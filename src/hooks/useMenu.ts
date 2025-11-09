@@ -19,8 +19,12 @@ export function useMenuData() {
 
 export function useCreateMenu(onSuccess?: () => void) {
   const apiAny = api as unknown as any;
+  const utils = apiAny.useUtils();
   const createMutation = apiAny.menu.create.useMutation({
-    onSuccess,
+    onSuccess: () => {
+      utils.menu.getAll.invalidate();
+      onSuccess?.();
+    },
   });
   const createMenu = (label: string, type: MenuCreateType) =>
     createMutation.mutate({ label, type });
@@ -39,4 +43,48 @@ export function useCreateChild() {
     createChildMutation.mutate({ parentTitle, child: { title: label, url } });
 
   return { createChild, isAddingChild: Boolean(createChildMutation?.isPending) } as const;
+}
+
+export function useUpdateParentLabel() {
+  const apiAny = api as unknown as any;
+  const utils = apiAny.useUtils();
+  const mutation = apiAny.menu.updateParentLabel.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const updateParentLabel = (oldTitle: string, newTitle: string) =>
+    mutation.mutate({ oldTitle, newTitle });
+  return { updateParentLabel, isUpdatingParentLabel: Boolean(mutation?.isPending) } as const;
+}
+
+export function useUpdateChildLabel() {
+  const apiAny = api as unknown as any;
+  const utils = apiAny.useUtils();
+  const mutation = apiAny.menu.updateChildLabel.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const updateChildLabel = (parentTitle: string, oldTitle: string, newTitle: string) =>
+    mutation.mutate({ parentTitle, oldTitle, newTitle });
+  return { updateChildLabel, isUpdatingChildLabel: Boolean(mutation?.isPending) } as const;
+}
+
+export function useReorderParents() {
+  const apiAny = api as unknown as any;
+  const utils = apiAny.useUtils();
+  const mutation = apiAny.menu.reorderNavMain.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const reorderParents = (orderedTitles: string[]) =>
+    mutation.mutate({ orderedTitles });
+  return { reorderParents, isReorderingParents: Boolean(mutation?.isPending) } as const;
+}
+
+export function useReorderChildren() {
+  const apiAny = api as unknown as any;
+  const utils = apiAny.useUtils();
+  const mutation = apiAny.menu.reorderChildren.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const reorderChildren = (parentTitle: string, orderedTitles: string[]) =>
+    mutation.mutate({ parentTitle, orderedTitles });
+  return { reorderChildren, isReorderingChildren: Boolean(mutation?.isPending) } as const;
 }

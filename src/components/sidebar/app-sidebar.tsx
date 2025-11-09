@@ -17,18 +17,31 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
-import { useMenuData, useCreateMenu, useCreateChild } from "@/hooks/useMenu";
+import { useMenuState } from "@/hooks/useMenuState";
 
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { menuData, refetch } = useMenuData();
-  const { createMenu, isCreating } = useCreateMenu(() => {
-    refetch();
-  });
-  const { createChild, isAddingChild } = useCreateChild();
+  // use centralized menu state with optimistic updates and background persistence
+  const {
+    menu,
+    addMenu,
+    addChild,
+    updateParentLabel,
+    updateChildLabel,
+    reorderParents,
+    reorderChildren,
+    isCreating,
+    isAddingChild,
+    isUpdatingParentLabel,
+    isUpdatingChildLabel,
+    removeParent,
+    removeChild,
+    isRemovingParent,
+    isRemovingChild,
+  } = useMenuState();
 
-  const navMain = (menuData?.navMain ?? []).map((item) => ({
+  const navMain = (menu?.navMain ?? []).map((item) => ({
     title: item.title,
     url: item.url,
     icon: SquareTerminal,
@@ -36,7 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     items: item.items,
   }));
 
-  const navSecondary = (menuData?.navSecondary ?? []).map((item) => ({
+  const navSecondary = (menu?.navSecondary ?? []).map((item) => ({
     title: item.title,
     url: item.url,
     icon: SquareTerminal,
@@ -61,15 +74,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
           {/* Plus button to add menu items */}
           <SidebarMenuItem>
-            <AddMenuPopover onAdd={createMenu} isCreating={isCreating} />
+            <AddMenuPopover onAdd={addMenu} isCreating={isCreating} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain
           items={navMain}
-          onAddChild={(parentTitle, label) => createChild(parentTitle, label)}
+          onAddChild={(parentTitle, label) => addChild(parentTitle, label)}
           isAddingChild={isAddingChild}
+          onUpdateParentLabel={updateParentLabel}
+          onUpdateChildLabel={updateChildLabel}
+          onReorderParents={reorderParents}
+          onReorderChildren={reorderChildren}
+          isUpdatingParentLabel={isUpdatingParentLabel}
+          isUpdatingChildLabel={isUpdatingChildLabel}
+          onRemoveParent={removeParent}
+          onRemoveChild={removeChild}
+          isRemovingParent={isRemovingParent}
+          isRemovingChild={isRemovingChild}
         />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>

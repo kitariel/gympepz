@@ -11,7 +11,12 @@ const MenuConfigSchema = z.object({
         title: z.string(),
         url: z.string().default("#"),
         isActive: z.boolean().optional(),
-        items: z.array(z.object({ title: z.string(), url: z.string() })).optional(),
+        order: z.number().optional(),
+        items: z
+          .array(
+            z.object({ title: z.string(), url: z.string(), order: z.number().optional() }),
+          )
+          .optional(),
       }),
     )
     .default([]),
@@ -60,6 +65,7 @@ export const menuRouter = createTRPCRouter({
         title: input.label,
         url: "#",
         isActive: false,
+        order: config.navMain.length,
         items: input.type === "group" ? [] : undefined,
       };
       config.navMain.push(newItem);
@@ -83,7 +89,95 @@ export const menuRouter = createTRPCRouter({
         throw new Error(`Parent item not found: ${input.parentTitle}`);
       }
       parent.items ??= [];
-      parent.items.push({ title: input.child.title, url: input.child.url });
+      const newChild = { title: input.child.title, url: input.child.url, order: parent.items.length };
+      parent.items.push(newChild);
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  updateParentLabel: publicProcedure
+    .input(z.object({ oldTitle: z.string().min(1), newTitle: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.oldTitle);
+      if (!parent) throw new Error(`Parent item not found: ${input.oldTitle}`);
+      parent.title = input.newTitle;
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  updateChildLabel: publicProcedure
+    .input(
+      z.object({
+        parentTitle: z.string().min(1),
+        oldTitle: z.string().min(1),
+        newTitle: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.parentTitle);
+      if (!parent) throw new Error(`Parent item not found: ${input.parentTitle}`);
+      const child = parent.items?.find((c) => c.title === input.oldTitle);
+      if (!child) throw new Error(`Child item not found: ${input.oldTitle}`);
+      child.title = input.newTitle;
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  reorderNavMain: publicProcedure
+    .input(z.object({ orderedTitles: z.array(z.string().min(1)).min(1) }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const titleSet = new Set(input.orderedTitles);
+      // Filter to only existing items, then sort by order specified
+      const existing = config.navMain.filter((i) => titleSet.has(i.title));
+      existing.sort(
+        (a, b) => input.orderedTitles.indexOf(a.title) - input.orderedTitles.indexOf(b.title),
+      );
+      // Update order field based on new index
+      existing.forEach((item, idx) => (item.order = idx));
+      // Keep non-mentioned items after existing order
+      const rest = config.navMain.filter((i) => !titleSet.has(i.title));
+      config.navMain = [...existing, ...rest];
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  reorderChildren: publicProcedure
+    .input(
+      z.object({ parentTitle: z.string().min(1), orderedTitles: z.array(z.string().min(1)).min(1) }),
+    )
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.parentTitle);
+      if (!parent) throw new Error(`Parent item not found: ${input.parentTitle}`);
+      const titleSet = new Set(input.orderedTitles);
+      const children = (parent.items ?? []).filter((c) => titleSet.has(c.title));
+      children.sort(
+        (a, b) => input.orderedTitles.indexOf(a.title) - input.orderedTitles.indexOf(b.title),
+      );
+      children.forEach((c, idx) => (c.order = idx));
+      const rest = (parent.items ?? []).filter((c) => !titleSet.has(c.title));
+      parent.items = [...children, ...rest];
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  deleteParent: publicProcedure
+    .input(z.object({ title: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const idx = config.navMain.findIndex((i) => i.title === input.title);
+      if (idx === -1) throw new Error(`Parent item not found: ${input.title}`);
+      config.navMain.splice(idx, 1);
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  deleteChild: publicProcedure
+    .input(z.object({ parentTitle: z.string().min(1), childTitle: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.parentTitle);
+      if (!parent) throw new Error(`Parent item not found: ${input.parentTitle}`);
+      const idx = (parent.items ?? []).findIndex((c) => c.title === input.childTitle);
+      if (idx === -1) throw new Error(`Child item not found: ${input.childTitle}`);
+      parent.items!.splice(idx, 1);
       await writeConfig(config);
       return { ok: true };
     }),
