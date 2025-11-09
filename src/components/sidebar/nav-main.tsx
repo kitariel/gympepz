@@ -1,8 +1,6 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any */
-
 import * as React from "react";
-import { ChevronRight, Plus, type LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import {
   Collapsible,
@@ -20,17 +18,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { api } from "@/trpc/react";
+import { AddChildPopover } from "@/components/sidebar/AddChildPopover";
 
 export function NavMain({
   items,
+  onAddChild,
+  isAddingChild,
 }: {
   items: {
     title: string;
@@ -42,17 +35,9 @@ export function NavMain({
       url: string;
     }[];
   }[];
+  onAddChild: (parentTitle: string, label: string) => void;
+  isAddingChild?: boolean;
 }) {
-  // Cast TRPC api to any at call site to avoid strict generic linter complaints
-  const apiAny = api as unknown as any;
-  const utils = apiAny.useUtils();
-  const createChild = apiAny.menu.createChild.useMutation({
-    onSuccess: () => utils.menu.getAll.invalidate(),
-  });
-  const [childLabels, setChildLabels] = React.useState<Record<string, string>>(
-    {},
-  );
-
   return (
     <SidebarGroup>
       {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
@@ -73,52 +58,11 @@ export function NavMain({
               {item.items ? (
                 <>
                   {/* Add child button to the left of the chevron toggle */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      {/* Move the plus button slightly left so it doesn't overlap the chevron */}
-                      <SidebarMenuAction className="right-7">
-                        <Plus />
-                        <span className="sr-only">Add child</span>
-                      </SidebarMenuAction>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-64">
-                      <div className="grid gap-2">
-                        <Input
-                          placeholder="Child label"
-                          value={childLabels[item.title] ?? ""}
-                          onChange={(e) =>
-                            setChildLabels((prev) => ({
-                              ...prev,
-                              [item.title]: e.target.value,
-                            }))
-                          }
-                        />
-                        <Button
-                          onClick={() => {
-                            const label = (
-                              childLabels[item.title] ?? ""
-                            ).trim();
-                            if (!label) return;
-                            createChild.mutate({
-                              parentTitle: item.title,
-                              child: { title: label, url: "#" },
-                            });
-                            setChildLabels((prev) => ({
-                              ...prev,
-                              [item.title]: "",
-                            }));
-                          }}
-                          disabled={
-                            (createChild.isPending ?? false)
-                              ? true
-                              : !Boolean((childLabels[item.title] ?? "").trim())
-                          }
-                        >
-                          {createChild.isPending ? "Adding..." : "Add"}
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <AddChildPopover
+                    parentTitle={item.title}
+                    onAddChild={(label) => onAddChild(item.title, label)}
+                    isAdding={isAddingChild}
+                  />
                   <CollapsibleTrigger asChild>
                     <SidebarMenuAction className="data-[state=open]:rotate-90">
                       <ChevronRight />
