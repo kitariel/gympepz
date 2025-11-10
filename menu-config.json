@@ -5,16 +5,24 @@
       "url": "#",
       "isActive": false,
       "order": 0,
-      "enabled": true
+      "enabled": true,
+      "items": [
+        {
+          "title": "Test",
+          "url": "#",
+          "order": 0,
+          "enabled": true
+        }
+      ]
     },
     {
       "title": "Test",
       "url": "#",
       "isActive": false,
       "order": 1,
-      "items": [],
       "iconName": "AccessibilityIcon",
-      "enabled": true
+      "enabled": true,
+      "items": []
     }
   ],
   "navSecondary": [

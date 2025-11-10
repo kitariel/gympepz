@@ -194,27 +194,6 @@ export function AddMenuPopover({
               placeholder="Menu label"
             />
           </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Type</label>
-            <RadioGroup
-              value={type}
-              onValueChange={(val) => setType(val as MenuCreateType)}
-              className="grid grid-cols-2 gap-2"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem id="type-single" value="single" />
-                <label htmlFor="type-single" className="text-sm">
-                  Single
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem id="type-group" value="group" />
-                <label htmlFor="type-group" className="text-sm">
-                  Group
-                </label>
-              </div>
-            </RadioGroup>
-          </div>
 
           {/* Icon platform selection */}
           <div className="grid gap-2">
@@ -245,32 +224,6 @@ export function AddMenuPopover({
             </RadioGroup>
           </div>
 
-          {/* Icon name input and preview for Lucide */}
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Icon name</label>
-            <Input
-              value={iconName}
-              onChange={(e) => setIconName(e.target.value)}
-              placeholder={
-                iconPlatform === "lucide"
-                  ? "e.g. SquareTerminal, Settings"
-                  : "Select Lucide for now"
-              }
-            />
-            {iconPlatform === "lucide" && (
-              <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded border">
-                  {PreviewIcon ? (
-                    <PreviewIcon className="h-4 w-4" />
-                  ) : (
-                    <span className="text-[10px]">no</span>
-                  )}
-                </span>
-                <span>{PreviewIcon ? "Preview" : "No match"}</span>
-              </div>
-            )}
-          </div>
-
           {/* Icon search and browse */}
           <div className="grid gap-2">
             <label className="text-sm font-medium">Search icons</label>
@@ -299,7 +252,7 @@ export function AddMenuPopover({
                     <span className="ml-1">Browse</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-[480px]">
+                <PopoverContent align="end" className="my-2 w-[480px]">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
