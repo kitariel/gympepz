@@ -39,11 +39,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+import * as Lucide from "lucide-react";
 
-// Define a local type to mirror the items prop for better type inference
 type SidebarNavItem = MenuItem & { icon: LucideIcon };
 
-// Provide sortable attributes/listeners to nested handle components
 const SortableItemContext = React.createContext<{
   attributes: DraggableAttributes;
   listeners: DraggableSyntheticListeners;
@@ -61,11 +60,15 @@ const SortableParent: React.FC<{ id: string; children: React.ReactNode }> = ({
     transition,
     isDragging,
   } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   return (
     <SidebarMenuItem
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? "cursor-grabbing shadow-sm" : "cursor-auto"}
+      style={style}
+      className={cn(isDragging && "opacity-50")}
     >
       <SortableItemContext.Provider value={{ attributes, listeners }}>
         {children}
@@ -86,11 +89,15 @@ const SortableChild: React.FC<{ id: string; children: React.ReactNode }> = ({
     transition,
     isDragging,
   } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   return (
     <SidebarMenuSubItem
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? "cursor-grabbing shadow-sm" : "cursor-auto"}
+      style={style}
+      className={cn(isDragging && "opacity-50")}
     >
       <SortableItemContext.Provider value={{ attributes, listeners }}>
         {children}
@@ -99,41 +106,34 @@ const SortableChild: React.FC<{ id: string; children: React.ReactNode }> = ({
   );
 };
 
-// Drag handle components that activate dragging only from the handle
 const ParentDragHandle: React.FC<{ className?: string }> = ({ className }) => {
-  const sortable = React.useContext(SortableItemContext);
-  if (!sortable) return null;
-  const { listeners, attributes } = sortable;
+  const sortableCtx = React.useContext(SortableItemContext);
+  const { attributes, listeners } = sortableCtx ?? {};
   return (
     <SidebarMenuAction
+      className={cn("cursor-grab active:cursor-grabbing", className)}
+      onPointerDown={(e) => e.stopPropagation()}
       {...attributes}
       {...listeners}
-      className={cn(
-        "absolute right-7 flex h-6 w-6 cursor-grab items-center justify-center p-0 active:cursor-grabbing",
-        className,
-      )}
     >
-      <GripVertical className="h-4 w-4" />
-      <span className="sr-only">Drag</span>
+      <GripVertical />
+      <span className="sr-only">Move</span>
     </SidebarMenuAction>
   );
 };
 
 const ChildDragHandle: React.FC<{ className?: string }> = ({ className }) => {
-  const sortable = React.useContext(SortableItemContext);
-  if (!sortable) return null;
-  const { listeners, attributes } = sortable;
+  const sortableCtx = React.useContext(SortableItemContext);
+  const { attributes, listeners } = sortableCtx ?? {};
   return (
     <SidebarMenuAction
+      className={cn("cursor-grab active:cursor-grabbing", className)}
+      onPointerDown={(e) => e.stopPropagation()}
       {...attributes}
       {...listeners}
-      className={cn(
-        "absolute right-7 flex h-6 w-6 cursor-grab items-center justify-center p-0 active:cursor-grabbing",
-        className,
-      )}
     >
-      <GripVertical className="h-4 w-4" />
-      <span className="sr-only">Drag child</span>
+      <GripVertical />
+      <span className="sr-only">Move</span>
     </SidebarMenuAction>
   );
 };
@@ -152,6 +152,10 @@ export function NavMain({
   onRemoveChild,
   isRemovingParent,
   isRemovingChild,
+  iconsByTitle,
+  onUpdateParentIcon,
+  enableEditing = true,
+  currentUserRoles,
 }: {
   items: (Omit<MenuItem, "title"> & { title: string } & { icon: LucideIcon })[];
   onAddChild: (parentTitle: string, label: string) => void;
@@ -170,24 +174,33 @@ export function NavMain({
   onRemoveChild: (parentTitle: string, childTitle: string) => void;
   isRemovingParent?: boolean;
   isRemovingChild?: boolean;
+  iconsByTitle?: Record<string, string>;
+  onUpdateParentIcon: (title: string, iconName?: string) => void;
+  // Global toggle: show/hide all editing UI (e.g., super admin mode)
+  enableEditing?: boolean;
+  // Future use: role-based filtering (not enforced yet)
+  currentUserRoles?: string[];
 }) {
   const sensors = useSensors(
+    // Add activation constraint to avoid interfering with regular clicks
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor),
   );
-  // Local optimistic state: mirror items so UI updates immediately
+
   const [localItems, setLocalItems] = React.useState<SidebarNavItem[]>(items);
+
   React.useEffect(() => {
-    setLocalItems(items as SidebarNavItem[]);
+    setLocalItems(items);
   }, [items]);
+
+  // Local wrappers for editing actions (optimistic UI)
   const handleAddChildLocal = React.useCallback(
     (parentTitle: string, label: string) => {
-      setLocalItems((prev: SidebarNavItem[]) => {
-        const next: SidebarNavItem[] = [...prev];
+      setLocalItems((prev) => {
+        const next = [...prev];
         const idx = next.findIndex((p) => p.title === parentTitle);
         if (idx === -1) return prev;
-        const parent = next[idx];
-        if (!parent) return prev;
+        const parent = next[idx]!;
         const children: MenuChild[] = [...(parent.items ?? [])];
         children.push({ title: label, url: "#" });
         next[idx] = { ...parent, items: children };
@@ -211,94 +224,95 @@ export function NavMain({
   const handleUpdateChildLabelLocal = React.useCallback(
     (parentTitle: string, oldTitle: string, newTitle: string) => {
       setLocalItems((prev) => {
-        const next = prev.map((p) => {
+        return prev.map((p) => {
           if (p.title !== parentTitle) return p;
-          const updatedChildren = (p.items ?? []).map((c) =>
+          const updated = (p.items ?? []).map((c) =>
             c.title === oldTitle ? { ...c, title: newTitle } : c,
           );
-          return { ...p, items: updatedChildren };
+          return { ...p, items: updated };
         });
-        return next;
       });
       onUpdateChildLabel(parentTitle, oldTitle, newTitle);
     },
     [onUpdateChildLabel],
   );
 
-  const handleRemoveParentLocal = React.useCallback((title: string) => {
-    setLocalItems((prev) => prev.filter((p) => p.title !== title));
-    onRemoveParent(title);
-  }, [onRemoveParent]);
+  const handleRemoveParentLocal = React.useCallback(
+    (title: string) => {
+      setLocalItems((prev) => prev.filter((p) => p.title !== title));
+      onRemoveParent(title);
+    },
+    [onRemoveParent],
+  );
 
-  const handleRemoveChildLocal = React.useCallback((parentTitle: string, childTitle: string) => {
-    setLocalItems((prev) => {
-      return prev.map((p) => {
-        if (p.title !== parentTitle) return p;
-        const updatedChildren = (p.items ?? []).filter((c) => c.title !== childTitle);
-        return { ...p, items: updatedChildren };
+  const handleRemoveChildLocal = React.useCallback(
+    (parentTitle: string, childTitle: string) => {
+      setLocalItems((prev) => {
+        return prev.map((p) => {
+          if (p.title !== parentTitle) return p;
+          const updated = (p.items ?? []).filter((c) => c.title !== childTitle);
+          return { ...p, items: updated };
+        });
       });
-    });
-    onRemoveChild(parentTitle, childTitle);
-  }, [onRemoveChild]);
+      onRemoveChild(parentTitle, childTitle);
+    },
+    [onRemoveChild],
+  );
 
-  const handleParentDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-    const ids = localItems.map((i) => i.title);
-    const oldIndex = ids.indexOf(String(active.id));
-    const newIndex = ids.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-    const newOrder = arrayMove(ids, oldIndex, newIndex);
-    // Optimistically update local state to reflect new parent order
-    setLocalItems((prev: SidebarNavItem[]) => {
-      const entries: [string, SidebarNavItem][] = prev.map((i) => [i.title, i]);
-      const byTitle = new Map(entries);
-      const reordered = newOrder
-        .map((t: string) => byTitle.get(t))
-        .filter(Boolean) as SidebarNavItem[];
-      return reordered;
-    });
-    onReorderParents(newOrder);
-  };
-  const handleChildDragEnd = (event: DragEndEvent, parentTitle: string) => {
-    const { active, over } = event;
-    if (!over) return;
-    const parentIndex = localItems.findIndex((i) => i.title === parentTitle);
-    if (parentIndex === -1) return;
-    const ids = (localItems[parentIndex]?.items ?? []).map((i) => i.title);
-    const oldIndex = ids.indexOf(String(active.id));
-    const newIndex = ids.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-    const newOrder = arrayMove(ids, oldIndex, newIndex);
-    // Optimistically update local state to reflect new child order
-    setLocalItems((prev: SidebarNavItem[]) => {
-      const next: SidebarNavItem[] = [...prev];
-      const parent = next[parentIndex];
-      if (!parent) return prev;
-      const entries: [string, MenuChild][] = (parent.items ?? []).map((i) => [
-        i.title,
-        i,
-      ]);
-      const childMap = new Map(entries);
-      const reorderedChildren = newOrder
-        .map((t: string) => childMap.get(t))
-        .filter(Boolean) as MenuChild[];
-      next[parentIndex] = { ...parent, items: reorderedChildren };
-      return next;
-    });
-    onReorderChildren(parentTitle, newOrder);
-  };
+  const handleParentDragEnd = React.useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const oldIndex = localItems.findIndex((i) => i.title === active.id);
+      const newIndex = localItems.findIndex((i) => i.title === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove(localItems, oldIndex, newIndex);
+      setLocalItems(reordered);
+      onReorderParents(reordered.map((i) => i.title));
+    },
+    [localItems, onReorderParents],
+  );
+
+  const handleChildDragEnd = React.useCallback(
+    (event: DragEndEvent, parentTitle: string) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const parentIdx = localItems.findIndex((i) => i.title === parentTitle);
+      if (parentIdx === -1) return;
+      const parent = localItems[parentIdx]!;
+      const items = parent.items ?? [];
+      const oldIndex = items.findIndex((i) => i.title === active.id);
+      const newIndex = items.findIndex((i) => i.title === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      const nextParents = [...localItems];
+      nextParents[parentIdx] = { ...parent, items: reordered };
+      setLocalItems(nextParents);
+      onReorderChildren(
+        parentTitle,
+        reordered.map((i) => i.title),
+      );
+    },
+    [localItems, onReorderChildren],
+  );
+
+  // Visibility gating: if editing disabled, hide items where enabled === false
+  const visibleParents = enableEditing
+    ? localItems
+    : localItems.filter((i) => i.enabled ?? true);
 
   return (
     <SidebarGroup>
-      {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
       <DndContext sensors={sensors} onDragEnd={handleParentDragEnd}>
         <SortableContext
-          items={localItems.map((i) => i.title)}
+          items={visibleParents.map((i) => i.title)}
           strategy={verticalListSortingStrategy}
         >
           <SidebarMenu>
-            {localItems.map((item, index) => {
+            {visibleParents.map((item, index) => {
+              const visibleChildren = enableEditing
+                ? (item.items ?? [])
+                : (item.items ?? []).filter((c) => c.enabled ?? true);
               return (
                 <Collapsible
                   key={item.title + index}
@@ -311,31 +325,51 @@ export function NavMain({
                         href={item.url ?? "#"}
                         onPointerDownCapture={(e) => e.stopPropagation()}
                       >
-                        <item.icon />
+                        {(() => {
+                          const dynamicIconName = iconsByTitle?.[item.title];
+                          const LucComp = dynamicIconName
+                            ? (Lucide[
+                                dynamicIconName as keyof typeof Lucide
+                              ] as unknown)
+                            : undefined;
+                          const DynamicIcon = LucComp
+                            ? (LucComp as LucideIcon)
+                            : item.icon;
+                          return <DynamicIcon />;
+                        })()}
                         <span>{item.title}</span>
                       </a>
                     </SidebarMenuButton>
                     {/* Actions always visible; chevron/collapsible only when children exist */}
 
                     {/** Always show settings and drag handle; only chevron appears if there are children */}
-                    <GroupSettingsPopover
-                      parentTitle={item.title}
-                      onUpdateLabel={handleUpdateParentLabelLocal}
-                      isUpdating={Boolean(isUpdatingParentLabel)}
-                      onAddChild={(label: string) =>
-                        handleAddChildLocal(item.title, label)
-                      }
-                      isAddingChild={isAddingChild}
-                      onRemoveParent={handleRemoveParentLocal}
-                      isRemovingParent={Boolean(isRemovingParent)}
-                      hasChildren={Boolean(item.items && item.items.length > 0)}
-                      actionClassName="right-14"
-                    />
-                    <ParentDragHandle className="right-7" />
-                    {item.items && item.items.length > 0 ? (
+                    {enableEditing && (
+                      <GroupSettingsPopover
+                        parentTitle={item.title}
+                        onUpdateLabel={handleUpdateParentLabelLocal}
+                        isUpdating={Boolean(isUpdatingParentLabel)}
+                        onAddChild={(label: string) =>
+                          handleAddChildLocal(item.title, label)
+                        }
+                        isAddingChild={isAddingChild}
+                        onRemoveParent={handleRemoveParentLocal}
+                        isRemovingParent={Boolean(isRemovingParent)}
+                        hasChildren={Boolean(
+                          item.items && item.items.length > 0,
+                        )}
+                        actionClassName="right-14"
+                        // New: edit icon for existing parent
+                        currentIconName={iconsByTitle?.[item.title]}
+                        onUpdateIcon={(title, iconName) =>
+                          onUpdateParentIcon(title, iconName)
+                        }
+                      />
+                    )}
+                    {enableEditing && <ParentDragHandle className="right-7" />}
+                    {visibleChildren.length > 0 ? (
                       <React.Fragment>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuAction className="data-[state=open]:rotate-90">
+                          <SidebarMenuAction className="transition-transform duration-300 ease-out data-[state=open]:rotate-90">
                             <ChevronRight />
                             <span className="sr-only">Toggle</span>
                           </SidebarMenuAction>
@@ -346,11 +380,11 @@ export function NavMain({
                             onDragEnd={(e) => handleChildDragEnd(e, item.title)}
                           >
                             <SortableContext
-                              items={(item.items ?? []).map((i) => i.title)}
+                              items={visibleChildren.map((i) => i.title)}
                               strategy={verticalListSortingStrategy}
                             >
                               <SidebarMenuSub>
-                                {item.items?.map((subItem, index) => {
+                                {visibleChildren.map((subItem, index) => {
                                   return (
                                     <SortableChild
                                       key={subItem.title + index}
@@ -366,28 +400,34 @@ export function NavMain({
                                           <span>{subItem.title}</span>
                                         </a>
                                       </SidebarMenuSubButton>
-                                      <ChildLabelEditorPopover
-                                        childLabel={subItem.title}
-                                        onUpdateLabel={(oldLabel, newLabel) =>
-                                          handleUpdateChildLabelLocal(
-                                            item.title,
-                                            oldLabel,
-                                            newLabel,
-                                          )
-                                        }
-                                        isUpdating={Boolean(
-                                          isUpdatingChildLabel,
-                                        )}
-                                        onRemoveChild={(label) =>
-                                          handleRemoveChildLocal(
-                                            item.title,
-                                            label,
-                                          )
-                                        }
-                                        isRemovingChild={Boolean(isRemovingChild)}
-                                        actionClassName="right-14"
-                                      />
-                                      <ChildDragHandle className="right-7" />
+                                      {enableEditing && (
+                                        <ChildLabelEditorPopover
+                                          childLabel={subItem.title}
+                                          onUpdateLabel={(oldLabel, newLabel) =>
+                                            handleUpdateChildLabelLocal(
+                                              item.title,
+                                              oldLabel,
+                                              newLabel,
+                                            )
+                                          }
+                                          isUpdating={Boolean(
+                                            isUpdatingChildLabel,
+                                          )}
+                                          onRemoveChild={(label) =>
+                                            handleRemoveChildLocal(
+                                              item.title,
+                                              label,
+                                            )
+                                          }
+                                          isRemovingChild={Boolean(
+                                            isRemovingChild,
+                                          )}
+                                          actionClassName="right-14"
+                                        />
+                                      )}
+                                      {enableEditing && (
+                                        <ChildDragHandle className="right-7" />
+                                      )}
                                     </SortableChild>
                                   );
                                 })}

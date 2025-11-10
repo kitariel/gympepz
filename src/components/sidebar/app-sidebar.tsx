@@ -1,8 +1,9 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any */
 
 import * as React from "react";
 import { Command, SquareTerminal } from "lucide-react";
+import * as Lucide from "lucide-react";
+import type { MenuCreateType } from "@/types/menu";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -19,9 +20,14 @@ import {
 import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
 import { useMenuState } from "@/hooks/useMenuState";
 
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  // Global toggle for editing UI (super admin mode)
+  enableEditing?: boolean;
+  // Future: pass current user roles to filter visibility (not enforced yet)
+  currentUserRoles?: string[];
+};
 
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }: AppSidebarProps) {
   // use centralized menu state with optimistic updates and background persistence
   const {
     menu,
@@ -39,21 +45,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     removeChild,
     isRemovingParent,
     isRemovingChild,
+    iconsByTitle,
+    setParentIcon,
   } = useMenuState();
 
-  const navMain = (menu?.navMain ?? []).map((item) => ({
-    title: item.title,
-    url: item.url,
-    icon: SquareTerminal,
-    isActive: item.isActive,
-    items: item.items,
-  }));
+  const navMain = (menu?.navMain ?? []).map((item) => {
+    const iconName: string | undefined = iconsByTitle?.[item.title];
+    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+    const IconComp: import("lucide-react").LucideIcon = iconName ? (LucideIcons[iconName] ?? SquareTerminal) : SquareTerminal;
+    return {
+      title: item.title,
+      url: item.url,
+      icon: IconComp,
+      isActive: item.isActive,
+      items: item.items,
+      enabled: item.enabled,
+    };
+  });
 
-  const navSecondary = (menu?.navSecondary ?? []).map((item) => ({
-    title: item.title,
-    url: item.url,
-    icon: SquareTerminal,
-  }));
+  const navSecondary = (menu?.navSecondary ?? []).map((item) => {
+    const iconName: string | undefined = iconsByTitle?.[item.title];
+    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+    const IconComp: import("lucide-react").LucideIcon = iconName ? (LucideIcons[iconName] ?? SquareTerminal) : SquareTerminal;
+    return {
+      title: item.title,
+      url: item.url,
+      icon: IconComp,
+    };
+  });
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -74,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
           {/* Plus button to add menu items */}
           <SidebarMenuItem>
-            <AddMenuPopover onAdd={addMenu} isCreating={isCreating} />
+            <AddMenuPopover onAdd={(label: string, type: MenuCreateType, iconName?: string) => { void addMenu(label, type, iconName); }} isCreating={isCreating} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -93,6 +112,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           onRemoveChild={removeChild}
           isRemovingParent={isRemovingParent}
           isRemovingChild={isRemovingChild}
+          // New props for icon editing on existing parents
+          iconsByTitle={iconsByTitle}
+          onUpdateParentIcon={(title: string, iconName?: string) => setParentIcon(title, iconName)}
+          // Global editing toggle and planned roles (future)
+          enableEditing={enableEditing}
+          currentUserRoles={currentUserRoles}
         />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>

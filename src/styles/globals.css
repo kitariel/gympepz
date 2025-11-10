@@ -116,10 +116,60 @@
 }
 
 @layer base {
+  /* Cross-browser scrollbar styling */
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  /* WebKit */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: var(--radius);
+    border: 2px solid transparent; /* creates inset for nicer thumb shape */
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+  /* Base app styles */
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Optional utility: apply a more prominent scrollbar to specific containers */
+@layer utilities {
+  .scrollbar-prominent {
+    /* Firefox */
+    scrollbar-width: auto;
+    scrollbar-color: var(--secondary) var(--muted);
+  }
+  /* WebKit */
+  .scrollbar-prominent::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .scrollbar-prominent::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: var(--radius);
+  }
+  .scrollbar-prominent::-webkit-scrollbar-thumb {
+    background-color: var(--secondary);
+    border-radius: var(--radius);
+    border: 2px solid var(--muted);
+  }
+  .scrollbar-prominent::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary-foreground);
   }
 }

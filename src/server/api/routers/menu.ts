@@ -12,9 +12,19 @@ const MenuConfigSchema = z.object({
         url: z.string().default("#"),
         isActive: z.boolean().optional(),
         order: z.number().optional(),
+        // Optional icon name per parent item
+        iconName: z.string().optional(),
+        // Optional enabled flag to control visibility for non-admin views
+        enabled: z.boolean().optional(),
         items: z
           .array(
-            z.object({ title: z.string(), url: z.string(), order: z.number().optional() }),
+            z.object({
+              title: z.string(),
+              url: z.string(),
+              order: z.number().optional(),
+              // Optional enabled flag to control visibility for non-admin views
+              enabled: z.boolean().optional(),
+            }),
           )
           .optional(),
       }),
@@ -57,6 +67,7 @@ export const menuRouter = createTRPCRouter({
       z.object({
         label: z.string().min(1),
         type: z.enum(["group", "single"]).default("single"),
+        iconName: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -67,6 +78,8 @@ export const menuRouter = createTRPCRouter({
         isActive: false,
         order: config.navMain.length,
         items: input.type === "group" ? [] : undefined,
+        iconName: input.iconName?.trim() ?? undefined,
+        enabled: true,
       };
       config.navMain.push(newItem);
       await writeConfig(config);
@@ -89,7 +102,7 @@ export const menuRouter = createTRPCRouter({
         throw new Error(`Parent item not found: ${input.parentTitle}`);
       }
       parent.items ??= [];
-      const newChild = { title: input.child.title, url: input.child.url, order: parent.items.length };
+      const newChild = { title: input.child.title, url: input.child.url, order: parent.items.length, enabled: true };
       parent.items.push(newChild);
       await writeConfig(config);
       return { ok: true };
@@ -156,6 +169,22 @@ export const menuRouter = createTRPCRouter({
       children.forEach((c, idx) => (c.order = idx));
       const rest = (parent.items ?? []).filter((c) => !titleSet.has(c.title));
       parent.items = [...children, ...rest];
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  updateParentIcon: publicProcedure
+    .input(z.object({ title: z.string().min(1), iconName: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.title);
+      if (!parent) throw new Error(`Parent item not found: ${input.title}`);
+      const trimmed = input.iconName?.trim();
+      if (trimmed) {
+        parent.iconName = trimmed;
+      } else {
+        // Clear icon by setting undefined (will be omitted in JSON)
+        parent.iconName = undefined;
+      }
       await writeConfig(config);
       return { ok: true };
     }),
