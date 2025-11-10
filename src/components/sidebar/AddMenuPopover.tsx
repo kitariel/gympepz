@@ -9,6 +9,7 @@ import {
   SquareTerminal,
 } from "lucide-react";
 import * as Lucide from "lucide-react";
+import * as HeroOutline from "@heroicons/react/24/outline";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,21 +25,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { MenuCreateType } from "@/types/menu";
+import type { MenuCreateType, IconPlatform } from "@/types/menu";
 import { Label } from "@radix-ui/react-dropdown-menu";
+
+ type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 export function AddMenuPopover({
   onAdd,
   isCreating,
 }: {
-  onAdd: (label: string, type: MenuCreateType, iconName?: string) => void;
+  onAdd: (label: string, type: MenuCreateType, iconName?: string, iconPlatform?: IconPlatform) => void;
   isCreating?: boolean;
 }) {
   const [label, setLabel] = React.useState("");
   const [type, setType] = React.useState<MenuCreateType>("single");
-  const [iconPlatform, setIconPlatform] = React.useState<
-    "lucide" | "heroicons"
-  >("lucide");
+  const [iconPlatform, setIconPlatform] = React.useState<IconPlatform>("lucide");
   const [iconName, setIconName] = React.useState<string>("");
   const [iconSearch, setIconSearch] = React.useState<string>("");
   const [browseOpen, setBrowseOpen] = React.useState<boolean>(false);
@@ -54,6 +55,9 @@ export function AddMenuPopover({
       (k) => /^[A-Z]/.test(k) && k !== "LucideIcon",
     );
   }, [LucideIcons]);
+
+  const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
+  const allHeroNames = React.useMemo(() => Object.keys(Outline), [Outline]);
 
   const categories: { key: string; label: string; matchers?: string[] }[] = [
     { key: "all", label: "All" },
@@ -135,7 +139,8 @@ export function AddMenuPopover({
 
   const PAGE_SIZE = 25;
 
-  const filteredLucideNames = React.useMemo(() => {
+  const filteredNames = React.useMemo(() => {
+    const names = iconPlatform === "lucide" ? allLucideNames : allHeroNames;
     const term = iconSearch.trim().toLowerCase();
     const currentCat = categories.find((c) => c.key === selectedCategory);
     const matchers = currentCat?.matchers;
@@ -143,17 +148,17 @@ export function AddMenuPopover({
       if (selectedCategory === "all" || !matchers) return true;
       return matchers.some((m) => name.includes(m));
     };
-    const names = allLucideNames.filter((n) => byCategory(n));
-    if (!term) return names;
-    return names.filter((n) => n.toLowerCase().includes(term));
-  }, [allLucideNames, iconSearch, selectedCategory]);
+    const namesByCat = names.filter((n) => byCategory(n));
+    if (!term) return namesByCat;
+    return namesByCat.filter((n) => n.toLowerCase().includes(term));
+  }, [allLucideNames, allHeroNames, iconSearch, selectedCategory, iconPlatform]);
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredLucideNames.length / PAGE_SIZE),
+    Math.ceil(filteredNames.length / PAGE_SIZE),
   );
   const pageSafe = Math.min(page, totalPages - 1);
-  const pagedLucideNames = filteredLucideNames.slice(
+  const pagedNames = filteredNames.slice(
     pageSafe * PAGE_SIZE,
     pageSafe * PAGE_SIZE + PAGE_SIZE,
   );
@@ -161,11 +166,15 @@ export function AddMenuPopover({
   React.useEffect(() => {
     // Reset pagination when filters change
     setPage(0);
-  }, [iconSearch, selectedCategory]);
+  }, [iconSearch, selectedCategory, iconPlatform]);
 
-  const PreviewIcon: import("lucide-react").LucideIcon | null =
+  const PreviewLucide: import("lucide-react").LucideIcon | null =
     iconPlatform === "lucide" && iconName && LucideIcons[iconName]
       ? LucideIcons[iconName]
+      : null;
+  const PreviewHero: HeroIcon | null =
+    iconPlatform === "heroicons" && iconName && Outline[iconName]
+      ? Outline[iconName]
       : null;
 
   const canSubmit = Boolean(label.trim()) && !isCreating;
@@ -201,7 +210,7 @@ export function AddMenuPopover({
             <RadioGroup
               value={iconPlatform}
               onValueChange={(val) =>
-                setIconPlatform(val as "lucide" | "heroicons")
+                setIconPlatform(val as IconPlatform)
               }
               className="grid grid-cols-2 gap-2"
             >
@@ -212,13 +221,9 @@ export function AddMenuPopover({
                 </label>
               </div>
               <div className="flex items-center gap-2">
-                <RadioGroupItem
-                  id="icon-heroicons"
-                  value="heroicons"
-                  disabled
-                />
+                <RadioGroupItem id="icon-heroicons" value="heroicons" />
                 <label htmlFor="icon-heroicons" className="text-sm">
-                  Heroicons (soon)
+                  Heroicons
                 </label>
               </div>
             </RadioGroup>
@@ -235,7 +240,7 @@ export function AddMenuPopover({
                     setIconSearch(e.target.value);
                     setIconName(e.target.value);
                   }}
-                  placeholder="Search by name"
+                  placeholder={iconPlatform === "lucide" ? "Lucide icon name" : "Heroicon name"}
                   className="pl-8"
                 />
                 <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
@@ -301,9 +306,10 @@ export function AddMenuPopover({
                   </div>
 
                   <div className="grid grid-cols-5 gap-2">
-                    {pagedLucideNames.map((name) => {
-                      const IconComp: import("lucide-react").LucideIcon =
-                        LucideIcons[name] ?? SquareTerminal;
+                    {pagedNames.map((name) => {
+                      const IconComp = iconPlatform === "lucide"
+                        ? ((LucideIcons[name] ?? SquareTerminal) as unknown as React.ComponentType<{ className?: string }>)
+                        : ((Outline[name] ?? undefined) as unknown as React.ComponentType<{ className?: string }>);
                       return (
                         <button
                           key={name}
@@ -315,14 +321,18 @@ export function AddMenuPopover({
                             setBrowseOpen(false);
                           }}
                         >
-                          <IconComp className="h-6 w-6" />
+                          {IconComp ? (
+                            <IconComp className="h-6 w-6" />
+                          ) : (
+                            <span className="text-[10px]">no</span>
+                          )}
                           <span className="max-w-24 truncate text-[11px]">
                             {name}
                           </span>
                         </button>
                       );
                     })}
-                    {pagedLucideNames.length === 0 && (
+                    {pagedNames.length === 0 && (
                       <div className="text-muted-foreground col-span-5 py-6 text-center text-xs">
                         No icons found
                       </div>
@@ -333,23 +343,23 @@ export function AddMenuPopover({
             </div>
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded border">
-                {PreviewIcon ? (
-                  <PreviewIcon className="h-4 w-4" />
+                {iconPlatform === "lucide" && PreviewLucide ? (
+                  <PreviewLucide className="h-4 w-4" />
+                ) : iconPlatform === "heroicons" && PreviewHero ? (
+                  <PreviewHero className="h-4 w-4" />
                 ) : (
                   <span className="text-[10px]">no</span>
                 )}
               </span>
-              <span>{PreviewIcon ? "Preview" : "No match"}</span>
+              <span>{(iconPlatform === "lucide" && PreviewLucide) || (iconPlatform === "heroicons" && PreviewHero) ? "Preview" : "No match"}</span>
             </div>
           </div>
 
           <Button
             onClick={() => {
-              const chosenIcon =
-                iconPlatform === "lucide" && iconName.trim()
-                  ? iconName.trim()
-                  : undefined;
-              onAdd(label.trim(), type, chosenIcon);
+              const chosenIcon = iconName.trim() ? iconName.trim() : undefined;
+              const chosenPlatform = chosenIcon ? iconPlatform : undefined;
+              onAdd(label.trim(), type, chosenIcon, chosenPlatform);
             }}
             disabled={!canSubmit}
           >

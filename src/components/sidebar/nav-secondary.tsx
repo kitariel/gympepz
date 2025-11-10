@@ -1,5 +1,4 @@
 import * as React from "react";
-import { type LucideIcon } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -9,14 +8,17 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
+// Define a unified icon type compatible with Lucide and Heroicons
+type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
 export function NavSecondary({
-  items,
+  items = [],
   ...props
 }: {
   items: {
     title: string;
     url: string;
-    icon: LucideIcon;
+    icon: SidebarIcon;
   }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
@@ -27,7 +29,7 @@ export function NavSecondary({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
                 <a href={item.url}>
-                  <item.icon />
+                  <item.icon className="size-4" />
                   <span>{item.title}</span>
                 </a>
               </SidebarMenuButton>

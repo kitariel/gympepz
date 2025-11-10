@@ -14,6 +14,8 @@ const MenuConfigSchema = z.object({
         order: z.number().optional(),
         // Optional icon name per parent item
         iconName: z.string().optional(),
+        // Optional icon platform per parent item
+        iconPlatform: z.enum(["lucide", "heroicons"]).optional(),
         // Optional enabled flag to control visibility for non-admin views
         enabled: z.boolean().optional(),
         items: z
@@ -68,6 +70,7 @@ export const menuRouter = createTRPCRouter({
         label: z.string().min(1),
         type: z.enum(["group", "single"]).default("single"),
         iconName: z.string().optional(),
+        iconPlatform: z.enum(["lucide", "heroicons"]).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -79,6 +82,7 @@ export const menuRouter = createTRPCRouter({
         order: config.navMain.length,
         items: input.type === "group" ? [] : undefined,
         iconName: input.iconName?.trim() ?? undefined,
+        iconPlatform: input.iconPlatform ?? (input.iconName ? "lucide" : undefined),
         enabled: true,
       };
       config.navMain.push(newItem);
@@ -173,7 +177,7 @@ export const menuRouter = createTRPCRouter({
       return { ok: true };
     }),
   updateParentIcon: publicProcedure
-    .input(z.object({ title: z.string().min(1), iconName: z.string().optional() }))
+    .input(z.object({ title: z.string().min(1), iconName: z.string().optional(), iconPlatform: z.enum(["lucide", "heroicons"]).optional() }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
       const parent = config.navMain.find((i) => i.title === input.title);
@@ -181,9 +185,11 @@ export const menuRouter = createTRPCRouter({
       const trimmed = input.iconName?.trim();
       if (trimmed) {
         parent.iconName = trimmed;
+        parent.iconPlatform = input.iconPlatform ?? parent.iconPlatform ?? "lucide";
       } else {
         // Clear icon by setting undefined (will be omitted in JSON)
         parent.iconName = undefined;
+        parent.iconPlatform = undefined;
       }
       await writeConfig(config);
       return { ok: true };

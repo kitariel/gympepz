@@ -1,10 +1,19 @@
 {
   "navMain": [
     {
-      "title": "Abc",
+      "title": "E",
       "url": "#",
       "isActive": false,
       "order": 0,
+      "iconName": "AdjustmentsVerticalIcon",
+      "iconPlatform": "heroicons",
+      "enabled": true
+    },
+    {
+      "title": "Abc",
+      "url": "#",
+      "isActive": false,
+      "order": 1,
       "enabled": true,
       "items": [
         {
@@ -19,7 +28,7 @@
       "title": "Test",
       "url": "#",
       "isActive": false,
-      "order": 1,
+      "order": 2,
       "iconName": "AccessibilityIcon",
       "enabled": true,
       "items": []
@@ -32,20 +41,6 @@
     },
     {
       "title": "Feedback",
-      "url": "#"
-    }
-  ],
-  "projects": [
-    {
-      "name": "Design Engineering",
-      "url": "#"
-    },
-    {
-      "name": "Sales & Marketing",
-      "url": "#"
-    },
-    {
-      "name": "Travel",
       "url": "#"
     }
   ]

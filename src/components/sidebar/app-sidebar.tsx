@@ -3,7 +3,8 @@
 import * as React from "react";
 import { Command, SquareTerminal } from "lucide-react";
 import * as Lucide from "lucide-react";
-import type { MenuCreateType } from "@/types/menu";
+import * as HeroOutline from "@heroicons/react/24/outline";
+import type { MenuCreateType, IconPlatform } from "@/types/menu";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -27,7 +28,16 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   currentUserRoles?: string[];
 };
 
-export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }: AppSidebarProps) {
+// Unify icon component type for sidebar rendering
+type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+export function AppSidebar({
+  enableEditing = true,
+  currentUserRoles,
+  ...props
+}: AppSidebarProps) {
   // use centralized menu state with optimistic updates and background persistence
   const {
     menu,
@@ -49,10 +59,32 @@ export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }:
     setParentIcon,
   } = useMenuState();
 
+  // Resolve icon component per item based on icon platform + name
+  const getIconForItem = (
+    title: string,
+    fallback: SidebarIcon,
+  ): SidebarIcon => {
+    const mapping = iconsByTitle?.[title];
+    if (!mapping) return fallback;
+    const { name, platform } = mapping;
+    if (platform === "heroicons") {
+      const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
+      const IconComp = Outline[name as keyof typeof Outline];
+      return IconComp ?? fallback;
+    }
+    const LucideIcons = Lucide as unknown as Record<
+      string,
+      import("lucide-react").LucideIcon
+    >;
+    const LucComp = LucideIcons[name as keyof typeof LucideIcons];
+    return LucComp ?? fallback;
+  };
+
   const navMain = (menu?.navMain ?? []).map((item) => {
-    const iconName: string | undefined = iconsByTitle?.[item.title];
-    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
-    const IconComp: import("lucide-react").LucideIcon = iconName ? (LucideIcons[iconName] ?? SquareTerminal) : SquareTerminal;
+    const IconComp = getIconForItem(
+      item.title,
+      SquareTerminal,
+    );
     return {
       title: item.title,
       url: item.url,
@@ -64,9 +96,10 @@ export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }:
   });
 
   const navSecondary = (menu?.navSecondary ?? []).map((item) => {
-    const iconName: string | undefined = iconsByTitle?.[item.title];
-    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
-    const IconComp: import("lucide-react").LucideIcon = iconName ? (LucideIcons[iconName] ?? SquareTerminal) : SquareTerminal;
+    const IconComp = getIconForItem(
+      item.title,
+      SquareTerminal,
+    );
     return {
       title: item.title,
       url: item.url,
@@ -93,7 +126,17 @@ export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }:
           </SidebarMenuItem>
           {/* Plus button to add menu items */}
           <SidebarMenuItem>
-            <AddMenuPopover onAdd={(label: string, type: MenuCreateType, iconName?: string) => { void addMenu(label, type, iconName); }} isCreating={isCreating} />
+            <AddMenuPopover
+              onAdd={(
+                label: string,
+                type: MenuCreateType,
+                iconName?: string,
+                iconPlatform?: IconPlatform,
+              ) => {
+                void addMenu(label, type, iconName, iconPlatform);
+              }}
+              isCreating={isCreating}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -114,7 +157,11 @@ export function AppSidebar({ enableEditing = true, currentUserRoles, ...props }:
           isRemovingChild={isRemovingChild}
           // New props for icon editing on existing parents
           iconsByTitle={iconsByTitle}
-          onUpdateParentIcon={(title: string, iconName?: string) => setParentIcon(title, iconName)}
+          onUpdateParentIcon={(
+            title: string,
+            iconName?: string,
+            iconPlatform?: IconPlatform,
+          ) => setParentIcon(title, iconName, iconPlatform)}
           // Global editing toggle and planned roles (future)
           enableEditing={enableEditing}
           currentUserRoles={currentUserRoles}

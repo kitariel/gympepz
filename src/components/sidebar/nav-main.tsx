@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { ChevronRight, GripVertical, type LucideIcon } from "lucide-react";
+import { ChevronRight, GripVertical } from "lucide-react";
 
 import {
   Collapsible,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { GroupSettingsPopover } from "@/components/sidebar/GroupSettingsPopover";
 import { ChildLabelEditorPopover } from "@/components/sidebar/ChildLabelEditorPopover";
-import type { MenuItem, MenuChild } from "@/types/menu";
+import type { MenuItem, MenuChild, IconPlatform } from "@/types/menu";
 
 import {
   DndContext,
@@ -40,8 +40,13 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import * as Lucide from "lucide-react";
+import * as HeroOutline from "@heroicons/react/24/outline";
 
-type SidebarNavItem = MenuItem & { icon: LucideIcon };
+// Unified icon type used in sidebar items
+ type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+ type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+ type SidebarNavItem = MenuItem & { icon: SidebarIcon };
 
 const SortableItemContext = React.createContext<{
   attributes: DraggableAttributes;
@@ -157,7 +162,7 @@ export function NavMain({
   enableEditing = true,
   currentUserRoles,
 }: {
-  items: (Omit<MenuItem, "title"> & { title: string } & { icon: LucideIcon })[];
+  items: (Omit<MenuItem, "title"> & { title: string } & { icon: SidebarIcon })[];
   onAddChild: (parentTitle: string, label: string) => void;
   isAddingChild?: boolean;
   onUpdateParentLabel: (oldTitle: string, newTitle: string) => void;
@@ -174,8 +179,8 @@ export function NavMain({
   onRemoveChild: (parentTitle: string, childTitle: string) => void;
   isRemovingParent?: boolean;
   isRemovingChild?: boolean;
-  iconsByTitle?: Record<string, string>;
-  onUpdateParentIcon: (title: string, iconName?: string) => void;
+  iconsByTitle?: Record<string, { name: string; platform: IconPlatform }>;
+  onUpdateParentIcon: (title: string, iconName?: string, iconPlatform?: IconPlatform) => void;
   // Global toggle: show/hide all editing UI (e.g., super admin mode)
   enableEditing?: boolean;
   // Future use: role-based filtering (not enforced yet)
@@ -326,16 +331,21 @@ export function NavMain({
                         onPointerDownCapture={(e) => e.stopPropagation()}
                       >
                         {(() => {
-                          const dynamicIconName = iconsByTitle?.[item.title];
-                          const LucComp = dynamicIconName
-                            ? (Lucide[
-                                dynamicIconName as keyof typeof Lucide
-                              ] as unknown)
-                            : undefined;
-                          const DynamicIcon = LucComp
-                            ? (LucComp as LucideIcon)
-                            : item.icon;
-                          return <DynamicIcon />;
+                          const mapping = iconsByTitle?.[item.title];
+                          if (mapping) {
+                            const { name, platform } = mapping;
+                            if (platform === "heroicons") {
+                              const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
+                              const DynamicIcon: SidebarIcon = Outline[name] ?? item.icon;
+                              return <DynamicIcon className="size-4" />;
+                            } else {
+                              const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+                              const DynamicIcon: SidebarIcon = LucideIcons[name] ?? item.icon;
+                              return <DynamicIcon className="size-4" />;
+                            }
+                          }
+                          const Fallback = item.icon;
+                          return <Fallback className="size-4" />;
                         })()}
                         <span>{item.title}</span>
                       </a>
@@ -359,9 +369,9 @@ export function NavMain({
                         )}
                         actionClassName="right-14"
                         // New: edit icon for existing parent
-                        currentIconName={iconsByTitle?.[item.title]}
-                        onUpdateIcon={(title, iconName) =>
-                          onUpdateParentIcon(title, iconName)
+                        currentIcon={iconsByTitle?.[item.title]}
+                        onUpdateIcon={(title, iconName, iconPlatform) =>
+                          onUpdateParentIcon(title, iconName, iconPlatform)
                         }
                       />
                     )}

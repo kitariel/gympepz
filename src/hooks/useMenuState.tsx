@@ -7,6 +7,7 @@ import type {
   MenuItem,
   MenuChild,
   MenuCreateType,
+  IconPlatform,
 } from "@/types/menu";
 
 // Centralized menu state with optimistic updates and background persistence (+ rollback on error)
@@ -23,20 +24,20 @@ export function useMenuState() {
       : undefined;
 
   const [menu, setMenu] = React.useState<MenuConfig | undefined>(initialData);
-  // Track icon assignments locally keyed by parent title (also hydrated from backend iconName when available)
+  // Track icon assignments locally keyed by parent title (also hydrated from backend iconName/iconPlatform when available)
   const [iconsByTitle, setIconsByTitle] = React.useState<
-    Record<string, string>
+    Record<string, { name: string; platform: IconPlatform }>
   >({});
 
   // Hydrate local state whenever server data changes
   React.useEffect(() => {
     setMenu(initialData);
     // Build local icon map from server-provided iconName fields
-    const iconMap: Record<string, string> = {};
+    const iconMap: Record<string, { name: string; platform: IconPlatform }> = {};
     (initialData?.navMain ?? []).forEach((p) => {
       const trimmed = p.iconName?.trim();
       if (trimmed) {
-        iconMap[p.title] = trimmed;
+        iconMap[p.title] = { name: trimmed, platform: p.iconPlatform ?? "lucide" };
       }
     });
     setIconsByTitle(iconMap);
@@ -55,7 +56,12 @@ export function useMenuState() {
     onSuccess: () => utils.menu.getAll.invalidate(),
   });
   const addMenu = React.useCallback(
-    async (label: string, type: MenuCreateType, iconName?: string) => {
+    async (
+      label: string,
+      type: MenuCreateType,
+      iconName?: string,
+      iconPlatform?: IconPlatform,
+    ) => {
       const snapshot = menu;
       // Optimistic update
       setMenu((prev) => {
@@ -63,17 +69,20 @@ export function useMenuState() {
         const next: MenuConfig = { ...prev };
         const newItem: MenuItem =
           type === "group"
-            ? { title: label, url: "#", items: [], iconName: iconName?.trim() }
-            : { title: label, url: "#", iconName: iconName?.trim() };
+            ? { title: label, url: "#", items: [], iconName: iconName?.trim(), iconPlatform }
+            : { title: label, url: "#", iconName: iconName?.trim(), iconPlatform };
         next.navMain = [...(next.navMain ?? []), newItem];
         return next;
       });
       // Record icon selection locally
       if (iconName) {
-        setIconsByTitle((prev) => ({ ...prev, [label]: iconName.trim() }));
+        setIconsByTitle((prev) => ({
+          ...prev,
+          [label]: { name: iconName.trim(), platform: iconPlatform ?? "lucide" },
+        }));
       }
       try {
-        await createParentMutation.mutateAsync({ label, type, iconName });
+        await createParentMutation.mutateAsync({ label, type, iconName, iconPlatform });
       } catch (err) {
         // Roll back on error
         setMenu(snapshot);
@@ -140,7 +149,7 @@ export function useMenuState() {
       });
       // Maintain icon mapping across label rename
       setIconsByTitle((prev) => {
-        const next = { ...prev };
+        const next = { ...prev } as Record<string, { name: string; platform: IconPlatform }>;
         if (prev[oldTitle]) {
           next[newTitle] = prev[oldTitle];
           delete next[oldTitle];
@@ -195,33 +204,33 @@ export function useMenuState() {
   });
   // Update or clear parent icon (optimistic + persistence)
   const setParentIcon = React.useCallback(
-    (title: string, iconName?: string) => {
+    (title: string, iconName?: string, iconPlatform?: IconPlatform) => {
       const snapshot = { icons: iconsByTitle, menu };
       // Optimistic local map update
       setIconsByTitle((prev) => {
-        const next = { ...prev };
+        const next = { ...prev } as Record<string, { name: string; platform: IconPlatform }>;
         const trimmed = iconName?.trim();
         if (trimmed) {
-          next[title] = trimmed;
+          next[title] = { name: trimmed, platform: iconPlatform ?? prev[title]?.platform ?? "lucide" };
         } else {
           delete next[title];
         }
         return next;
       });
-      // Also update menu local state so iconName is reflected in menu data
+      // Also update menu local state so iconName/iconPlatform are reflected in menu data
       setMenu((prev) => {
         if (!prev) return prev;
         const next: MenuConfig = { ...prev };
         next.navMain = (next.navMain ?? []).map((p) =>
           p.title === title
-            ? { ...p, iconName: iconName?.trim() ?? undefined }
+            ? { ...p, iconName: iconName?.trim() ?? undefined, iconPlatform: iconName ? (iconPlatform ?? p.iconPlatform ?? "lucide") : undefined }
             : p,
         );
         return next;
       });
       // Persist to backend
       try {
-        void updateParentIconMutation.mutateAsync({ title, iconName });
+        void updateParentIconMutation.mutateAsync({ title, iconName, iconPlatform });
       } catch (err) {
         // Roll back icon map and menu state on error
         setIconsByTitle(snapshot.icons);
@@ -313,7 +322,7 @@ export function useMenuState() {
       });
       // Remove any icon mapping for this parent
       setIconsByTitle((prev) => {
-        const next = { ...prev };
+        const next = { ...prev } as Record<string, { name: string; platform: IconPlatform }>;
         delete next[title];
         return next;
       });

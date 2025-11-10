@@ -11,13 +11,17 @@ export type MenuChild = {
   enabled?: boolean;
 };
 
+export type IconPlatform = "lucide" | "heroicons";
+
 export type MenuItem = {
   title: string;
   url: string;
   isActive?: boolean;
   items?: MenuChild[];
-  // Optional icon name for this parent item (Lucide icon name)
+  // Optional icon name for this parent item
   iconName?: string;
+  // Optional icon platform (lucide or heroicons)
+  iconPlatform?: IconPlatform;
   // Optional roles that can view this parent item
   roles?: Role[];
   // Whether this parent is enabled/visible for non-admin views
