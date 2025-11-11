@@ -364,6 +364,58 @@ export function useMenuState() {
     [menu, deleteChildMutation],
   );
 
+  // Update parent URL
+  const updateParentUrlMutation = api.menu.updateParentUrl.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const updateParentUrl = React.useCallback(
+    async (title: string, url: string) => {
+      const snapshot = menu;
+      setMenu((prev) => {
+        if (!prev) return prev;
+        const next: MenuConfig = { ...prev };
+        next.navMain = (next.navMain ?? []).map((p) =>
+          p.title === title ? { ...p, url } : p,
+        );
+        return next;
+      });
+      try {
+        await updateParentUrlMutation.mutateAsync({ title, url });
+      } catch (err) {
+        setMenu(snapshot);
+      }
+    },
+    [menu, updateParentUrlMutation],
+  );
+
+  // Update child URL
+  const updateChildUrlMutation = api.menu.updateChildUrl.useMutation({
+    onSuccess: () => utils.menu.getAll.invalidate(),
+  });
+  const updateChildUrl = React.useCallback(
+    async (parentTitle: string, childTitle: string, url: string) => {
+      const snapshot = menu;
+      setMenu((prev) => {
+        if (!prev) return prev;
+        const next: MenuConfig = { ...prev };
+        next.navMain = (next.navMain ?? []).map((p) => {
+          if (p.title !== parentTitle) return p;
+          const updatedChildren = (p.items ?? []).map((c) =>
+            c.title === childTitle ? { ...c, url } : c,
+          );
+          return { ...p, items: updatedChildren };
+        });
+        return next;
+      });
+      try {
+        await updateChildUrlMutation.mutateAsync({ parentTitle, childTitle, url });
+      } catch (err) {
+        setMenu(snapshot);
+      }
+    },
+    [menu, updateChildUrlMutation],
+  );
+
   return {
     menu,
     isLoading: Boolean(isLoading),
@@ -378,6 +430,8 @@ export function useMenuState() {
     findParentIndex,
     iconsByTitle,
     setParentIcon,
+    updateParentUrl,
+    updateChildUrl,
     isCreating: Boolean(createParentMutation?.isPending),
     isAddingChild: Boolean(createChildMutation?.isPending),
     isUpdatingParentLabel: Boolean(updateParentLabelMutation?.isPending),

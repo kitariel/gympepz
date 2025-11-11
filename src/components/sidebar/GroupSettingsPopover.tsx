@@ -47,6 +47,9 @@ export function GroupSettingsPopover({
   onUpdateIcon,
   hasChildren,
   actionClassName = "right-7",
+  // New: URL props
+  currentUrl,
+  onUpdateUrl,
 }: {
   parentTitle: string;
   onUpdateLabel: (oldTitle: string, newTitle: string) => void;
@@ -59,8 +62,12 @@ export function GroupSettingsPopover({
   onUpdateIcon: (title: string, iconName?: string, iconPlatform?: IconPlatform) => void;
   hasChildren?: boolean;
   actionClassName?: string;
+  // New: URL props
+  currentUrl?: string;
+  onUpdateUrl?: (title: string, url: string) => void;
 }) {
   const [groupLabel, setGroupLabel] = React.useState(parentTitle);
+  const [groupUrl, setGroupUrl] = React.useState<string>(currentUrl ?? "#");
   const [childLabel, setChildLabel] = React.useState("");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [iconPlatform, setIconPlatform] = React.useState<IconPlatform>(
@@ -81,15 +88,21 @@ export function GroupSettingsPopover({
     setGroupLabel(parentTitle);
   }, [parentTitle]);
 
-  // Debounce group label updates by 500ms
   React.useEffect(() => {
-    const trimmed = groupLabel.trim();
-    if (!trimmed || trimmed === parentTitle) return;
-    const handle = setTimeout(() => {
-      onUpdateLabel(parentTitle, trimmed);
-    }, 500);
-    return () => clearTimeout(handle);
-  }, [groupLabel, parentTitle, onUpdateLabel]);
+    setGroupUrl(currentUrl ?? "#");
+  }, [currentUrl]);
+
+  // Remove auto-save: manual Save button will persist label and URL changes
+  const handleSaveInfo = React.useCallback(() => {
+    const trimmedLabel = groupLabel.trim();
+    const trimmedUrl = groupUrl.trim();
+    if (trimmedLabel && trimmedLabel !== parentTitle) {
+      onUpdateLabel(parentTitle, trimmedLabel);
+    }
+    if (onUpdateUrl && trimmedUrl && trimmedUrl !== (currentUrl ?? "#")) {
+      onUpdateUrl(parentTitle, trimmedUrl);
+    }
+  }, [groupLabel, groupUrl, parentTitle, currentUrl, onUpdateLabel, onUpdateUrl]);
 
   const canAddChild = Boolean(childLabel.trim()) && !Boolean(isAddingChild);
 
@@ -228,6 +241,17 @@ export function GroupSettingsPopover({
               value={groupLabel}
               onChange={(e) => setGroupLabel(e.target.value)}
             />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Group URL</label>
+            <Input
+              placeholder="https://example.com/path or /path"
+              value={groupUrl}
+              onChange={(e) => setGroupUrl(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end border-t pt-3">
+            <Button variant="secondary" onClick={handleSaveInfo}>Save changes</Button>
           </div>
           {/* Icon editing for existing parent */}
           <div className="grid gap-2">

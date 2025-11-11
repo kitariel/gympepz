@@ -139,6 +139,32 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
+  // New: update parent URL
+  updateParentUrl: publicProcedure
+    .input(z.object({ title: z.string().min(1), url: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.title);
+      if (!parent) throw new Error(`Parent item not found: ${input.title}`);
+      parent.url = input.url;
+      await writeConfig(config);
+      return { ok: true };
+    }),
+  // New: update child URL
+  updateChildUrl: publicProcedure
+    .input(
+      z.object({ parentTitle: z.string().min(1), childTitle: z.string().min(1), url: z.string().min(1) }),
+    )
+    .mutation(async ({ input }) => {
+      const config = await readConfig();
+      const parent = config.navMain.find((i) => i.title === input.parentTitle);
+      if (!parent) throw new Error(`Parent item not found: ${input.parentTitle}`);
+      const child = parent.items?.find((c) => c.title === input.childTitle);
+      if (!child) throw new Error(`Child item not found: ${input.childTitle}`);
+      child.url = input.url;
+      await writeConfig(config);
+      return { ok: true };
+    }),
   reorderNavMain: publicProcedure
     .input(z.object({ orderedTitles: z.array(z.string().min(1)).min(1) }))
     .mutation(async ({ input }) => {

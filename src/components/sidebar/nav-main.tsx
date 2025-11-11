@@ -159,6 +159,9 @@ export function NavMain({
   isRemovingChild,
   iconsByTitle,
   onUpdateParentIcon,
+  // New URL update handlers
+  onUpdateParentUrl,
+  onUpdateChildUrl,
   enableEditing = true,
   currentUserRoles,
 }: {
@@ -181,6 +184,9 @@ export function NavMain({
   isRemovingChild?: boolean;
   iconsByTitle?: Record<string, { name: string; platform: IconPlatform }>;
   onUpdateParentIcon: (title: string, iconName?: string, iconPlatform?: IconPlatform) => void;
+  // New URL update handlers
+  onUpdateParentUrl: (title: string, url: string) => void;
+  onUpdateChildUrl: (parentTitle: string, childTitle: string, url: string) => void;
   // Global toggle: show/hide all editing UI (e.g., super admin mode)
   enableEditing?: boolean;
   // Future use: role-based filtering (not enforced yet)
@@ -373,6 +379,9 @@ export function NavMain({
                         onUpdateIcon={(title, iconName, iconPlatform) =>
                           onUpdateParentIcon(title, iconName, iconPlatform)
                         }
+                        // New: URL editing for parent
+                        currentUrl={item.url}
+                        onUpdateUrl={(title, url) => onUpdateParentUrl(title, url)}
                       />
                     )}
                     {enableEditing && <ParentDragHandle className="right-7" />}
@@ -432,7 +441,12 @@ export function NavMain({
                                           isRemovingChild={Boolean(
                                             isRemovingChild,
                                           )}
-                                          actionClassName="right-14"
+                                          actionClassName="right-7"
+                                          // New: URL editing for child
+                                          currentUrl={subItem.url}
+                                          onUpdateUrl={(childTitle, url) =>
+                                            onUpdateChildUrl(item.title, childTitle, url)
+                                          }
                                         />
                                       )}
                                       {enableEditing && (

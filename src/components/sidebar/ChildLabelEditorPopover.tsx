@@ -27,6 +27,9 @@ export function ChildLabelEditorPopover({
   onRemoveChild,
   isRemovingChild,
   actionClassName = "right-7",
+  // New: URL editing support
+  currentUrl,
+  onUpdateUrl,
 }: {
   childLabel: string;
   onUpdateLabel: (oldLabel: string, newLabel: string) => void;
@@ -34,23 +37,33 @@ export function ChildLabelEditorPopover({
   onRemoveChild: (label: string) => void;
   isRemovingChild?: boolean;
   actionClassName?: string;
+  // New: URL editing support
+  currentUrl?: string;
+  onUpdateUrl?: (label: string, url: string) => void;
 }) {
   const [label, setLabel] = React.useState(childLabel);
+  const [url, setUrl] = React.useState<string>(currentUrl ?? "#");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   React.useEffect(() => {
     setLabel(childLabel);
   }, [childLabel]);
 
-  // Debounce label updates by 500ms
   React.useEffect(() => {
-    const trimmed = label?.trim();
-    if (!trimmed || trimmed === childLabel) return;
-    const handle = setTimeout(() => {
-      onUpdateLabel(childLabel, trimmed);
-    }, 500);
-    return () => clearTimeout(handle);
-  }, [label, childLabel, onUpdateLabel]);
+    setUrl(currentUrl ?? "#");
+  }, [currentUrl]);
+
+  // Remove auto-save: manual Save button will persist changes
+  const handleSave = React.useCallback(() => {
+    const trimmedLabel = label?.trim();
+    const trimmedUrl = url?.trim();
+    if (trimmedLabel && trimmedLabel !== childLabel) {
+      onUpdateLabel(childLabel, trimmedLabel);
+    }
+    if (onUpdateUrl && trimmedUrl && trimmedUrl !== (currentUrl ?? "#")) {
+      onUpdateUrl(childLabel, trimmedUrl);
+    }
+  }, [label, url, childLabel, currentUrl, onUpdateLabel, onUpdateUrl]);
 
   const handleRemoveChild = React.useCallback(() => {
     onRemoveChild(childLabel);
@@ -74,6 +87,17 @@ export function ChildLabelEditorPopover({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Child URL</label>
+            <Input
+              placeholder="https://example.com/path or /path"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+          <div className="border-t pt-3 flex justify-end">
+            <Button variant="secondary" onClick={handleSave}>Save changes</Button>
           </div>
           <div className="border-t pt-3">
             <Button

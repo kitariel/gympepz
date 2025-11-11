@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/sidebar";
 import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
 import { useMenuState } from "@/hooks/useMenuState";
+import { useHeaderState } from "@/hooks/useHeaderState";
+import { HeaderSettingsPopover } from "@/components/sidebar/HeaderSettingsPopover";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   // Global toggle for editing UI (super admin mode)
@@ -57,6 +59,9 @@ export function AppSidebar({
     isRemovingChild,
     iconsByTitle,
     setParentIcon,
+    // New: URL update handlers
+    updateParentUrl,
+    updateChildUrl,
   } = useMenuState();
 
   // Resolve icon component per item based on icon platform + name
@@ -69,15 +74,12 @@ export function AppSidebar({
     const { name, platform } = mapping;
     if (platform === "heroicons") {
       const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
-      const IconComp = Outline[name as keyof typeof Outline];
-      return IconComp ?? fallback;
+      const IconComp = Outline[name] ?? fallback;
+      return IconComp;
     }
-    const LucideIcons = Lucide as unknown as Record<
-      string,
-      import("lucide-react").LucideIcon
-    >;
-    const LucComp = LucideIcons[name as keyof typeof LucideIcons];
-    return LucComp ?? fallback;
+    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+    const LucComp = (LucideIcons[name] as unknown as SidebarIcon) ?? fallback;
+    return LucComp;
   };
 
   const navMain = (menu?.navMain ?? []).map((item) => {
@@ -107,6 +109,26 @@ export function AppSidebar({
     };
   });
 
+  // Header config state
+  const { header, updateHeader } = useHeaderState();
+
+  // Determine header icon
+  const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
+  const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+  const HeaderIcon: SidebarIcon = (() => {
+    const name = header?.iconName;
+    const platform = header?.iconPlatform ?? "lucide";
+    if (name && platform === "heroicons") {
+      const CompHero: SidebarIcon = (Outline[name] ?? Command) as SidebarIcon;
+      return CompHero;
+    }
+    if (name) {
+      const CompLucide: SidebarIcon = (LucideIcons[name] ?? Command) as SidebarIcon;
+      return CompLucide;
+    }
+    return Command as SidebarIcon;
+  })();
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -115,14 +137,27 @@ export function AppSidebar({
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                  <HeaderIcon className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">{header?.title ?? "Acme Inc"}</span>
+                  {header?.subtitle ? (
+                    <span className="truncate text-xs">{header.subtitle}</span>
+                  ) : null}
                 </div>
               </a>
             </SidebarMenuButton>
+            {/* Header settings */}
+            <HeaderSettingsPopover
+              config={{
+                title: header?.title ?? "Acme Inc",
+                subtitle: header?.subtitle,
+                iconName: header?.iconName,
+                iconPlatform: header?.iconPlatform ?? "lucide",
+              }}
+              onUpdate={(next) => updateHeader(next)}
+              actionClassName="right-7"
+            />
           </SidebarMenuItem>
           {/* Plus button to add menu items */}
           <SidebarMenuItem>
@@ -162,6 +197,11 @@ export function AppSidebar({
             iconName?: string,
             iconPlatform?: IconPlatform,
           ) => setParentIcon(title, iconName, iconPlatform)}
+          // New: URL editing
+          onUpdateParentUrl={(title, url) => updateParentUrl(title, url)}
+          onUpdateChildUrl={(parentTitle, childTitle, url) =>
+            updateChildUrl(parentTitle, childTitle, url)
+          }
           // Global editing toggle and planned roles (future)
           enableEditing={enableEditing}
           currentUserRoles={currentUserRoles}
