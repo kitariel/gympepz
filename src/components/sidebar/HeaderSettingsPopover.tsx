@@ -2,13 +2,23 @@
 import * as React from "react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
-import { Settings, LayoutGrid, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Settings,
+  LayoutGrid,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SidebarMenuAction } from "@/components/ui/sidebar";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import type { IconPlatform } from "@/types/menu";
 import {
   DropdownMenu,
@@ -26,13 +36,25 @@ export function HeaderSettingsPopover({
   onUpdate,
   actionClassName = "right-7",
 }: {
-  config: { title: string; subtitle?: string; iconName?: string; iconPlatform?: IconPlatform };
-  onUpdate: (next: { title: string; subtitle?: string; iconName?: string; iconPlatform?: IconPlatform }) => void;
+  config: {
+    title: string;
+    subtitle?: string;
+    iconName?: string;
+    iconPlatform?: IconPlatform;
+  };
+  onUpdate: (next: {
+    title: string;
+    subtitle?: string;
+    iconName?: string;
+    iconPlatform?: IconPlatform;
+  }) => void;
   actionClassName?: string;
 }) {
   const [title, setTitle] = React.useState<string>(config.title);
   const [subtitle, setSubtitle] = React.useState<string>(config.subtitle ?? "");
-  const [iconPlatform, setIconPlatform] = React.useState<IconPlatform>(config.iconPlatform ?? "lucide");
+  const [iconPlatform, setIconPlatform] = React.useState<IconPlatform>(
+    config.iconPlatform ?? "lucide",
+  );
   const [iconName, setIconName] = React.useState<string>(config.iconName ?? "");
 
   React.useEffect(() => {
@@ -52,7 +74,10 @@ export function HeaderSettingsPopover({
   const [page, setPage] = React.useState<number>(0);
 
   const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
-  const LucideIcons = Lucide as unknown as Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>;
+  const LucideIcons = Lucide as unknown as Record<
+    string,
+    React.ComponentType<React.SVGProps<SVGSVGElement>>
+  >;
 
   const allLucideNames = React.useMemo(() => {
     return Object.keys(Lucide as unknown as Record<string, unknown>).filter(
@@ -64,13 +89,79 @@ export function HeaderSettingsPopover({
   const categories: { key: string; label: string; matchers?: string[] }[] = [
     { key: "all", label: "All" },
     { key: "arrows", label: "Arrows", matchers: ["Arrow", "Chevron"] },
-    { key: "media", label: "Media", matchers: ["Play", "Pause", "Stop", "Video", "Music", "Mic", "Headphones", "Volume", "Camera"] },
-    { key: "files", label: "Files", matchers: ["File", "Folder", "Archive", "Book", "Notebook", "Clipboard"] },
-    { key: "interface", label: "Interface", matchers: ["Settings", "Menu", "Home", "User", "Bell", "Search", "Star", "Heart", "Alert", "Calendar", "Clock"] },
-    { key: "commerce", label: "Commerce", matchers: ["Cart", "Bank", "Wallet", "CreditCard", "Coin", "Dollar", "Bitcoin", "Store"] },
-    { key: "maps", label: "Maps", matchers: ["Map", "Pin", "Location", "Navigation", "Globe", "Compass"] },
-    { key: "text", label: "Text", matchers: ["Bold", "Italic", "Underline", "Align", "List", "Text"] },
-    { key: "shapes", label: "Shapes", matchers: ["Square", "Circle", "Triangle", "Hexagon", "Octagon", "Diamond"] },
+    {
+      key: "media",
+      label: "Media",
+      matchers: [
+        "Play",
+        "Pause",
+        "Stop",
+        "Video",
+        "Music",
+        "Mic",
+        "Headphones",
+        "Volume",
+        "Camera",
+      ],
+    },
+    {
+      key: "files",
+      label: "Files",
+      matchers: ["File", "Folder", "Archive", "Book", "Notebook", "Clipboard"],
+    },
+    {
+      key: "interface",
+      label: "Interface",
+      matchers: [
+        "Settings",
+        "Menu",
+        "Home",
+        "User",
+        "Bell",
+        "Search",
+        "Star",
+        "Heart",
+        "Alert",
+        "Calendar",
+        "Clock",
+      ],
+    },
+    {
+      key: "commerce",
+      label: "Commerce",
+      matchers: [
+        "Cart",
+        "Bank",
+        "Wallet",
+        "CreditCard",
+        "Coin",
+        "Dollar",
+        "Bitcoin",
+        "Store",
+      ],
+    },
+    {
+      key: "maps",
+      label: "Maps",
+      matchers: ["Map", "Pin", "Location", "Navigation", "Globe", "Compass"],
+    },
+    {
+      key: "text",
+      label: "Text",
+      matchers: ["Bold", "Italic", "Underline", "Align", "List", "Text"],
+    },
+    {
+      key: "shapes",
+      label: "Shapes",
+      matchers: [
+        "Square",
+        "Circle",
+        "Triangle",
+        "Hexagon",
+        "Octagon",
+        "Diamond",
+      ],
+    },
   ];
 
   const PAGE_SIZE = 25;
@@ -86,11 +177,22 @@ export function HeaderSettingsPopover({
     const namesByCat = names.filter((n) => byCategory(n));
     if (!term) return namesByCat;
     return namesByCat.filter((n) => n.toLowerCase().includes(term));
-  }, [allLucideNames, allHeroNames, iconSearch, selectedCategory, iconPlatform]);
+  }, [
+    allLucideNames,
+    allHeroNames,
+    iconSearch,
+    selectedCategory,
+    iconPlatform,
+  ]);
   const totalPages = Math.max(1, Math.ceil(filteredNames.length / PAGE_SIZE));
   const pageSafe = Math.min(page, totalPages - 1);
-  const pagedNames = filteredNames.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
-  React.useEffect(() => { setPage(0); }, [iconSearch, selectedCategory, iconPlatform]);
+  const pagedNames = filteredNames.slice(
+    pageSafe * PAGE_SIZE,
+    pageSafe * PAGE_SIZE + PAGE_SIZE,
+  );
+  React.useEffect(() => {
+    setPage(0);
+  }, [iconSearch, selectedCategory, iconPlatform]);
 
   const PreviewIcon: SidebarIcon | undefined = iconName
     ? iconPlatform === "heroicons"
@@ -149,110 +251,161 @@ export function HeaderSettingsPopover({
           <div className="grid gap-2">
             <label className="text-sm font-medium">Search icons</label>
             <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-            <Input
-            value={iconSearch}
-            onChange={(e) => {
-            setIconSearch(e.target.value);
-            setIconName(e.target.value);
-            }}
-            placeholder={iconPlatform === "lucide" ? "Lucide icon name" : "Heroicon name"}
-            className="pl-8"
-            />
-            <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
+              <div className="relative flex-1">
+                <Input
+                  value={iconSearch}
+                  onChange={(e) => {
+                    setIconSearch(e.target.value);
+                    setIconName(e.target.value);
+                  }}
+                  placeholder={
+                    iconPlatform === "lucide"
+                      ? "Lucide icon name"
+                      : "Heroicon name"
+                  }
+                  className="pl-8"
+                />
+                <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
+              </div>
+              <Popover open={browseOpen} onOpenChange={setBrowseOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label="Browse icons"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="ml-1">Browse</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="my-2 w-[480px]">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          Category:{" "}
+                          {categories.find((c) => c.key === selectedCategory)
+                            ?.label ?? "All"}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        {categories.map((cat) => (
+                          <DropdownMenuItem
+                            key={cat.key}
+                            onClick={() => setSelectedCategory(cat.key)}
+                          >
+                            {cat.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={pageSafe <= 0}
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span>
+                        Page {pageSafe + 1} of {totalPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={pageSafe >= totalPages - 1}
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages - 1, p + 1))
+                        }
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {pagedNames.map((name) => {
+                      const IconComp =
+                        iconPlatform === "lucide"
+                          ? ((LucideIcons[name] ??
+                              undefined) as unknown as React.ComponentType<{
+                              className?: string;
+                            }>)
+                          : ((Outline[name] ??
+                              undefined) as unknown as React.ComponentType<{
+                              className?: string;
+                            }>);
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          className="hover:bg-muted flex flex-col items-center gap-1 rounded border p-2"
+                          onClick={() => {
+                            setIconName(name);
+                            setIconSearch(name);
+                            setBrowseOpen(false);
+                          }}
+                        >
+                          {IconComp ? (
+                            <IconComp className="h-6 w-6" />
+                          ) : (
+                            <span className="text-[10px]">no</span>
+                          )}
+                          <span className="max-w-24 truncate text-[11px]">
+                            {name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {pagedNames.length === 0 && (
+                      <div className="text-muted-foreground col-span-5 py-6 text-center text-xs">
+                        No icons found
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIconName("")}
+              >
+                Clear
+              </Button>
             </div>
-            <Popover open={browseOpen} onOpenChange={setBrowseOpen}>
-            <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="sm" aria-label="Browse icons">
-            <LayoutGrid className="h-4 w-4" />
-            <span className="ml-1">Browse</span>
-            </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="my-2 w-[480px]">
-            <div className="mb-2 flex items-center justify-between gap-2">
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-            Category:{" "}
-            {categories.find((c) => c.key === selectedCategory)?.label ?? "All"}
-            </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-            {categories.map((cat) => (
-            <DropdownMenuItem key={cat.key} onClick={() => setSelectedCategory(cat.key)}>
-            {cat.label}
-            </DropdownMenuItem>
-            ))}
-            </DropdownMenuContent>
-            </DropdownMenu>
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <Button type="button" variant="outline" size="icon" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-            <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span>
-            Page {pageSafe + 1} of {totalPages}
-            </span>
-            <Button type="button" variant="outline" size="icon" disabled={pageSafe >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
-            <ChevronRight className="h-4 w-4" />
-            </Button>
-            </div>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-            {pagedNames.map((name) => {
-            const IconComp = iconPlatform === "lucide"
-            ? ((LucideIcons[name] ?? undefined) as unknown as React.ComponentType<{ className?: string }>)
-            : ((Outline[name] ?? undefined) as unknown as React.ComponentType<{ className?: string }>);
-            return (
-            <button
-            key={name}
-            type="button"
-            className="hover:bg-muted flex flex-col items-center gap-1 rounded border p-2"
-            onClick={() => {
-            setIconName(name);
-            setIconSearch(name);
-            setBrowseOpen(false);
-            }}
-            >
-            {IconComp ? (
-            <IconComp className="h-6 w-6" />
-            ) : (
-            <span className="text-[10px]">no</span>
-            )}
-            <span className="max-w-24 truncate text-[11px]">{name}</span>
-            </button>
-            );
-            })}
-            {pagedNames.length === 0 && (
-            <div className="text-muted-foreground col-span-5 py-6 text-center text-xs">No icons found</div>
-            )}
-            </div>
-            </PopoverContent>
-            </Popover>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setIconName("")}>Clear</Button>
-            </div>
-            <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded border">
-            {PreviewIcon ? (
-            <PreviewIcon className="h-4 w-4" />
-            ) : (
-            <span className="text-[10px]">no</span>
-            )}
-            </span>
-            <span>{PreviewIcon ? "Preview" : "No match"}</span>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded border">
+                {PreviewIcon ? (
+                  <PreviewIcon className="h-4 w-4" />
+                ) : (
+                  <span className="text-[10px]">no</span>
+                )}
+              </span>
+              <span>{PreviewIcon ? "Preview" : "No match"}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              {PreviewIcon ? <PreviewIcon className="size-4" /> : <span className="text-xs">No icon</span>}
+              {PreviewIcon ? (
+                <PreviewIcon className="size-4" />
+              ) : (
+                <span className="text-xs">No icon</span>
+              )}
             </div>
             <div className="grid text-left text-sm leading-tight">
-              <span className="truncate font-medium">{title || "Untitled"}</span>
+              <span className="truncate font-medium">
+                {title || "Untitled"}
+              </span>
               {subtitle ? (
                 <span className="truncate text-xs">{subtitle}</span>
               ) : null}
             </div>
           </div>
-          <div className="border-t pt-3 flex justify-end">
+          <div className="flex justify-end border-t pt-3">
             <Button
               variant="secondary"
               onClick={() => {

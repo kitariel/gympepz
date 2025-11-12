@@ -43,10 +43,10 @@ import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
 
 // Unified icon type used in sidebar items
- type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
- type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
- type SidebarNavItem = MenuItem & { icon: SidebarIcon };
+type SidebarNavItem = MenuItem & { icon: SidebarIcon };
 
 const SortableItemContext = React.createContext<{
   attributes: DraggableAttributes;
@@ -163,9 +163,10 @@ export function NavMain({
   onUpdateParentUrl,
   onUpdateChildUrl,
   enableEditing = true,
-  currentUserRoles,
 }: {
-  items: (Omit<MenuItem, "title"> & { title: string } & { icon: SidebarIcon })[];
+  items: (Omit<MenuItem, "title"> & { title: string } & {
+    icon: SidebarIcon;
+  })[];
   onAddChild: (parentTitle: string, label: string) => void;
   isAddingChild?: boolean;
   onUpdateParentLabel: (oldTitle: string, newTitle: string) => void;
@@ -183,10 +184,18 @@ export function NavMain({
   isRemovingParent?: boolean;
   isRemovingChild?: boolean;
   iconsByTitle?: Record<string, { name: string; platform: IconPlatform }>;
-  onUpdateParentIcon: (title: string, iconName?: string, iconPlatform?: IconPlatform) => void;
+  onUpdateParentIcon: (
+    title: string,
+    iconName?: string,
+    iconPlatform?: IconPlatform,
+  ) => void;
   // New URL update handlers
   onUpdateParentUrl: (title: string, url: string) => void;
-  onUpdateChildUrl: (parentTitle: string, childTitle: string, url: string) => void;
+  onUpdateChildUrl: (
+    parentTitle: string,
+    childTitle: string,
+    url: string,
+  ) => void;
   // Global toggle: show/hide all editing UI (e.g., super admin mode)
   enableEditing?: boolean;
   // Future use: role-based filtering (not enforced yet)
@@ -341,12 +350,20 @@ export function NavMain({
                           if (mapping) {
                             const { name, platform } = mapping;
                             if (platform === "heroicons") {
-                              const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
-                              const DynamicIcon: SidebarIcon = Outline[name] ?? item.icon;
+                              const Outline = HeroOutline as unknown as Record<
+                                string,
+                                HeroIcon
+                              >;
+                              const DynamicIcon: SidebarIcon =
+                                Outline[name] ?? item.icon;
                               return <DynamicIcon className="size-4" />;
                             } else {
-                              const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
-                              const DynamicIcon: SidebarIcon = LucideIcons[name] ?? item.icon;
+                              const LucideIcons = Lucide as unknown as Record<
+                                string,
+                                import("lucide-react").LucideIcon
+                              >;
+                              const DynamicIcon: SidebarIcon =
+                                LucideIcons[name] ?? item.icon;
                               return <DynamicIcon className="size-4" />;
                             }
                           }
@@ -381,7 +398,9 @@ export function NavMain({
                         }
                         // New: URL editing for parent
                         currentUrl={item.url}
-                        onUpdateUrl={(title, url) => onUpdateParentUrl(title, url)}
+                        onUpdateUrl={(title, url) =>
+                          onUpdateParentUrl(title, url)
+                        }
                       />
                     )}
                     {enableEditing && <ParentDragHandle className="right-7" />}
@@ -445,7 +464,11 @@ export function NavMain({
                                           // New: URL editing for child
                                           currentUrl={subItem.url}
                                           onUpdateUrl={(childTitle, url) =>
-                                            onUpdateChildUrl(item.title, childTitle, url)
+                                            onUpdateChildUrl(
+                                              item.title,
+                                              childTitle,
+                                              url,
+                                            )
                                           }
                                         />
                                       )}

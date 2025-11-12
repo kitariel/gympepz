@@ -147,17 +147,19 @@ export function AppSidebar({
                 </div>
               </a>
             </SidebarMenuButton>
-            {/* Header settings */}
-            <HeaderSettingsPopover
-              config={{
-                title: header?.title ?? "Acme Inc",
-                subtitle: header?.subtitle,
-                iconName: header?.iconName,
-                iconPlatform: header?.iconPlatform ?? "lucide",
-              }}
-              onUpdate={(next) => updateHeader(next)}
-              actionClassName="right-7"
-            />
+            {/* Header settings - gated by enableEditing */}
+            {enableEditing && (
+              <HeaderSettingsPopover
+                config={{
+                  title: header?.title ?? "Acme Inc",
+                  subtitle: header?.subtitle,
+                  iconName: header?.iconName,
+                  iconPlatform: header?.iconPlatform ?? "lucide",
+                }}
+                onUpdate={(next) => updateHeader(next)}
+                actionClassName="right-7"
+              />
+            )}
           </SidebarMenuItem>
           {/* Plus button to add menu items */}
           <SidebarMenuItem>
