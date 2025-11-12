@@ -29,12 +29,12 @@ export const authRouter = createTRPCRouter({
       const { email } = input;
       const existing = await ctx.db.user.findUnique({ where: { email } });
 
-      // Existing account with password -> prompt login
+      // Existing account with password -> prompt password login
       if (existing?.passwordHash) {
-        return { status: "has_password" as const };
+        return { status: "exists_with_password" as const };
       }
 
-      // Existing account without password (e.g., Google/pending) -> ask to set password
+      // Existing account without password -> send OTP and indicate next step
       if (existing) {
         // Rate-limit OTP requests: block if requested < 60s ago
         if (
@@ -60,12 +60,12 @@ export const authRouter = createTRPCRouter({
           },
         });
 
-        // Simulate email sending for testing: log and return the OTP
+        // Simulate email sending: log and return the OTP
         console.log(`[OTP] ${email}: ${code} (expires at ${expires.toISOString()})`);
-        return { status: "otp_sent" as const, otp: code };
+        return { status: "exists_no_password" as const, otp: code };
       }
 
-      // New user
+      // New user -> create and send OTP
       const code = generateOTP();
       const hash = await bcrypt.hash(code, 10);
       const expires = new Date(Date.now() + 10 * 60_000);

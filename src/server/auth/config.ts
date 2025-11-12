@@ -16,6 +16,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      status?: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -43,29 +44,36 @@ export const authConfig = {
         const { email, password } = parsed.data;
 
         const user = await db.user.findUnique({ where: { email } });
-        if (!user?.passwordHash) return null;
+        if (!user) return null;
 
+        // If user exists but has no password yet, instruct client to complete registration
+        if (!user.passwordHash) {
+          throw new Error("NO_PASSWORD");
+        }
+
+        // Account lock check
         if (user.lockUntil && new Date(user.lockUntil).getTime() > Date.now()) {
-          // Deny login while locked
-          return null;
+          throw new Error("LOCKED");
         }
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) {
           const attempts = (user.failedLoginAttempts ?? 0) + 1;
           let lockUntil: Date | null = null;
-          if (attempts >= 5) {
-            lockUntil = new Date(Date.now() + 15 * 60_000);
+          const MAX_FAILED_ATTEMPTS = 5;
+          const LOCK_MINUTES = 15;
+          if (attempts >= MAX_FAILED_ATTEMPTS) {
+            lockUntil = new Date(Date.now() + LOCK_MINUTES * 60_000);
           }
           await db.user.update({
             where: { id: user.id },
-            data: { failedLoginAttempts: attempts, lockUntil },
+            data: { failedLoginAttempts: lockUntil ? 0 : attempts, lockUntil },
           });
-          return null;
+          throw new Error("INVALID_CREDENTIALS");
         }
 
         if (user.status !== "active") {
-          return null;
+          throw new Error("INACTIVE");
         }
 
         // Reset counters on success
@@ -74,17 +82,30 @@ export const authConfig = {
           data: { failedLoginAttempts: 0, lockUntil: null },
         });
 
-        return { id: user.id, email: user.email };
+        // Return minimal user data required by NextAuth (id and email)
+        return { id: user.id, email: user.email ?? null };
       },
     }),
   ],
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async jwt({ token }) {
+      // No custom fields added to JWT to avoid type augmentation complexity
+      return token;
+    },
+    async session({ session }) {
+      // Populate id and status on session.user by looking up the user by email
+      const email = session.user?.email ?? null;
+      if (email) {
+        const dbUser = await db.user.findUnique({
+          where: { email },
+          select: { id: true, status: true },
+        });
+        if (dbUser) {
+          session.user.id = dbUser.id;
+          session.user.status = dbUser.status ?? null;
+        }
+      }
+      return session;
+    },
   },
 } satisfies NextAuthConfig;

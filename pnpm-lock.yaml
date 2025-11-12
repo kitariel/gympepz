@@ -21,7 +21,7 @@ dependencies:
     specifier: ^2.1.5
     version: 2.2.0(react@19.2.0)
   '@prisma/client':
-    specifier: ^6.6.0
+    specifier: ^6.12.0
     version: 6.19.0(prisma@6.19.0)(typescript@5.9.3)
   '@radix-ui/react-alert-dialog':
     specifier: ^1.1.15

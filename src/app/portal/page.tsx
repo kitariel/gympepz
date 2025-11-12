@@ -1,27 +1,28 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { LogoutButton } from "@/components/auth/logout-button";
+import { auth } from "@/server/auth";
+import { redirect } from "next/navigation";
 
-export default function Page() {
+export default async function Page() {
+  const session = await auth();
+  if (!session) {
+    redirect("/login");
+  }
+
+  const email = session.user?.email ?? "user";
+
   return (
     <SidebarProvider>
-      <AppSidebar enableEditing={true} />
+      <AppSidebar enableEditing={false} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600">Welcome, {email}</span>
+            <LogoutButton />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
