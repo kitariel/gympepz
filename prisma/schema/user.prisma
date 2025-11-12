@@ -1,0 +1,19 @@
+model User {
+    id                  String     @id @default(cuid())
+    email               String     @unique
+    passwordHash        String?
+    otpCodeHash         String?
+    otpExpiresAt        DateTime?
+    otpRequestedAt      DateTime?
+    // New: verification attempt rate limiting
+    otpVerifyAttempts   Int        @default(0)
+    otpVerifyLockUntil  DateTime?
+    status              UserStatus @default(otp_sent)
+    failedLoginAttempts Int        @default(0)
+    lockUntil           DateTime?
+    createdAt           DateTime   @default(now())
+    updatedAt           DateTime   @updatedAt
+
+    accounts Account[]
+    sessions Session[]
+}
