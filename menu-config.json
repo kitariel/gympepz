@@ -2,7 +2,7 @@
   "navMain": [
     {
       "title": "Discover",
-      "url": "/portal",
+      "url": "/portal/discover",
       "iconName": "Compass",
       "iconPlatform": "lucide",
       "enabled": true
