@@ -30,6 +30,7 @@ const CredsSchema = z.object({
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  */
 export const authConfig = {
+  session: { strategy: "jwt" },
   adapter: PrismaAdapter(db),
   providers: [
     Credentials({
@@ -90,7 +91,7 @@ export const authConfig = {
   ],
   callbacks: {
     async jwt({ token }) {
-      // No custom fields added to JWT to avoid type augmentation complexity
+      // Keep JWT minimal; NextAuth will set token.sub and token.email.
       return token;
     },
     async session({ session }) {

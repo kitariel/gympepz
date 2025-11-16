@@ -75,7 +75,6 @@ export default function LoginPage() {
         password,
         redirect: false,
       });
-      console.log("resresres", res);
       // Prioritize error field; NextAuth may return ok: true with error: "Configuration" when misconfigured
       if (res?.error) {
         const err = res.error;
@@ -109,6 +108,8 @@ export default function LoginPage() {
       if (res?.ok) {
         // Navigate to portal on success
         router.replace("/portal");
+        // Ensure server components read the new auth cookies
+        router.refresh();
         return;
       }
 
