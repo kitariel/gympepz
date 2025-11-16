@@ -77,16 +77,16 @@ export function AppSidebar({
       const IconComp = Outline[name] ?? fallback;
       return IconComp;
     }
-    const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+    const LucideIcons = Lucide as unknown as Record<
+      string,
+      import("lucide-react").LucideIcon
+    >;
     const LucComp = (LucideIcons[name] as unknown as SidebarIcon) ?? fallback;
     return LucComp;
   };
 
   const navMain = (menu?.navMain ?? []).map((item) => {
-    const IconComp = getIconForItem(
-      item.title,
-      SquareTerminal,
-    );
+    const IconComp = getIconForItem(item.title, SquareTerminal);
     return {
       title: item.title,
       url: item.url,
@@ -98,10 +98,7 @@ export function AppSidebar({
   });
 
   const navSecondary = (menu?.navSecondary ?? []).map((item) => {
-    const IconComp = getIconForItem(
-      item.title,
-      SquareTerminal,
-    );
+    const IconComp = getIconForItem(item.title, SquareTerminal);
     return {
       title: item.title,
       url: item.url,
@@ -114,7 +111,10 @@ export function AppSidebar({
 
   // Determine header icon
   const Outline = HeroOutline as unknown as Record<string, HeroIcon>;
-  const LucideIcons = Lucide as unknown as Record<string, import("lucide-react").LucideIcon>;
+  const LucideIcons = Lucide as unknown as Record<
+    string,
+    import("lucide-react").LucideIcon
+  >;
   const HeaderIcon: SidebarIcon = (() => {
     const name = header?.iconName;
     const platform = header?.iconPlatform ?? "lucide";
@@ -123,7 +123,8 @@ export function AppSidebar({
       return CompHero;
     }
     if (name) {
-      const CompLucide: SidebarIcon = (LucideIcons[name] ?? Command) as SidebarIcon;
+      const CompLucide: SidebarIcon = (LucideIcons[name] ??
+        Command) as SidebarIcon;
       return CompLucide;
     }
     return Command as SidebarIcon;
@@ -140,7 +141,9 @@ export function AppSidebar({
                   <HeaderIcon className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{header?.title ?? "Acme Inc"}</span>
+                  <span className="truncate font-medium">
+                    {header?.title ?? ""}
+                  </span>
                   {header?.subtitle ? (
                     <span className="truncate text-xs">{header.subtitle}</span>
                   ) : null}
@@ -151,7 +154,7 @@ export function AppSidebar({
             {enableEditing && (
               <HeaderSettingsPopover
                 config={{
-                  title: header?.title ?? "Acme Inc",
+                  title: header?.title ?? "",
                   subtitle: header?.subtitle,
                   iconName: header?.iconName,
                   iconPlatform: header?.iconPlatform ?? "lucide",

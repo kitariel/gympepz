@@ -1,6 +1,6 @@
 {
-  "title": "Acme Inc23",
-  "subtitle": "123",
-  "iconName": "Activity",
+  "title": "AliPlace",
+  "subtitle": "Discover and manage places nearby",
+  "iconName": "MapPin",
   "iconPlatform": "lucide"
 }

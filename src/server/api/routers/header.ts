@@ -22,18 +22,22 @@ async function readHeaderConfig(): Promise<HeaderConfig> {
     const parsed = HeaderConfigSchema.safeParse(json);
     if (!parsed.success) {
       // fall back to defaults
-      return { title: "Acme Inc" };
+      return { title: "" };
     }
     return parsed.data;
   } catch (err) {
     // If file doesn't exist or is invalid, return defaults
-    return { title: "Acme Inc" };
+    return { title: "" };
   }
 }
 
 async function writeHeaderConfig(config: HeaderConfig) {
   const configPath = path.join(process.cwd(), "header-config.json");
-  await fs.writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf8");
+  await fs.writeFile(
+    configPath,
+    JSON.stringify(config, null, 2) + "\n",
+    "utf8",
+  );
 }
 
 export const headerRouter = createTRPCRouter({

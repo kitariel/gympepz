@@ -12,9 +12,9 @@ export interface LoginHeaderProps {
 
 export function LoginHeader({
   step,
-  title = "Kit Projects",
+  title = "AliPlace",
   subtitle = "Sign up or Login with",
-  logoEmoji = "🎨",
+  logoEmoji = "📍",
 }: LoginHeaderProps) {
   const description =
     step === "email"

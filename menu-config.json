@@ -1,47 +1,42 @@
 {
   "navMain": [
     {
-      "title": "E",
-      "url": "#",
-      "isActive": false,
-      "order": 0,
-      "iconName": "AdjustmentsVerticalIcon",
-      "iconPlatform": "heroicons",
+      "title": "Discover",
+      "url": "/portal",
+      "iconName": "Compass",
+      "iconPlatform": "lucide",
       "enabled": true
     },
     {
-      "title": "Abc",
+      "title": "My Places",
       "url": "#",
-      "isActive": false,
-      "order": 1,
+      "iconName": "MapPin",
+      "iconPlatform": "lucide",
       "enabled": true,
       "items": [
+        { "title": "My Listings", "url": "/portal/my-places", "enabled": true },
         {
-          "title": "Test",
-          "url": "#",
-          "order": 0,
+          "title": "Add New Place",
+          "url": "/portal/new/place",
           "enabled": true
         }
       ]
     },
     {
-      "title": "Test",
-      "url": "#",
-      "isActive": false,
-      "order": 2,
-      "iconName": "AccessibilityIcon",
-      "enabled": true,
-      "items": []
-    }
-  ],
-  "navSecondary": [
-    {
-      "title": "Support",
-      "url": "#"
+      "title": "Saved / Favorites",
+      "url": "/portal/saved",
+      "iconName": "Heart",
+      "iconPlatform": "lucide",
+      "enabled": true
     },
     {
-      "title": "Feedback",
-      "url": "#"
+      "title": "Analytics / Insights",
+      "url": "/portal/analytics",
+      "iconName": "BarChart3",
+      "iconPlatform": "lucide",
+      "enabled": true
     }
-  ]
+  ],
+  "navSecondary": [],
+  "projects": []
 }

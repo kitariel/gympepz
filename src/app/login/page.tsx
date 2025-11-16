@@ -228,12 +228,6 @@ export default function LoginPage() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-between gap-2 px-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
-            <span className="text-muted-foreground text-sm">Login</span>
-          </div>
-        </header>
         <div className="p-4">
           <div className="bg-muted/50 rounded-xl p-6">Hello world</div>
         </div>
