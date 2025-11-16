@@ -41,6 +41,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 // Unified icon type used in sidebar items
 type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -349,18 +350,20 @@ export function NavMain({
                               if (mapping) {
                                 const { name, platform } = mapping;
                                 if (platform === "heroicons") {
-                                  const Outline = HeroOutline as unknown as Record<
-                                    string,
-                                    HeroIcon
-                                  >;
+                                  const Outline =
+                                    HeroOutline as unknown as Record<
+                                      string,
+                                      HeroIcon
+                                    >;
                                   const DynamicIcon: SidebarIcon =
                                     Outline[name] ?? item.icon;
                                   return <DynamicIcon className="size-4" />;
                                 } else {
-                                  const LucideIcons = Lucide as unknown as Record<
-                                    string,
-                                    import("lucide-react").LucideIcon
-                                  >;
+                                  const LucideIcons =
+                                    Lucide as unknown as Record<
+                                      string,
+                                      import("lucide-react").LucideIcon
+                                    >;
                                   const DynamicIcon: SidebarIcon =
                                     LucideIcons[name] ?? item.icon;
                                   return <DynamicIcon className="size-4" />;
@@ -375,19 +378,23 @@ export function NavMain({
                       </CollapsibleTrigger>
                     ) : (
                       <SidebarMenuButton asChild tooltip={item.title}>
-                        <a href={item.url ?? "#"} onPointerDownCapture={(e) => e.stopPropagation()}>
+                        <Link
+                          href={item.url ?? "#"}
+                          onPointerDownCapture={(e) => e.stopPropagation()}
+                        >
                           {(() => {
                             const mapping = iconsByTitle?.[item.title];
                             if (mapping) {
                               const { name, platform } = mapping;
                               if (platform === "heroicons") {
-                                const Outline = HeroOutline as unknown as Record<
-                                  string,
-                                  HeroIcon
-                                >;
+                                const Outline =
+                                  HeroOutline as unknown as Record<
+                                    string,
+                                    HeroIcon
+                                  >;
                                 const DynamicIcon: SidebarIcon =
                                   Outline[name] ?? item.icon;
-                                return <DynamicIcon className="size-4" />;
+                                  return <DynamicIcon className="size-4" />;
                               } else {
                                 const LucideIcons = Lucide as unknown as Record<
                                   string,
@@ -395,14 +402,14 @@ export function NavMain({
                                 >;
                                 const DynamicIcon: SidebarIcon =
                                   LucideIcons[name] ?? item.icon;
-                                return <DynamicIcon className="size-4" />;
+                                  return <DynamicIcon className="size-4" />;
                               }
                             }
                             const Fallback = item.icon;
                             return <Fallback className="size-4" />;
                           })()}
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     )}
                     {/* Actions always visible; chevron/collapsible only when children exist */}
@@ -461,14 +468,14 @@ export function NavMain({
                                       id={subItem.title}
                                     >
                                       <SidebarMenuSubButton asChild>
-                                        <a
+                                        <Link
                                           href={subItem.url}
                                           onPointerDownCapture={(e) =>
                                             e.stopPropagation()
                                           }
                                         >
                                           <span>{subItem.title}</span>
-                                        </a>
+                                        </Link>
                                       </SidebarMenuSubButton>
                                       {enableEditing && (
                                         <ChildLabelEditorPopover

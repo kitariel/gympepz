@@ -12,7 +12,7 @@ export default async function AccountPage() {
   return (
     <HydrateClient>
       <div>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-2">
           <div className="bg-card text-card-foreground rounded-xl border shadow">
             <div className="p-6">
               <AccountForm initialUser={user} email={email} />

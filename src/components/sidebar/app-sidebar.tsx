@@ -22,6 +22,7 @@ import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
 import { useMenuState } from "@/hooks/useMenuState";
 import { useHeaderState } from "@/hooks/useHeaderState";
 import { HeaderSettingsPopover } from "@/components/sidebar/HeaderSettingsPopover";
+import Link from "next/link";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   // Global toggle for editing UI (super admin mode)
@@ -136,7 +137,7 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="#">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <HeaderIcon className="size-4" />
                 </div>
@@ -148,7 +149,7 @@ export function AppSidebar({
                     <span className="truncate text-xs">{header.subtitle}</span>
                   ) : null}
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
             {/* Header settings - gated by enableEditing */}
             {enableEditing && (
