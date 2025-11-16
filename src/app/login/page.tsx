@@ -5,17 +5,19 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+import { LoginForm } from "@/components/auth/login-form";
+import type React from "react";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { LoginHeader } from "@/components/auth/login-header";
 
 // UI flow states
 type Step = "email" | "password_login" | "otp" | "password_set";
@@ -175,124 +177,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>Enter your email to continue.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>There was a problem</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {step === "email" && (
-            <form onSubmit={submitEmail} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Checking…" : "Continue"}
+    <SidebarProvider
+      style={{ ["--sidebar-width"]: "22rem" } as React.CSSProperties}
+    >
+      {/* Left-side sidebar with the form; main content area shows Hello world */}
+      <Sidebar side="left" variant="inset">
+        <SidebarHeader>
+          <LoginHeader step={step} />
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="px-4 py-2">
+            <LoginForm
+              step={step}
+              email={email}
+              password={password}
+              otp={otp}
+              loading={loading}
+              error={error}
+              fieldError={fieldError}
+              devOtp={devOtp}
+              onSubmitEmail={submitEmail}
+              onSubmitPasswordLogin={submitPasswordLogin}
+              onSubmitOtp={submitOtp}
+              onSubmitSetPassword={submitSetPassword}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onOtpChange={setOtp}
+            />
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="px-4 py-3">
+            {step !== "email" && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setError(null);
+                  setFieldError(null);
+                  setPassword("");
+                  setOtp("");
+                  setStep("email");
+                }}
+                className="w-full"
+              >
+                Start over
               </Button>
-            </form>
-          )}
-
-          {step === "password_login" && (
-            <form onSubmit={submitPasswordLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} disabled />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  aria-invalid={!!fieldError}
-                />
-                {fieldError && (
-                  <p className="text-destructive text-sm">{fieldError}</p>
-                )}
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
-              </Button>
-            </form>
-          )}
-
-          {step === "otp" && (
-            <form onSubmit={submitOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} disabled />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otp">One-Time Password (OTP)</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-                {devOtp && (
-                  <p className="text-muted-foreground text-xs">
-                    Dev OTP: {devOtp}
-                  </p>
-                )}
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Verifying…" : "Verify OTP"}
-              </Button>
-            </form>
-          )}
-
-          {step === "password_set" && (
-            <form onSubmit={submitSetPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} disabled />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Create a password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Saving…" : "Save and continue"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button type="button" variant="outline" className="w-full" disabled>
-            Continue with Google (coming soon)
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+            )}
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-16 items-center justify-between gap-2 px-4">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+            <span className="text-muted-foreground text-sm">Login</span>
+          </div>
+        </header>
+        <div className="p-4">
+          <div className="bg-muted/50 rounded-xl p-6">Hello world</div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
