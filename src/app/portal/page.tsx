@@ -1,5 +1,9 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";

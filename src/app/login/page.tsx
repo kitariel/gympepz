@@ -1,16 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // UI flow states
 type Step = "email" | "password_login" | "otp" | "password_set";
 
 export default function LoginPage() {
   const router = useRouter();
-
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +30,7 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   // tRPC mutations
   const registerMutation = api.auth.register.useMutation();
@@ -54,32 +66,54 @@ export default function LoginPage() {
   async function submitPasswordLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldError(null);
     setLoading(true);
     try {
-      const res = await signIn("credentials", { email, password, redirect: false });
-      if (res?.ok) {
-        router.push("/portal");
+      // Use redirect: false to handle errors inline under the password field
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      console.log("resresres", res);
+      // Prioritize error field; NextAuth may return ok: true with error: "Configuration" when misconfigured
+      if (res?.error) {
+        const err = res.error;
+        switch (err) {
+          case "INVALID_CREDENTIALS":
+          case "CredentialsSignin":
+          case "Configuration":
+            // Treat as invalid for inline UX; "Configuration" typically indicates env misconfig
+            setFieldError("Invalid email or password.");
+            break;
+          case "LOCKED":
+            setError(
+              "Too many failed attempts. Your account is temporarily locked.",
+            );
+            break;
+          case "INACTIVE":
+            setError(
+              "Your account is not active. Please complete verification.",
+            );
+            break;
+          case "NO_PASSWORD":
+            setError("Please complete registration and set a password.");
+            setStep("otp");
+            break;
+          default:
+            setError(err ?? "Login failed");
+        }
         return;
       }
-      const err = res?.error ?? "Login failed";
-      switch (err) {
-        case "LOCKED":
-          setError("Too many failed attempts. Your account is temporarily locked.");
-          break;
-        case "INACTIVE":
-          setError("Your account is not active. Please complete verification.");
-          break;
-        case "INVALID_CREDENTIALS":
-          setError("Invalid email or password.");
-          break;
-        case "NO_PASSWORD":
-          // Shouldn't happen in this step, but handle gracefully
-          setError("Please complete registration and set a password.");
-          setStep("otp");
-          break;
-        default:
-          setError(err);
+
+      if (res?.ok) {
+        // Navigate to portal on success
+        router.replace("/portal");
+        return;
       }
+
+      // Fallback if neither error nor ok flags are set
+      setFieldError("Invalid email or password.");
     } catch {
       setError("Unexpected error. Please try again.");
     } finally {
@@ -122,12 +156,13 @@ export default function LoginPage() {
     try {
       const res = await setPasswordMutation.mutateAsync({ email, password });
       if (res.status === "password_set") {
-        const login = await signIn("credentials", { email, password, redirect: false });
-        if (login?.ok) {
-          router.push("/portal");
-          return;
-        }
-        setError(login?.error ?? "Login failed after setting password.");
+        // Automatically sign in and let NextAuth handle redirect
+        await signIn("credentials", {
+          email,
+          password,
+          callbackUrl: "/portal",
+          redirect: true,
+        });
       } else {
         setError("User not found.");
       }
@@ -139,162 +174,124 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Sign in</h1>
-        <p className="mt-1 text-sm text-gray-600">Enter your email to continue.</p>
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription>Enter your email to continue.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>There was a problem</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {error && (
-          <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-            {error}
-          </div>
-        )}
+          {step === "email" && (
+            <form onSubmit={submitEmail} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Checking…" : "Continue"}
+              </Button>
+            </form>
+          )}
 
-        {step === "email" && (
-          <form onSubmit={submitEmail} className="mt-6 space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
-            >
-              {loading ? "Checking…" : "Continue"}
-            </button>
-          </form>
-        )}
+          {step === "password_login" && (
+            <form onSubmit={submitPasswordLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={email} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!fieldError}
+                />
+                {fieldError && (
+                  <p className="text-destructive text-sm">{fieldError}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in…" : "Sign in"}
+              </Button>
+            </form>
+          )}
 
-        {step === "password_login" && (
-          <form onSubmit={submitPasswordLogin} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
-            >
-              {loading ? "Signing in…" : "Sign in"}
-            </button>
-          </form>
-        )}
+          {step === "otp" && (
+            <form onSubmit={submitOtp} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={email} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="otp">One-Time Password (OTP)</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+                {devOtp && (
+                  <p className="text-muted-foreground text-xs">
+                    Dev OTP: {devOtp}
+                  </p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Verifying…" : "Verify OTP"}
+              </Button>
+            </form>
+          )}
 
-        {step === "otp" && (
-          <form onSubmit={submitOtp} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
-                One-Time Password (OTP)
-              </label>
-              <input
-                id="otp"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-              {devOtp && (
-                <p className="mt-2 text-xs text-gray-500">Dev OTP: {devOtp}</p>
-              )}
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
-            >
-              {loading ? "Verifying…" : "Verify OTP"}
-            </button>
-          </form>
-        )}
-
-        {step === "password_set" && (
-          <form onSubmit={submitSetPassword} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
-                Create a password
-              </label>
-              <input
-                id="new-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
-            >
-              {loading ? "Saving…" : "Save and continue"}
-            </button>
-          </form>
-        )}
-
-        <div className="mt-6">
-          <button
-            type="button"
-            disabled
-            className="inline-flex w-full items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200"
-          >
+          {step === "password_set" && (
+            <form onSubmit={submitSetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={email} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Create a password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Saving…" : "Save and continue"}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button type="button" variant="outline" className="w-full" disabled>
             Continue with Google (coming soon)
-          </button>
-        </div>
-      </div>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

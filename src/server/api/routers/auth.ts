@@ -26,7 +26,7 @@ export const authRouter = createTRPCRouter({
   register: publicProcedure
     .input(RegisterInput)
     .mutation(async ({ ctx, input }) => {
-      const { email } = input;
+      const email = input.email.trim().toLowerCase();
       const existing = await ctx.db.user.findUnique({ where: { email } });
 
       // Existing account with password -> prompt password login
@@ -91,7 +91,8 @@ export const authRouter = createTRPCRouter({
   verifyOtp: publicProcedure
     .input(VerifyOtpInput)
     .mutation(async ({ ctx, input }) => {
-      const { email, otp } = input;
+      const email = input.email.trim().toLowerCase();
+      const { otp } = input;
       const user = await ctx.db.user.findUnique({ where: { email } });
       if (!user) {
         return { status: "not_found" as const };
@@ -147,7 +148,8 @@ export const authRouter = createTRPCRouter({
   setPassword: publicProcedure
     .input(SetPasswordInput)
     .mutation(async ({ ctx, input }) => {
-      const { email, password } = input;
+      const email = input.email.trim().toLowerCase();
+      const password = input.password.trim();
       const user = await ctx.db.user.findUnique({ where: { email } });
       if (!user) {
         return { status: "not_found" as const };

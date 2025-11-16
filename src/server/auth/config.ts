@@ -41,7 +41,8 @@ export const authConfig = {
       async authorize(raw) {
         const parsed = CredsSchema.safeParse(raw ?? {});
         if (!parsed.success) return null;
-        const { email, password } = parsed.data;
+        const email = parsed.data.email.trim().toLowerCase();
+        const password = parsed.data.password.trim();
 
         const user = await db.user.findUnique({ where: { email } });
         if (!user) return null;
