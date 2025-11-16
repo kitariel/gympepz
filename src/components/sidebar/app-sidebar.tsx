@@ -161,20 +161,22 @@ export function AppSidebar({
               />
             )}
           </SidebarMenuItem>
-          {/* Plus button to add menu items */}
-          <SidebarMenuItem>
-            <AddMenuPopover
-              onAdd={(
-                label: string,
-                type: MenuCreateType,
-                iconName?: string,
-                iconPlatform?: IconPlatform,
-              ) => {
-                void addMenu(label, type, iconName, iconPlatform);
-              }}
-              isCreating={isCreating}
-            />
-          </SidebarMenuItem>
+          {/* Plus button to add menu items - hidden when editing is disabled */}
+          {enableEditing && (
+            <SidebarMenuItem>
+              <AddMenuPopover
+                onAdd={(
+                  label: string,
+                  type: MenuCreateType,
+                  iconName?: string,
+                  iconPlatform?: IconPlatform,
+                ) => {
+                  void addMenu(label, type, iconName, iconPlatform);
+                }}
+                isCreating={isCreating}
+              />
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
@@ -211,13 +213,7 @@ export function AppSidebar({
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={{
-            name: "shadcn",
-            email: "m@example.com",
-            avatar: "/avatars/shadcn.jpg",
-          }}
-        />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
