@@ -1,38 +1,27 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
-import { useSession } from "next-auth/react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { api } from "@/trpc/react";
 import { UploadButton } from "@/components/uploadthing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// Include UploadThing styles (can also be added globally in globals.css)
-import "@uploadthing/react/styles.css";
+type AccountUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  imageUrl?: string | null;
+};
 
-export default function AccountForm() {
-  const { data: session } = useSession();
-  const email = session?.user?.email ?? "";
-
-  type AccountUser = {
-    id: string;
-    email: string;
-    name?: string | null;
-    imageUrl?: string | null;
-  };
-
-  const userQuery = api.user.getByEmail.useQuery(
-    { email },
-    { enabled: !!email },
-  );
-  const user = userQuery.data as AccountUser | null;
+export default function AccountForm({
+  initialUser,
+  email,
+}: {
+  initialUser: AccountUser | null;
+  email: string;
+}) {
+  const user = initialUser;
 
   const initials = useMemo(() => {
     const display: string = (user?.name ?? email ?? "").toString();
@@ -44,16 +33,15 @@ export default function AccountForm() {
     return `${first}${second}`;
   }, [user?.name, email]);
 
-  const [name, setName] = useState<string>((user?.name ?? "") as string);
-
-  useEffect(() => {
-    setName((user?.name ?? "") as string);
-  }, [user?.name]);
+  const [name, setName] = useState<string>(user?.name ?? "");
+  const [imageUrl, setImageUrl] = useState<string | undefined>(
+    user?.imageUrl ?? undefined,
+  );
 
   const utils = api.useUtils();
   const updateProfile = api.user.updateProfile.useMutation({
     onSuccess: () => {
-      // refetch user after update
+      // Invalidate user data so any other components (e.g., NavUser) refetch
       void utils.user.getByEmail.invalidate({ email });
     },
   });
@@ -63,8 +51,8 @@ export default function AccountForm() {
       <div className="flex flex-col items-center gap-4">
         <Avatar className="h-24 w-24 rounded-xl">
           <AvatarImage
-            src={(user?.imageUrl ?? undefined) as string | undefined}
-            alt={(user?.name ?? email) as string}
+            src={imageUrl}
+            alt={(user?.name ?? email) || "User avatar"}
           />
           <AvatarFallback className="rounded-xl text-lg">
             {initials}
@@ -80,6 +68,8 @@ export default function AccountForm() {
             const url = first?.serverData?.url ?? first?.url;
             if (!url || !email) return;
             await updateProfile.mutateAsync({ email, imageUrl: url });
+            // Optimistically update local avatar for immediate feedback
+            setImageUrl(url);
           }}
           onUploadError={(error: Error) => {
             console.error("Upload error", error);
@@ -104,14 +94,20 @@ export default function AccountForm() {
             id="name"
             placeholder="Your name"
             value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setName(e.target.value)
-            }
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setName(e.target.value);
+            }}
           />
         </div>
 
         <div>
-          <Button type="submit">Save changes</Button>
+          <Button
+            type="submit"
+            disabled={updateProfile.isPending}
+            aria-busy={updateProfile.isPending}
+          >
+            {updateProfile.isPending ? "Saving..." : "Save changes"}
+          </Button>
         </div>
       </form>
     </div>
