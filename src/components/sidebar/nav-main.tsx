@@ -340,39 +340,71 @@ export function NavMain({
                   defaultOpen={item.isActive}
                 >
                   <SortableParent id={item.title}>
-                    <SidebarMenuButton asChild tooltip={item.title}>
-                      <a
-                        href={item.url ?? "#"}
-                        onPointerDownCapture={(e) => e.stopPropagation()}
-                      >
-                        {(() => {
-                          const mapping = iconsByTitle?.[item.title];
-                          if (mapping) {
-                            const { name, platform } = mapping;
-                            if (platform === "heroicons") {
-                              const Outline = HeroOutline as unknown as Record<
-                                string,
-                                HeroIcon
-                              >;
-                              const DynamicIcon: SidebarIcon =
-                                Outline[name] ?? item.icon;
-                              return <DynamicIcon className="size-4" />;
-                            } else {
-                              const LucideIcons = Lucide as unknown as Record<
-                                string,
-                                import("lucide-react").LucideIcon
-                              >;
-                              const DynamicIcon: SidebarIcon =
-                                LucideIcons[name] ?? item.icon;
-                              return <DynamicIcon className="size-4" />;
+                    {visibleChildren.length > 0 ? (
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton asChild tooltip={item.title}>
+                          <button type="button">
+                            {(() => {
+                              const mapping = iconsByTitle?.[item.title];
+                              if (mapping) {
+                                const { name, platform } = mapping;
+                                if (platform === "heroicons") {
+                                  const Outline = HeroOutline as unknown as Record<
+                                    string,
+                                    HeroIcon
+                                  >;
+                                  const DynamicIcon: SidebarIcon =
+                                    Outline[name] ?? item.icon;
+                                  return <DynamicIcon className="size-4" />;
+                                } else {
+                                  const LucideIcons = Lucide as unknown as Record<
+                                    string,
+                                    import("lucide-react").LucideIcon
+                                  >;
+                                  const DynamicIcon: SidebarIcon =
+                                    LucideIcons[name] ?? item.icon;
+                                  return <DynamicIcon className="size-4" />;
+                                }
+                              }
+                              const Fallback = item.icon;
+                              return <Fallback className="size-4" />;
+                            })()}
+                            <span>{item.title}</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                    ) : (
+                      <SidebarMenuButton asChild tooltip={item.title}>
+                        <a href={item.url ?? "#"} onPointerDownCapture={(e) => e.stopPropagation()}>
+                          {(() => {
+                            const mapping = iconsByTitle?.[item.title];
+                            if (mapping) {
+                              const { name, platform } = mapping;
+                              if (platform === "heroicons") {
+                                const Outline = HeroOutline as unknown as Record<
+                                  string,
+                                  HeroIcon
+                                >;
+                                const DynamicIcon: SidebarIcon =
+                                  Outline[name] ?? item.icon;
+                                return <DynamicIcon className="size-4" />;
+                              } else {
+                                const LucideIcons = Lucide as unknown as Record<
+                                  string,
+                                  import("lucide-react").LucideIcon
+                                >;
+                                const DynamicIcon: SidebarIcon =
+                                  LucideIcons[name] ?? item.icon;
+                                return <DynamicIcon className="size-4" />;
+                              }
                             }
-                          }
-                          const Fallback = item.icon;
-                          return <Fallback className="size-4" />;
-                        })()}
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
+                            const Fallback = item.icon;
+                            return <Fallback className="size-4" />;
+                          })()}
+                          <span>{item.title}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    )}
                     {/* Actions always visible; chevron/collapsible only when children exist */}
 
                     {/** Always show settings and drag handle; only chevron appears if there are children */}
