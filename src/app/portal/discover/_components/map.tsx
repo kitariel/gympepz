@@ -124,7 +124,7 @@ export function DiscoverMap({ className }: { className?: string }) {
   return (
     <Map
       key={mapStyleUrl}
-      mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN as string}
+      mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
       initialViewState={viewState}
       mapStyle={mapStyleUrl}
       style={{ width: "100%", height: "100%", borderRadius: "12px" }}

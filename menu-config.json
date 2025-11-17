@@ -14,12 +14,7 @@
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        { "title": "My Listings", "url": "/portal/my-places", "enabled": true },
-        {
-          "title": "Add New Place",
-          "url": "/portal/new/place",
-          "enabled": true
-        }
+        { "title": "My Listings", "url": "/portal/my-places", "enabled": true }
       ]
     },
     {
