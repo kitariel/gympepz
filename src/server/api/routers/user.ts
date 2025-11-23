@@ -18,6 +18,8 @@ export const userRouter = createTRPCRouter({
         image: (user as { image?: string | null }).image ?? null,
         hasPassword: !!(user as { passwordHash?: string | null }).passwordHash,
         emailVerified: (user as { emailVerified?: Date | null }).emailVerified ?? null,
+        country: (user as { country?: string | null }).country ?? null,
+        region: (user as { region?: string | null }).region ?? null,
       };
     }),
 
@@ -27,15 +29,19 @@ export const userRouter = createTRPCRouter({
         email: z.string().email(),
         name: z.string().min(1).max(100).optional(),
         image: z.string().url().optional(),
+        country: z.string().min(2).optional(),
+        region: z.string().min(1).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { email, name, image } = input;
+      const { email, name, image, country, region } = input;
       const updated = await ctx.db.user.update({
         where: { email: email.toLowerCase() },
         data: {
           ...(name !== undefined ? { name } : {}),
           ...(image !== undefined ? { image } : {}),
+          ...(country !== undefined ? { country } : {}),
+          ...(region !== undefined ? { region } : {}),
         },
       });
       return {
@@ -43,6 +49,8 @@ export const userRouter = createTRPCRouter({
         email: updated.email,
         name: (updated as { name?: string | null }).name ?? null,
         image: (updated as { image?: string | null }).image ?? null,
+        country: (updated as { country?: string | null }).country ?? null,
+        region: (updated as { region?: string | null }).region ?? null,
       };
     }),
 });

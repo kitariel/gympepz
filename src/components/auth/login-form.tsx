@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export type LoginStep = "email" | "password_login" | "otp" | "password_set";
+export type LoginStep = "email" | "password_login" | "otp" | "password_set" | "profile_setup";
 
 export interface LoginFormProps {
   step: LoginStep;
   email: string;
   password: string;
   otp: string;
+  country?: string;
+  region?: string;
   loading: boolean;
   error: string | null;
   fieldError: string | null;
@@ -24,9 +26,12 @@ export interface LoginFormProps {
   onSubmitPasswordLogin: (e: React.FormEvent<HTMLFormElement>) => void;
   onSubmitOtp: (e: React.FormEvent<HTMLFormElement>) => void;
   onSubmitSetPassword: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmitProfileSetup?: (e: React.FormEvent<HTMLFormElement>) => void;
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
   onOtpChange: (otp: string) => void;
+  onCountryChange?: (country: string) => void;
+  onRegionChange?: (region: string) => void;
 }
 
 export function LoginForm(props: LoginFormProps) {
@@ -35,6 +40,8 @@ export function LoginForm(props: LoginFormProps) {
     email,
     password,
     otp,
+    country,
+    region,
     loading,
     error,
     fieldError,
@@ -45,9 +52,12 @@ export function LoginForm(props: LoginFormProps) {
     onSubmitPasswordLogin,
     onSubmitOtp,
     onSubmitSetPassword,
+    onSubmitProfileSetup,
     onEmailChange,
     onPasswordChange,
     onOtpChange,
+    onCountryChange,
+    onRegionChange,
   } = props;
 
   const Separator = () => (
@@ -238,6 +248,70 @@ export function LoginForm(props: LoginFormProps) {
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Saving…" : "Save and continue"}
+          </Button>
+        </form>
+      )}
+
+      {step === "profile_setup" && (
+        <form onSubmit={onSubmitProfileSetup} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" value={email} disabled />
+          </div>
+          <div className="space-y-2">
+            <Label>Country</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={country === "philippines" ? "default" : "outline"}
+                onClick={() => onCountryChange?.("philippines")}
+              >
+                Philippines
+              </Button>
+              <Button
+                type="button"
+                variant={country && country !== "philippines" ? "default" : "outline"}
+                onClick={() => onCountryChange?.("")}
+              >
+                Other
+              </Button>
+            </div>
+            {country !== "philippines" && (
+              <div className="mt-2">
+                <Label htmlFor="country-other">Specify country</Label>
+                <Input
+                  id="country-other"
+                  type="text"
+                  value={country ?? ""}
+                  onChange={(e) => onCountryChange?.(e.target.value)}
+                  placeholder="Your country"
+                />
+              </div>
+            )}
+          </div>
+          {country === "philippines" && (
+            <div className="space-y-2">
+              <Label>Region (optional)</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { key: "luzon", label: "Luzon" },
+                  { key: "visayas", label: "Visayas" },
+                  { key: "mindanao", label: "Mindanao" },
+                ].map((r) => (
+                  <Button
+                    key={r.key}
+                    type="button"
+                    variant={region === r.label ? "default" : "outline"}
+                    onClick={() => onRegionChange?.(r.label)}
+                  >
+                    {r.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          <Button type="submit" className="w-full" disabled={loading || !country}>
+            {loading ? "Saving…" : "Save profile"}
           </Button>
         </form>
       )}

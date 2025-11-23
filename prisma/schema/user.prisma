@@ -4,6 +4,8 @@ model User {
     name                String?
     image               String?
     emailVerified       DateTime?
+    country             String?
+    region              String?
     passwordHash        String?
     otpCodeHash         String?
     otpExpiresAt        DateTime?

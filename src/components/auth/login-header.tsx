@@ -23,7 +23,9 @@ export function LoginHeader({
         ? "Enter your password to sign in."
         : step === "otp"
           ? "Enter the OTP we sent to your email."
-          : "Set a password to complete registration.";
+          : step === "password_set"
+            ? "Set a password to complete registration."
+            : "Select your country and region.";
 
   return (
     <div className="px-4 py-6">
