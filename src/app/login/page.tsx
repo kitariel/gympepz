@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 
@@ -15,15 +15,17 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarInset,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { LoginHeader } from "@/components/auth/login-header";
+import { useSession } from "next-auth/react";
 
 // UI flow states
 type Step = "email" | "password_login" | "otp" | "password_set";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +35,46 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
+
+  const [isMobileView, setIsMobileView] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = (e: MediaQueryListEvent) => setIsMobileView(e.matches);
+    setIsMobileView(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  // If returning from Google, decide whether to set password or go to portal
+  const googleCallback = searchParams?.get("google") === "1";
+  const sessionEmail = useMemo(
+    () => (session?.user?.email ?? "").trim().toLowerCase(),
+    [session?.user?.email],
+  );
+  const userQuery = api.user.getByEmail.useQuery(
+    { email: sessionEmail },
+    { enabled: googleCallback && status === "authenticated" && !!sessionEmail },
+  );
+  useEffect(() => {
+    if (!googleCallback || status !== "authenticated") return;
+    const u = userQuery.data as {
+      hasPassword?: boolean;
+      emailVerified?: Date | null;
+    } | null;
+    if (!u) return;
+    if (u.hasPassword) {
+      router.replace("/portal");
+      router.refresh();
+    } else {
+      setStep("password_set");
+    }
+  }, [googleCallback, status, userQuery.data, router]);
+
+  useEffect(() => {
+    if (status === "authenticated" && sessionEmail && email !== sessionEmail) {
+      setEmail(sessionEmail);
+    }
+  }, [status, sessionEmail]);
 
   // tRPC mutations
   const registerMutation = api.auth.register.useMutation();
@@ -44,9 +86,12 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await registerMutation.mutateAsync({ email });
+      const eLower = email.trim().toLowerCase();
+      const res = await registerMutation.mutateAsync({ email: eLower });
       if (res.status === "exists_with_password") {
         setStep("password_login");
+      } else if (res.status === "verified_no_password") {
+        setStep("password_set");
       } else if (res.status === "exists_no_password") {
         setDevOtp(res.otp ?? null);
         setStep("otp");
@@ -72,8 +117,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       // Use redirect: false to handle errors inline under the password field
+      const eLower = email.trim().toLowerCase();
       const res = await signIn("credentials", {
-        email,
+        email: eLower,
         password,
         redirect: false,
       });
@@ -129,7 +175,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await verifyOtpMutation.mutateAsync({ email, otp });
+      const eLower = email.trim().toLowerCase();
+      const res = await verifyOtpMutation.mutateAsync({ email: eLower, otp });
       if (res.status === "verified_pending_password") {
         setStep("password_set");
       } else if (res.status === "otp_expired") {
@@ -157,11 +204,15 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await setPasswordMutation.mutateAsync({ email, password });
+      const eLower = email.trim().toLowerCase();
+      const res = await setPasswordMutation.mutateAsync({
+        email: eLower,
+        password,
+      });
       if (res.status === "password_set") {
         // Automatically sign in and let NextAuth handle redirect
         await signIn("credentials", {
-          email,
+          email: eLower,
           password,
           callbackUrl: "/portal",
           redirect: true,
@@ -176,11 +227,63 @@ export default function LoginPage() {
     }
   }
 
+  if (isMobileView) {
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <div className="px-4 py-6">
+          <LoginHeader step={step} />
+        </div>
+        <div className="px-4 py-2">
+          <LoginForm
+            step={step}
+            email={email}
+            password={password}
+            otp={otp}
+            loading={loading}
+            error={error}
+            fieldError={fieldError}
+            devOtp={devOtp}
+            onGoogleClick={() =>
+              signIn("google", {
+                callbackUrl: "/login?google=1",
+                redirect: true,
+              })
+            }
+            onSubmitEmail={submitEmail}
+            onSubmitPasswordLogin={submitPasswordLogin}
+            onSubmitOtp={submitOtp}
+            onSubmitSetPassword={submitSetPassword}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onOtpChange={setOtp}
+          />
+        </div>
+        <div className="mt-auto px-4 py-3">
+          {step !== "email" && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setError(null);
+                setFieldError(null);
+                setPassword("");
+                setOtp("");
+                setStep("email");
+              }}
+              className="w-full"
+            >
+              Start over
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider
       style={{ ["--sidebar-width"]: "22rem" } as React.CSSProperties}
     >
-      {/* Left-side sidebar with the form; main content area shows Hello world */}
       <Sidebar side="left" variant="inset">
         <SidebarHeader>
           <LoginHeader step={step} />
@@ -196,6 +299,12 @@ export default function LoginPage() {
               error={error}
               fieldError={fieldError}
               devOtp={devOtp}
+              onGoogleClick={() =>
+                signIn("google", {
+                  callbackUrl: "/login?google=1",
+                  redirect: true,
+                })
+              }
               onSubmitEmail={submitEmail}
               onSubmitPasswordLogin={submitPasswordLogin}
               onSubmitOtp={submitOtp}
@@ -227,7 +336,7 @@ export default function LoginPage() {
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
+      <SidebarInset className="hidden md:block">
         <div className="p-4">
           <div className="bg-muted/50 rounded-xl p-6">Hello world</div>
         </div>

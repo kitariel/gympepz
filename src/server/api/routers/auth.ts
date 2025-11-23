@@ -34,8 +34,12 @@ export const authRouter = createTRPCRouter({
         return { status: "exists_with_password" as const };
       }
 
-      // Existing account without password -> send OTP and indicate next step
+      // Existing account without password
       if (existing) {
+        // If email already verified (e.g., via Google), skip OTP and go to password set
+        if (existing.emailVerified) {
+          return { status: "verified_no_password" as const };
+        }
         // Rate-limit OTP requests: block if requested < 60s ago
         if (
           existing.otpRequestedAt &&

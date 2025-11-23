@@ -15,7 +15,9 @@ export const userRouter = createTRPCRouter({
         email: user.email,
         // Optional fields may be present after migration; guarded access
         name: (user as { name?: string | null }).name ?? null,
-        imageUrl: (user as { imageUrl?: string | null }).imageUrl ?? null,
+        image: (user as { image?: string | null }).image ?? null,
+        hasPassword: !!(user as { passwordHash?: string | null }).passwordHash,
+        emailVerified: (user as { emailVerified?: Date | null }).emailVerified ?? null,
       };
     }),
 
@@ -24,23 +26,23 @@ export const userRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         name: z.string().min(1).max(100).optional(),
-        imageUrl: z.string().url().optional(),
+        image: z.string().url().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { email, name, imageUrl } = input;
+      const { email, name, image } = input;
       const updated = await ctx.db.user.update({
         where: { email: email.toLowerCase() },
         data: {
           ...(name !== undefined ? { name } : {}),
-          ...(imageUrl !== undefined ? { imageUrl } : {}),
+          ...(image !== undefined ? { image } : {}),
         },
       });
       return {
         id: updated.id,
         email: updated.email,
         name: (updated as { name?: string | null }).name ?? null,
-        imageUrl: (updated as { imageUrl?: string | null }).imageUrl ?? null,
+        image: (updated as { image?: string | null }).image ?? null,
       };
     }),
 });

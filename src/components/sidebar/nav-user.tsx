@@ -41,12 +41,12 @@ export function NavUser() {
 
   const email = session?.user?.email ?? "";
 
-  // Fetch the latest user data so we can use imageUrl stored in DB
+  // Fetch the latest user data so we can use image stored in DB
   type AccountUser = {
     id: string;
     email: string;
     name?: string | null;
-    imageUrl?: string | null;
+    image?: string | null;
   };
   const userQuery = api.user.getByEmail.useQuery(
     { email },
@@ -56,7 +56,7 @@ export function NavUser() {
 
   const name =
     user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
-  const avatarSrc: string | undefined = user?.imageUrl ?? undefined;
+  const avatarSrc: string | undefined = user?.image ?? session?.user?.image ?? undefined;
 
   // if has name or first name and last name then use if dont have use email split by @ and use first part
   // if one word use 2 letter of the word

@@ -18,9 +18,7 @@ export interface LoginFormProps {
   fieldError: string | null;
   devOtp?: string | null;
   // Optional provider actions
-  onAppleClick?: () => void;
   onGoogleClick?: () => void;
-  onMicrosoftClick?: () => void;
   onContinueWithEmail?: () => void;
   onSubmitEmail: (e: React.FormEvent<HTMLFormElement>) => void;
   onSubmitPasswordLogin: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -41,9 +39,7 @@ export function LoginForm(props: LoginFormProps) {
     error,
     fieldError,
     devOtp,
-    onAppleClick,
     onGoogleClick,
-    onMicrosoftClick,
     onContinueWithEmail,
     onSubmitEmail,
     onSubmitPasswordLogin,
@@ -97,20 +93,6 @@ export function LoginForm(props: LoginFormProps) {
         <>
           <div className="space-y-3">
             <ProviderButton
-              onClick={onAppleClick}
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="currentColor"
-                >
-                  <path d="M16.365 1.43c0 1.14-.93 2.52-2.04 2.52-.24 0-.54-.09-.72-.18.06-1.14.96-2.46 2.1-2.46.24 0 .48.06.66.12zM20.916 18.93c-.42.93-.93 1.86-1.62 2.73-.96 1.26-2.1 2.82-3.63 2.82-1.41 0-1.86-.9-3.45-.9-1.62 0-2.1.9-3.51.9-1.62 0-2.82-1.71-3.78-3.03-1.68-2.34-3.06-6.66-1.29-9.6.9-1.5 2.46-2.46 4.2-2.46 1.56 0 3 .99 3.45.99.48 0 2.37-1.17 3.96-1.17.66 0 2.82.06 4.26 2.1-3.66 1.98-3.12 7.08 1.41 8.62z" />
-                </svg>
-              }
-            >
-              Apple
-            </ProviderButton>
-            <ProviderButton
               onClick={onGoogleClick}
               icon={
                 <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -128,19 +110,6 @@ export function LoginForm(props: LoginFormProps) {
               }
             >
               Google
-            </ProviderButton>
-            <ProviderButton
-              onClick={onMicrosoftClick}
-              icon={
-                <svg viewBox="0 0 24 24" className="h-5 w-5">
-                  <rect x="3" y="3" width="8" height="8" fill="#F25022" />
-                  <rect x="13" y="3" width="8" height="8" fill="#7FBA00" />
-                  <rect x="3" y="13" width="8" height="8" fill="#00A4EF" />
-                  <rect x="13" y="13" width="8" height="8" fill="#FFB900" />
-                </svg>
-              }
-            >
-              Microsoft
             </ProviderButton>
             <ProviderButton
               onClick={
@@ -174,7 +143,7 @@ export function LoginForm(props: LoginFormProps) {
                 required
                 placeholder="name@host.com"
                 value={email}
-                onChange={(e) => onEmailChange(e.target.value)}
+                onChange={(e) => onEmailChange(e.target.value.trim().toLowerCase())}
               />
             </div>
             <Button

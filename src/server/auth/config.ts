@@ -1,6 +1,8 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { env } from "@/env";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -88,7 +90,25 @@ export const authConfig = {
         return { id: user.id, email: user.email ?? null };
       },
     }),
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
+  events: {
+    async linkAccount({ user, account }) {
+      if (account?.provider === "google") {
+        await db.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date(), status: "active" },
+        });
+      }
+    },
+  },
   callbacks: {
     async jwt({ token }) {
       // Keep JWT minimal; NextAuth will set token.sub and token.email.

@@ -11,7 +11,7 @@ type AccountUser = {
   id: string;
   email: string;
   name?: string | null;
-  imageUrl?: string | null;
+  image?: string | null;
 };
 
 export default function AccountForm({
@@ -34,8 +34,8 @@ export default function AccountForm({
   }, [user?.name, email]);
 
   const [name, setName] = useState<string>(user?.name ?? "");
-  const [imageUrl, setImageUrl] = useState<string | undefined>(
-    user?.imageUrl ?? undefined,
+  const [image, setImage] = useState<string | undefined>(
+    user?.image ?? undefined,
   );
 
   const utils = api.useUtils();
@@ -51,7 +51,7 @@ export default function AccountForm({
       <div className="flex flex-col items-center gap-4">
         <Avatar className="h-24 w-24 rounded-xl">
           <AvatarImage
-            src={imageUrl}
+            src={image}
             alt={(user?.name ?? email) || "User avatar"}
           />
           <AvatarFallback className="rounded-xl text-lg">
@@ -67,9 +67,9 @@ export default function AccountForm({
             const first = Array.isArray(res) ? res[0] : undefined;
             const url = first?.serverData?.url ?? first?.url;
             if (!url || !email) return;
-            await updateProfile.mutateAsync({ email, imageUrl: url });
+            await updateProfile.mutateAsync({ email, image: url });
             // Optimistically update local avatar for immediate feedback
-            setImageUrl(url);
+            setImage(url);
           }}
           onUploadError={(error: Error) => {
             console.error("Upload error", error);
