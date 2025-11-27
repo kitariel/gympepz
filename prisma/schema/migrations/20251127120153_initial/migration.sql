@@ -40,6 +40,11 @@ CREATE TABLE "VerificationToken" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "name" TEXT,
+    "image" TEXT,
+    "emailVerified" TIMESTAMP(3),
+    "country" TEXT,
+    "region" TEXT,
     "passwordHash" TEXT,
     "otpCodeHash" TEXT,
     "otpExpiresAt" TIMESTAMP(3),
