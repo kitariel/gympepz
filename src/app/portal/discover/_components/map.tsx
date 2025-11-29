@@ -136,7 +136,6 @@ export function DiscoverMap({
       : "mapbox://styles/mapbox/light-v11"
     : (MAP_STYLES.find((s) => s.id === selectedStyleId)?.url ??
       MAP_STYLES[0]!.url);
-  console.log("viewStateviewStateviewStateviewState", viewState);
   return (
     <Map
       key={mapStyleUrl}
