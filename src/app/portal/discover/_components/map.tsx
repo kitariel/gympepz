@@ -5,25 +5,39 @@ import { env } from "@/env";
 import Map, { NavigationControl, GeolocateControl } from "react-map-gl/mapbox";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
-import { Layers, Check } from "lucide-react";
+  MapStyleMenuOverlay,
+  type MapStyle,
+} from "./parts/map-style-menu-overlay";
+import { LocationPillOverlay } from "./parts/location-pill-overlay";
 
-export function DiscoverMap({ className }: { className?: string }) {
+export function DiscoverMap({
+  className,
+  initialView,
+  enableGeolocate = true,
+  locationLabel,
+  onLocationClick,
+}: {
+  className?: string;
+  initialView?: { longitude: number; latitude: number; zoom: number };
+  enableGeolocate?: boolean;
+  locationLabel?: string;
+  onLocationClick?: () => void;
+}) {
   const { resolvedTheme } = useTheme();
-  const [viewState, setViewState] = useState({
-    longitude: 0,
-    latitude: 0,
-    zoom: 2,
-  });
-  type MapStyle = { id: string; name: string; url: string };
+  const [viewState, setViewState] = useState(
+    initialView ?? {
+      longitude: 0,
+      latitude: 0,
+      zoom: 2,
+    },
+  );
+
+  useEffect(() => {
+    if (initialView) {
+      setViewState(initialView);
+    }
+  }, [initialView]);
   const MAP_STYLES: MapStyle[] = [
     {
       id: "standard",
@@ -60,22 +74,24 @@ export function DiscoverMap({ className }: { className?: string }) {
       if (savedId && MAP_STYLES.some((s) => s.id === savedId)) {
         setSelectedStyleId(savedId);
       }
-      const savedView = localStorage.getItem(LS_VIEWSTATE_KEY);
-      if (savedView) {
-        const v = JSON.parse(savedView) as unknown;
-        const lon = (v as Record<string, unknown>)?.longitude;
-        const lat = (v as Record<string, unknown>)?.latitude;
-        const zoom = (v as Record<string, unknown>)?.zoom;
-        if (
-          typeof lon === "number" &&
-          typeof lat === "number" &&
-          typeof zoom === "number"
-        ) {
-          setViewState({ longitude: lon, latitude: lat, zoom });
+      if (!initialView) {
+        const savedView = localStorage.getItem(LS_VIEWSTATE_KEY);
+        if (savedView) {
+          const v = JSON.parse(savedView) as unknown;
+          const lon = (v as Record<string, unknown>)?.longitude;
+          const lat = (v as Record<string, unknown>)?.latitude;
+          const zoom = (v as Record<string, unknown>)?.zoom;
+          if (
+            typeof lon === "number" &&
+            typeof lat === "number" &&
+            typeof zoom === "number"
+          ) {
+            setViewState({ longitude: lon, latitude: lat, zoom });
+          }
         }
       }
     } catch {}
-  }, []);
+  }, [initialView]);
 
   useEffect(() => {
     try {
@@ -96,19 +112,19 @@ export function DiscoverMap({ className }: { className?: string }) {
   }, [viewState]);
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    if (!initialView && enableGeolocate && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           setViewState({ latitude, longitude, zoom: 14 });
         },
         () => {
-          console.log("Error getting location");
+          /* empty */
         },
         { enableHighAccuracy: true, timeout: 10000 },
       );
     }
-  }, []);
+  }, [initialView, enableGeolocate]);
 
   if (!env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN) {
     return <div className={className}>Missing Mapbox access token</div>;
@@ -120,7 +136,7 @@ export function DiscoverMap({ className }: { className?: string }) {
       : "mapbox://styles/mapbox/light-v11"
     : (MAP_STYLES.find((s) => s.id === selectedStyleId)?.url ??
       MAP_STYLES[0]!.url);
-
+  console.log("viewStateviewStateviewStateviewState", viewState);
   return (
     <Map
       key={mapStyleUrl}
@@ -130,41 +146,20 @@ export function DiscoverMap({ className }: { className?: string }) {
       style={{ width: "100%", height: "100%", borderRadius: "12px" }}
       onMove={(e) => setViewState(e.viewState)}
     >
-      <div className="absolute top-2 left-12 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon-sm">
-              <Layers className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            {MAP_STYLES.map((s) => (
-              <DropdownMenuItem
-                key={s.id}
-                onClick={() => {
-                  setSyncTheme(false);
-                  setSelectedStyleId(s.id);
-                }}
-              >
-                {s.name}
-                {!syncTheme && selectedStyleId === s.id ? (
-                  <Check className="ml-auto h-4 w-4" />
-                ) : null}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={syncTheme}
-              onCheckedChange={(v) => setSyncTheme(Boolean(v))}
-            >
-              Sync with Theme
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <MapStyleMenuOverlay
+        styles={MAP_STYLES}
+        selectedStyleId={selectedStyleId}
+        syncTheme={syncTheme}
+        onSelectStyle={(id) => {
+          setSyncTheme(false);
+          setSelectedStyleId(id);
+        }}
+        onToggleSyncTheme={(v) => setSyncTheme(v)}
+      />
+      <LocationPillOverlay label={locationLabel} onClick={onLocationClick} />
       <NavigationControl position="top-right" />
       <GeolocateControl
-        position="top-left"
+        position="top-right"
         positionOptions={{ enableHighAccuracy: true }}
         trackUserLocation
         showUserLocation
