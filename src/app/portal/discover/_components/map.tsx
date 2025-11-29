@@ -3,7 +3,7 @@
 import "mapbox-gl/dist/mapbox-gl.css";
 import { env } from "@/env";
 import Map, { NavigationControl, GeolocateControl } from "react-map-gl/mapbox";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import {
   MapStyleMenuOverlay,
@@ -11,18 +11,31 @@ import {
 } from "./parts/map-style-menu-overlay";
 import { LocationPillOverlay } from "./parts/location-pill-overlay";
 
+type View = { longitude: number; latitude: number; zoom: number };
+function isView(v: unknown): v is View {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    typeof (v as Record<string, unknown>).longitude === "number" &&
+    typeof (v as Record<string, unknown>).latitude === "number" &&
+    typeof (v as Record<string, unknown>).zoom === "number"
+  );
+}
+
 export function DiscoverMap({
   className,
   initialView,
   enableGeolocate = true,
   locationLabel,
   onLocationClick,
+  initialBounds,
 }: {
   className?: string;
   initialView?: { longitude: number; latitude: number; zoom: number };
   enableGeolocate?: boolean;
   locationLabel?: string;
   onLocationClick?: () => void;
+  initialBounds?: [[number, number], [number, number]];
 }) {
   const { resolvedTheme } = useTheme();
   const [viewState, setViewState] = useState(
@@ -32,12 +45,22 @@ export function DiscoverMap({
       zoom: 2,
     },
   );
+  const mapRef = useRef<unknown>(null);
 
   useEffect(() => {
     if (initialView) {
       setViewState(initialView);
     }
   }, [initialView]);
+
+  useEffect(() => {
+    const map = mapRef.current as { fitBounds: (b: [[number, number], [number, number]], opts?: unknown) => void } | null;
+    if (map && initialBounds) {
+      try {
+        map.fitBounds(initialBounds, { padding: 40, duration: 500 });
+      } catch {}
+    }
+  }, [initialBounds]);
   const MAP_STYLES: MapStyle[] = [
     {
       id: "standard",
@@ -77,16 +100,9 @@ export function DiscoverMap({
       if (!initialView) {
         const savedView = localStorage.getItem(LS_VIEWSTATE_KEY);
         if (savedView) {
-          const v = JSON.parse(savedView) as unknown;
-          const lon = (v as Record<string, unknown>)?.longitude;
-          const lat = (v as Record<string, unknown>)?.latitude;
-          const zoom = (v as Record<string, unknown>)?.zoom;
-          if (
-            typeof lon === "number" &&
-            typeof lat === "number" &&
-            typeof zoom === "number"
-          ) {
-            setViewState({ longitude: lon, latitude: lat, zoom });
+          const v: unknown = JSON.parse(savedView);
+          if (isView(v)) {
+            setViewState(v);
           }
         }
       }
@@ -144,6 +160,14 @@ export function DiscoverMap({
       mapStyle={mapStyleUrl}
       style={{ width: "100%", height: "100%", borderRadius: "12px" }}
       onMove={(e) => setViewState(e.viewState)}
+      onLoad={(e) => {
+        mapRef.current = e.target;
+        if (initialBounds) {
+          try {
+            e.target.fitBounds(initialBounds, { padding: 40, duration: 500 });
+          } catch {}
+        }
+      }}
     >
       <MapStyleMenuOverlay
         styles={MAP_STYLES}
