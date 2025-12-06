@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // Unified icon type used in sidebar items
 type SidebarIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -202,6 +203,7 @@ export function NavMain({
   // Future use: role-based filtering (not enforced yet)
   currentUserRoles?: string[];
 }) {
+  const pathname = usePathname();
   const sensors = useSensors(
     // Add activation constraint to avoid interfering with regular clicks
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -334,16 +336,28 @@ export function NavMain({
               const visibleChildren = enableEditing
                 ? (item.items ?? [])
                 : (item.items ?? []).filter((c) => c.enabled ?? true);
+              const isParentActive = (() => {
+                const url = (item.url ?? "").trim();
+                const hasChildren = (item.items ?? []).length > 0;
+                if (hasChildren) {
+                  return (item.items ?? []).some((c) => {
+                    const cu = (c.url ?? "").trim();
+                    return Boolean(cu) && (pathname === cu || pathname.startsWith(cu));
+                  });
+                }
+                return Boolean(url) && (pathname === url || pathname.startsWith(url));
+              })();
               return (
                 <Collapsible
                   key={item.title + index}
                   asChild
-                  defaultOpen={item.isActive}
+                  defaultOpen={Boolean(isParentActive)}
                 >
                   <SortableParent id={item.title}>
                     {visibleChildren.length > 0 ? (
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton asChild tooltip={item.title}>
+                        <SidebarMenuButton asChild tooltip={item.title} isActive={isParentActive}
+                        >
                           <button type="button">
                             {(() => {
                               const mapping = iconsByTitle?.[item.title];
@@ -377,7 +391,7 @@ export function NavMain({
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                     ) : (
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isParentActive}>
                         <Link
                           href={item.url ?? "#"}
                           onPointerDownCapture={(e) => e.stopPropagation()}
@@ -467,7 +481,7 @@ export function NavMain({
                                       key={subItem.title + index}
                                       id={subItem.title}
                                     >
-                                      <SidebarMenuSubButton asChild>
+                                      <SidebarMenuSubButton asChild isActive={Boolean((subItem.url ?? "") && (pathname === subItem.url || pathname.startsWith(subItem.url)))}>
                                         <Link
                                           href={subItem.url}
                                           onPointerDownCapture={(e) =>

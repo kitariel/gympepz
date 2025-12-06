@@ -20,7 +20,7 @@ import { LoginHeader } from "@/components/auth/login-header";
 import { useSession } from "next-auth/react";
 
 // UI flow states
-type Step = "email" | "password_login" | "otp" | "password_set" | "profile_setup";
+type Step = "email" | "password_login" | "otp" | "password_set";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,8 +31,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
-  const [country, setCountry] = useState("");
-  const [region, setRegion] = useState("");
+  // removed country/region selection from login
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +81,7 @@ export default function LoginPage() {
   const registerMutation = api.auth.register.useMutation();
   const verifyOtpMutation = api.auth.verifyOtp.useMutation();
   const setPasswordMutation = api.auth.setPassword.useMutation();
-  const updateProfileMutation = api.user.updateProfile.useMutation();
+  
 
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -113,22 +112,7 @@ export default function LoginPage() {
     }
   }
 
-  async function submitProfileSetup(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const eLower = email.trim().toLowerCase();
-      const countryVal = country.trim().toLowerCase() === "philippines" ? "Philippines" : country.trim();
-      const regionVal = region.trim() ? region.trim() : undefined;
-      await updateProfileMutation.mutateAsync({ email: eLower, country: countryVal, region: regionVal });
-      await signIn("credentials", { email: eLower, password, callbackUrl: "/portal", redirect: true });
-    } catch {
-      setError("Unexpected error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  // removed profile setup submit; sign-in occurs after password set
 
   async function submitPasswordLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -230,7 +214,7 @@ export default function LoginPage() {
         password,
       });
       if (res.status === "password_set") {
-        setStep("profile_setup");
+        await signIn("credentials", { email: eLower, password, callbackUrl: "/portal", redirect: true });
       } else {
         setError("User not found.");
       }
@@ -253,8 +237,6 @@ export default function LoginPage() {
             email={email}
             password={password}
             otp={otp}
-            country={country}
-            region={region}
             loading={loading}
             error={error}
             fieldError={fieldError}
@@ -269,12 +251,9 @@ export default function LoginPage() {
             onSubmitPasswordLogin={submitPasswordLogin}
             onSubmitOtp={submitOtp}
             onSubmitSetPassword={submitSetPassword}
-            onSubmitProfileSetup={submitProfileSetup}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
             onOtpChange={setOtp}
-            onCountryChange={setCountry}
-            onRegionChange={setRegion}
           />
         </div>
         <div className="mt-auto px-4 py-3">
@@ -287,8 +266,6 @@ export default function LoginPage() {
                 setFieldError(null);
                 setPassword("");
                 setOtp("");
-                setCountry("");
-                setRegion("");
                 setStep("email");
               }}
               className="w-full"
@@ -316,8 +293,6 @@ export default function LoginPage() {
             email={email}
             password={password}
             otp={otp}
-            country={country}
-            region={region}
             loading={loading}
             error={error}
             fieldError={fieldError}
@@ -332,12 +307,9 @@ export default function LoginPage() {
             onSubmitPasswordLogin={submitPasswordLogin}
             onSubmitOtp={submitOtp}
             onSubmitSetPassword={submitSetPassword}
-            onSubmitProfileSetup={submitProfileSetup}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
             onOtpChange={setOtp}
-            onCountryChange={setCountry}
-            onRegionChange={setRegion}
           />
           </div>
         </SidebarContent>
@@ -352,8 +324,6 @@ export default function LoginPage() {
                   setFieldError(null);
                   setPassword("");
                   setOtp("");
-                  setCountry("");
-                  setRegion("");
                   setStep("email");
                 }}
                 className="w-full"

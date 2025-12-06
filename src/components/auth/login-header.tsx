@@ -25,7 +25,7 @@ export function LoginHeader({
           ? "Enter the OTP we sent to your email."
           : step === "password_set"
             ? "Set a password to complete registration."
-            : "Select your country and region.";
+            : "";
 
   return (
     <div className="px-4 py-6">
@@ -48,7 +48,7 @@ export function LoginHeader({
       </div>
       <p className="text-muted-foreground text-sm">{subtitle}</p>
       {/* Step helper below for non-email steps */}
-      {step !== "email" && (
+      {step !== "email" && description && (
         <p className="text-muted-foreground mt-1 text-xs">{description}</p>
       )}
     </div>
