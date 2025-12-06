@@ -14,6 +14,11 @@ export const uploadthingFileRouter = {
       // Return data to the client; we'll use file.url to update the user's profile.
       return { url: file.url } as { url: string };
     }),
+  listingImages: f({ image: { maxFileCount: 10, maxFileSize: "8MB" } })
+    .onUploadComplete(async ({ file }: { file: { url: string } }) => {
+      console.log("[UploadThing] listing image uploaded:", file.url);
+      return { url: file.url } as { url: string };
+    }),
 } satisfies FileRouter;
 
 export type UploadthingFileRouter = typeof uploadthingFileRouter;

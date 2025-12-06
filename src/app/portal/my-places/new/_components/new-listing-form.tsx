@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "@/trpc/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UploadButton } from "@/components/uploadthing";
+import { GalleryUploader } from "@/components/uploader/gallery-uploader";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/card";
@@ -35,7 +35,13 @@ export default function NewListingForm() {
     { enabled: isEdit },
   );
 
-  if (isEdit && listingQuery.data && title === "" && category === "" && address === "") {
+  if (
+    isEdit &&
+    listingQuery.data &&
+    title === "" &&
+    category === "" &&
+    address === ""
+  ) {
     const l = listingQuery.data;
     setTitle(l?.title ?? "");
     setCategory(l?.category ?? "");
@@ -50,7 +56,9 @@ export default function NewListingForm() {
 
   return (
     <div className="p-3">
-      <h1 className="mb-3 text-lg font-semibold">{isEdit ? "Edit Listing" : "Add Listing"}</h1>
+      <h1 className="mb-3 text-lg font-semibold">
+        {isEdit ? "Edit Listing" : "Add Listing"}
+      </h1>
       <Card className="p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
@@ -101,15 +109,8 @@ export default function NewListingForm() {
           </div>
           <div className="grid gap-2 sm:col-span-2">
             <Label>Images</Label>
-            <UploadButton
-              endpoint="avatarUploader"
-              onClientUploadComplete={(res) => {
-                const first = Array.isArray(res) ? res[0] : undefined;
-                const raw = first?.serverData?.url ?? first?.url;
-                const url = (raw ?? "").trim().replace(/[)]+$/g, "");
-                if (url) setImageUrls((prev) => [...prev, url]);
-              }}
-              onUploadError={(error: Error) => alert(error.message)}
+            <GalleryUploader
+              onAdd={(urls) => setImageUrls((prev) => [...prev, ...urls])}
             />
             {imageUrls.length > 0 && (
               <div className="flex gap-2">
@@ -154,45 +155,57 @@ export default function NewListingForm() {
                 return;
               }
               let normalizedWebsite = website.trim();
-              if (normalizedWebsite && !/^https?:\/\//i.test(normalizedWebsite)) {
+              if (
+                normalizedWebsite &&
+                !/^https?:\/\//i.test(normalizedWebsite)
+              ) {
                 normalizedWebsite = `https://${normalizedWebsite}`;
               }
               try {
-              if (isEdit) {
-                await updateListing.mutateAsync({
-                  id: placeId,
-                  title,
-                  category,
-                  address,
-                  latitude: lat!,
-                  longitude: lng!,
-                  shortDescription,
-                  phone,
-                  website: normalizedWebsite || undefined,
-                  imageUrls,
-                });
-              } else {
-                await createListing.mutateAsync({
-                  ownerId,
-                  title,
-                  category,
-                  address,
-                  latitude: lat!,
-                  longitude: lng!,
-                  shortDescription,
-                  phone,
-                  website: normalizedWebsite || undefined,
-                  imageUrls,
-                });
-              }
-              router.replace("/portal/my-places");
+                if (isEdit) {
+                  await updateListing.mutateAsync({
+                    id: placeId,
+                    title,
+                    category,
+                    address,
+                    latitude: lat!,
+                    longitude: lng!,
+                    shortDescription,
+                    phone,
+                    website: normalizedWebsite || undefined,
+                    imageUrls,
+                  });
+                } else {
+                  await createListing.mutateAsync({
+                    ownerId,
+                    title,
+                    category,
+                    address,
+                    latitude: lat!,
+                    longitude: lng!,
+                    shortDescription,
+                    phone,
+                    website: normalizedWebsite || undefined,
+                    imageUrls,
+                  });
+                }
+                router.replace("/portal/my-places");
               } catch (err) {
-                const message = err instanceof Error ? err.message : "Failed to save listing.";
+                const message =
+                  err instanceof Error
+                    ? err.message
+                    : "Failed to save listing.";
                 alert(message);
               }
             }}
           >
-            {isEdit ? (updateListing.isPending ? "Updating..." : "Update Listing") : (createListing.isPending ? "Saving..." : "Save Listing")}
+            {isEdit
+              ? updateListing.isPending
+                ? "Updating..."
+                : "Update Listing"
+              : createListing.isPending
+                ? "Saving..."
+                : "Save Listing"}
           </Button>
         </div>
       </Card>
