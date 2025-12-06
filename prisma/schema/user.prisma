@@ -20,4 +20,5 @@ model User {
     location UserLocation?
     accounts Account[]
     sessions Session[]
+    images   UserImage[]
 }
