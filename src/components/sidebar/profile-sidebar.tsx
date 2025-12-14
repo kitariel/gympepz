@@ -17,19 +17,32 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Props = React.ComponentProps<typeof Sidebar>;
 
 export default function ProfileSidebar(props: Props) {
   const { data: session } = useSession();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
+  const email = session?.user?.email ?? "";
+  type AccountUser = {
+    id: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+  };
+  const userQuery = api.user.getByEmail.useQuery(
+    { email },
+    { enabled: !!email },
+  );
+  const user = userQuery.data as AccountUser | null;
   const plansQuery = api.plan.listByUser.useQuery(
     { userId },
     { enabled: !!userId },
   );
 
-  const name = session?.user?.name ?? "Member";
-  const image = session?.user?.image ?? undefined;
+  const name = user?.name ?? session?.user?.name ?? "Member";
+  const image = user?.image ?? session?.user?.image ?? undefined;
   const memberSince = "—";
   const totalPlans = Array.isArray(plansQuery.data)
     ? plansQuery.data.length
@@ -41,29 +54,13 @@ export default function ProfileSidebar(props: Props) {
       )
     : 0;
 
-  const notifications = [
-    {
-      id: "n1",
-      title: "Workout Reminder",
-      body: 'You have an upcoming "Total Body Circuit" in 1h.',
-      ago: "1h ago",
-      action: "View Details",
-    },
-    {
-      id: "n2",
-      title: "Sleep Reminder",
-      body: "You have a sleep schedule in 30m. Let's wind down.",
-      ago: "1h ago",
-      action: "Open Sleep Settings",
-    },
-    {
-      id: "n3",
-      title: "Hydration",
-      body: "You need 750ml more to complete today's target.",
-      ago: "1h ago",
-      action: "Log Water",
-    },
-  ];
+  const notifications: Array<{
+    id: string;
+    title: string;
+    body: string;
+    ago: string;
+    action: string;
+  }> = [];
 
   return (
     <Sidebar side="right" variant="inset" collapsible="offcanvas" {...props}>
@@ -118,24 +115,30 @@ export default function ProfileSidebar(props: Props) {
             <CardDescription>Recent alerts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {notifications.map((n) => (
-              <Card key={n.id} className="bg-neutral-800 p-3">
-                <div className="flex justify-between text-xs text-neutral-400">
-                  <div>{n.title}</div>
-                  <div>{n.ago}</div>
-                </div>
-                <div className="mt-1 text-sm text-neutral-200">{n.body}</div>
-                <div className="mt-2">
-                  <Button type="button" variant="outline" size="sm">
-                    {n.action}
-                  </Button>
-                </div>
-              </Card>
-            ))}
+            {notifications.length === 0 ? (
+              <Alert>
+                <AlertTitle>No notifications</AlertTitle>
+                <AlertDescription>You’re all caught up.</AlertDescription>
+              </Alert>
+            ) : (
+              notifications.map((n) => (
+                <Card key={n.id} className="bg-neutral-800 p-3">
+                  <div className="flex justify-between text-xs text-neutral-400">
+                    <div>{n.title}</div>
+                    <div>{n.ago}</div>
+                  </div>
+                  <div className="mt-1 text-sm text-neutral-200">{n.body}</div>
+                  <div className="mt-2">
+                    <Button type="button" variant="outline" size="sm">
+                      {n.action}
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
           </CardContent>
         </Card>
       </SidebarContent>
     </Sidebar>
   );
 }
-
