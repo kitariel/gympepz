@@ -1,6 +1,8 @@
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { mastra } from "@/mastra";
+import { handleSuggest } from "./plan.suggest";
+import { workoutPlannerAgent } from "@/mastra/agents";
 
 const PlanExerciseInput = z.object({
   exerciseId: z.string().min(1),
@@ -68,7 +70,7 @@ export const planRouter = createTRPCRouter({
         name: p.name,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
-        daysCount: (p as any)._count?.days ?? 0,
+        daysCount: (p as { _count?: { days?: number } })._count?.days ?? 0,
         isActive: user?.activePlanId === p.id,
       }));
     }),
@@ -214,6 +216,7 @@ export const planRouter = createTRPCRouter({
     .mutation(async ({ ctx }) => {
       return { ok: true };
     }),
+
   suggest: publicProcedure
     .input(
       z.object({
@@ -221,81 +224,22 @@ export const planRouter = createTRPCRouter({
         scheduleDays: z.number().min(1).max(7),
         experience: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
         equipment: z.enum(["Full Gym", "Dumbbells", "Home Setup"]).optional(),
+        dayLabel: z.string().optional(),
+        rawText: z.string().optional(),
+        conversationHistory: z
+          .array(
+            z.object({
+              role: z.enum(["user", "assistant"]),
+              content: z.string(),
+            }),
+          )
+          .optional(),
+        previousDays: z.array(z.string()).optional(),
         useAI: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const eqFilter =
-        input.equipment === "Full Gym"
-          ? undefined
-          : input.equipment === "Dumbbells"
-            ? "Dumbbell"
-            : "Bodyweight";
-      const all = await ctx.db.exercise.findMany({
-        where: eqFilter
-          ? { equipment: { contains: eqFilter, mode: "insensitive" } }
-          : undefined,
-        orderBy: { name: "asc" },
-      });
-      const vol =
-        input.experience === "Advanced"
-          ? { sets: 4, reps: 10 }
-          : input.experience === "Intermediate"
-            ? { sets: 3, reps: 10 }
-            : { sets: 3, reps: 8 };
-      const pickWarmup = () => {
-        const pool = all.filter((e) =>
-          e.muscleGroup.toLowerCase().includes("conditioning"),
-        );
-        const e = pool[0];
-        return e
-          ? [{ exerciseId: e.id, exerciseName: e.name, sets: 1, reps: 15 }]
-          : [];
-      };
-      const pick = (group: string, n: number) => {
-        const pool = all.filter((e) =>
-          e.muscleGroup.toLowerCase().includes(group),
-        );
-        const res: {
-          exerciseId: string;
-          exerciseName: string;
-          sets: number;
-          reps: number;
-        }[] = [];
-        for (let i = 0; i < Math.min(n, pool.length); i++) {
-          const e = pool[i]!;
-          res.push({
-            exerciseId: e.id,
-            exerciseName: e.name,
-            sets: vol.sets,
-            reps: vol.reps,
-          });
-        }
-        return res;
-      };
-      const days: {
-        title: string;
-        order: number;
-        items: {
-          exerciseId: string;
-          exerciseName: string;
-          sets: number;
-          reps: number;
-        }[];
-      }[] = [];
-      const pattern = ["push", "pull", "legs"] as const;
-      for (let i = 0; i < input.scheduleDays; i++) {
-        const kind = pattern[i % pattern.length]!;
-        const title = kind.charAt(0).toUpperCase() + kind.slice(1);
-        const items =
-          kind === "push"
-            ? pick("chest", 4)
-            : kind === "pull"
-              ? pick("back", 4)
-              : pick("legs", 4);
-        days.push({ title, order: i, items: [...pickWarmup(), ...items] });
-      }
-      return { ok: true, name: `${input.goal} Plan`, days };
+      return handleSuggest(ctx, input);
     }),
   generate: publicProcedure
     .input(
@@ -311,20 +255,23 @@ export const planRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       if (input.useAI && process.env.OPENAI_API_KEY) {
         try {
-          const agent = (mastra as any).agents?.workoutPlannerAgent;
-          if (!agent) throw new Error("Agent not available");
+          const runner = workoutPlannerAgent as unknown as {
+            run: (p: string) => Promise<unknown>;
+          };
           const prompt = JSON.stringify({
             goal: input.goal,
             days: input.scheduleDays,
             experience: input.experience,
             equipment: input.equipment,
           });
-          const res = await agent.run(prompt);
-          const text =
-            typeof res === "string"
-              ? res
-              : (res?.outputText ?? res?.text ?? "");
+          const res = await runner.run(prompt);
+          type AgentRunResult = { outputText?: string; text?: string };
+          const r: AgentRunResult | string = res as AgentRunResult | string;
+          const text: string =
+            typeof r === "string" ? r : (r.outputText ?? r.text ?? "");
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const parsed = JSON.parse(text || "{}");
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const daysFromAi: {
             title: string;
             items: {
@@ -333,6 +280,7 @@ export const planRouter = createTRPCRouter({
               sets: number;
               reps: number;
             }[];
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           }[] = parsed?.days ?? [];
           const all = await ctx.db.exercise.findMany({
             orderBy: { name: "asc" },

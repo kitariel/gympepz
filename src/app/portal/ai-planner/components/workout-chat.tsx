@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 
 type Props = {
   userId: string;
@@ -22,6 +23,7 @@ type PreviewItem = {
   exerciseName: string;
   sets: number;
   reps: number;
+  muscleGroup?: string;
 };
 type PreviewDay = { title: string; order: number; items: PreviewItem[] };
 type PreviewPlan = { name: string; days: PreviewDay[] };
@@ -37,6 +39,7 @@ export default function WorkoutChat({
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [latestPlanId, setLatestPlanId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const suggest = api.plan.suggest.useMutation();
   const create = api.plan.create.useMutation();
@@ -53,11 +56,21 @@ export default function WorkoutChat({
     { enabled: !!latestPlanId },
   );
 
+  const formatGroup = (s?: string) =>
+    s
+      ? s
+          .split(/\s+/)
+          .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+          .join(" ")
+      : undefined;
+
   useEffect(() => {
     if (plan.data && latestPlanId) {
       setMessages((m) => [...m, { role: "assistant", planId: latestPlanId }]);
     }
   }, [plan.data, latestPlanId]);
+
+  // AI-first: no manual day parsing; agent infers intent
 
   const send = async () => {
     if (!userId) return;
@@ -65,22 +78,38 @@ export default function WorkoutChat({
     setInput("");
     setLastText(text);
     if (text) setMessages((m) => [...m, { role: "user", text }]);
-    const scheduleDays = text.toLowerCase().includes("monday") ? 1 : days;
+    setLoading(true);
+    const scheduleDays = days;
     const mappedEquip: "Full Gym" | "Dumbbells" | "Home Setup" | undefined =
       equip === "Hybrid" ? undefined : equip;
-    const sg = (await suggest.mutateAsync({
-      goal: text || goal || "Workout",
-      scheduleDays,
-      experience: exp,
-      equipment: mappedEquip,
-      useAI: true,
-    })) as { ok: boolean; name: string; days: PreviewDay[] };
-    if (sg?.ok) {
-      setPreview({ name: sg.name, days: sg.days });
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", text: "Here are some suggestions." },
-      ]);
+    try {
+      const sg = (await suggest.mutateAsync({
+        goal: text || goal || "Workout",
+        scheduleDays,
+        experience: exp,
+        equipment: mappedEquip,
+        rawText: text,
+        conversationHistory: messages
+          .filter((m) => m.text)
+          .map((m) => ({ role: m.role, content: m.text! })),
+        useAI: true,
+      })) as {
+        ok: boolean;
+        name: string;
+        days: PreviewDay[];
+        assistantText?: string;
+      };
+      if (sg?.assistantText !== undefined) {
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", text: sg.assistantText },
+        ]);
+      }
+      if (sg?.ok) {
+        setPreview({ name: sg.name, days: sg.days });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,14 +178,17 @@ export default function WorkoutChat({
               variant={exp === e ? "default" : "outline"}
               onClick={async () => {
                 setExp(e as typeof exp);
+                setLoading(true);
                 const sg = (await suggest.mutateAsync({
                   goal: lastText || goal || "Workout",
                   scheduleDays: preview.days.length,
                   experience: e as typeof exp,
                   equipment: equip === "Hybrid" ? undefined : equip,
+                  rawText: lastText,
                   useAI: true,
                 })) as { ok: boolean; name: string; days: PreviewDay[] };
                 if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
+                setLoading(false);
               }}
             >
               {e}
@@ -176,6 +208,7 @@ export default function WorkoutChat({
               variant={equip === opt.value ? "default" : "outline"}
               onClick={async () => {
                 setEquip(opt.value as typeof equip);
+                setLoading(true);
                 const sg = (await suggest.mutateAsync({
                   goal: lastText || goal || "Workout",
                   scheduleDays: preview.days.length,
@@ -184,9 +217,11 @@ export default function WorkoutChat({
                     opt.value === "Hybrid"
                       ? undefined
                       : (opt.value as "Full Gym" | "Dumbbells" | "Home Setup"),
+                  rawText: lastText,
                   useAI: true,
                 })) as { ok: boolean; name: string; days: PreviewDay[] };
                 if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
+                setLoading(false);
               }}
             >
               {opt.label}
@@ -212,7 +247,10 @@ export default function WorkoutChat({
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-sm text-neutral-200">
-                    <div className="font-medium">{it.exerciseName}</div>
+                    <div className="font-medium">
+                      {it.exerciseName}
+                      {it.muscleGroup && ` (${formatGroup(it.muscleGroup)})`}
+                    </div>
                     <div className="text-xs text-neutral-400">
                       {it.sets} sets × {it.reps} reps
                     </div>
@@ -247,6 +285,16 @@ export default function WorkoutChat({
         {preview && (
           <div className="flex justify-start">{renderPreviewCard()}</div>
         )}
+        {loading && (
+          <div className="flex justify-start">
+            <Card className="max-w-[75%] bg-neutral-900 p-3 text-neutral-100">
+              <div className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" />
+                <span>Thinking…</span>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
       <div className="sticky bottom-0 w-full border-t border-neutral-800 bg-neutral-900 p-3">
         <div className="flex gap-2">
@@ -255,9 +303,17 @@ export default function WorkoutChat({
             placeholder="Need a workout plan?"
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            disabled={loading}
           />
-          <Button type="button" onClick={send}>
-            Send
+          <Button type="button" onClick={send} disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" />
+                Thinking…
+              </span>
+            ) : (
+              "Send"
+            )}
           </Button>
         </div>
       </div>
