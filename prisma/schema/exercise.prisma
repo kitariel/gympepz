@@ -3,6 +3,7 @@ model Exercise {
   name        String
   muscleGroup String
   equipment   String?
+  category    String?
   difficulty  String?
   description String?
   howTo       String?

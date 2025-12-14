@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import ProfileSidebar from "@/components/sidebar/profile-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
@@ -29,6 +30,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
           </header>
           <div className="flex flex-1 flex-col p-0">{children}</div>
         </SidebarInset>
+        <ProfileSidebar side="right" width="20rem" />
       </SidebarProvider>
     </AuthSessionProvider>
   );

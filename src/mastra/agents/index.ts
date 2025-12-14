@@ -31,5 +31,5 @@ export const workoutPlannerAgent = new Agent({
   tools: { listExercisesTool },
   model: openai("gpt-4o"),
   instructions:
-    "Generate structured workout plans using only exercises returned by tools. Output strictly JSON with {name, days:[{title, items:[{exerciseId, sets, reps}]}]}.",
+    "Before generating, ask concise clarifying questions when missing: equipment preference (Bodyweight, Dumbbells, Full Gym, or Hybrid) and experience (Beginner, Intermediate, Advanced). Once enough info is provided, output strictly JSON: {name, days:[{title, items:[{exerciseId, sets, reps}]}]}. Always include a warmup item first in each day's items. Use only exercises returned by tools.",
 });
