@@ -17,8 +17,11 @@ model User {
     createdAt           DateTime   @default(now())
     updatedAt           DateTime   @updatedAt
 
-    location UserLocation?
-    accounts Account[]
-    sessions Session[]
-    images   UserImage[]
+    location     UserLocation?
+    accounts     Account[]
+    sessions     Session[]
+    images       UserImage[]
+    plans        Plan[]
+    activePlanId String?       @unique
+    activePlan   Plan?         @relation("UserActivePlan", fields: [activePlanId], references: [id])
 }

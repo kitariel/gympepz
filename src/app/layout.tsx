@@ -17,6 +17,7 @@ const geist = Geist({
 });
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 
 export default function RootLayout({
   children,
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <AuthSessionProvider session={null}>
+            <TRPCReactProvider>{children}</TRPCReactProvider>
+          </AuthSessionProvider>
         </ThemeProvider>
       </body>
     </html>

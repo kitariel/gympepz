@@ -1,35 +1,49 @@
 {
   "navMain": [
     {
-      "title": "Discover",
-      "url": "/portal/discover",
-      "iconName": "Compass",
-      "iconPlatform": "lucide",
-      "enabled": true
-    },
-    {
-      "title": "My Places",
+      "title": "Workouts",
       "url": "#",
-      "iconName": "MapPin",
+      "iconName": "Dumbbell",
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        { "title": "My Listings", "url": "/portal/my-places", "enabled": true }
+        { "title": "AI Workout Creator", "url": "/portal/ai-planner", "enabled": true },
+        { "title": "My Plans", "url": "/portal/plans", "enabled": true },
+        { "title": "Exercise Library", "url": "/portal/exercises", "enabled": true }
       ]
     },
     {
-      "title": "Saved / Favorites",
-      "url": "/portal/saved",
-      "iconName": "Heart",
+      "title": "Logs",
+      "url": "#",
+      "iconName": "NotebookPen",
       "iconPlatform": "lucide",
-      "enabled": true
+      "enabled": true,
+      "items": [
+        { "title": "Workout Log", "url": "/log", "enabled": true },
+        { "title": "Progress Charts", "url": "/progress", "enabled": true }
+      ]
     },
     {
-      "title": "Analytics / Insights",
-      "url": "/portal/analytics",
-      "iconName": "BarChart3",
+      "title": "AI Coach",
+      "url": "#",
+      "iconName": "Sparkles",
       "iconPlatform": "lucide",
-      "enabled": true
+      "enabled": true,
+      "items": [
+        { "title": "Weekly Adjustments", "url": "/ai-weekly", "enabled": true },
+        { "title": "Ask a Coach", "url": "/ai-coach", "enabled": true }
+      ]
+    },
+    {
+      "title": "Nutrition",
+      "url": "#",
+      "iconName": "Beef",
+      "iconPlatform": "lucide",
+      "enabled": true,
+      "items": [
+        { "title": "Meal Plans", "url": "/meal-plans", "enabled": true },
+        { "title": "Calorie Calculator", "url": "/calories", "enabled": true }
+      ]
     }
   ],
   "navSecondary": [],

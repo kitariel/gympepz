@@ -1,0 +1,14 @@
+model Exercise {
+  id          String   @id @default(cuid())
+  name        String
+  muscleGroup String
+  equipment   String?
+  difficulty  String?
+  description String?
+  howTo       String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  planExercises PlanExercise[]
+}
