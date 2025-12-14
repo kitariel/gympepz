@@ -20,7 +20,7 @@ export default function AIPlannerPage() {
   // generation and adjustments happen within the chat component
 
   return (
-    <div className="min-h-screen">
+    <div className="h-full overflow-hidden">
       <WorkoutChat
         userId={userId}
         goal={goal}

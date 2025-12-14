@@ -265,8 +265,8 @@ export default function WorkoutChat({
   };
 
   return (
-    <div className="flex h-screen flex-col bg-neutral-950">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+    <div className="flex h-full flex-col bg-neutral-950">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m, idx) => (
           <div
             key={idx}
