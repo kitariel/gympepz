@@ -1,6 +1,13 @@
 {
   "navMain": [
     {
+      "title": "Home",
+      "url": "/portal",
+      "iconName": "Home",
+      "iconPlatform": "lucide",
+      "enabled": true
+    },
+    {
       "title": "Workouts",
       "url": "#",
       "iconName": "Dumbbell",
