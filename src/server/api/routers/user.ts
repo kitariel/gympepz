@@ -17,7 +17,10 @@ export const userRouter = createTRPCRouter({
         name: (user as { name?: string | null }).name ?? null,
         image: (user as { image?: string | null }).image ?? null,
         hasPassword: !!(user as { passwordHash?: string | null }).passwordHash,
-        emailVerified: (user as { emailVerified?: Date | null }).emailVerified ?? null,
+        emailVerified:
+          (user as { emailVerified?: Date | null }).emailVerified ?? null,
+        status: (user as { status?: string | null }).status ?? null,
+        createdAt: (user as { createdAt?: Date | null }).createdAt ?? null,
       };
     }),
 
@@ -44,5 +47,16 @@ export const userRouter = createTRPCRouter({
         name: (updated as { name?: string | null }).name ?? null,
         image: (updated as { image?: string | null }).image ?? null,
       };
+    }),
+
+  listSessions: publicProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const sessions = await ctx.db.session.findMany({
+        where: { userId: input.userId },
+        orderBy: { expires: "desc" },
+        select: { id: true, expires: true },
+      });
+      return sessions.map((s) => ({ id: s.id, expires: s.expires }));
     }),
 });
