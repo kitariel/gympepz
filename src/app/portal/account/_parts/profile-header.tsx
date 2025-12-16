@@ -51,7 +51,7 @@ export function ProfileHeader({
   const planLabel = "Free Plan";
 
   return (
-    <Card className="bg-card text-card-foreground rounded-xl border p-6 shadow-sm">
+    <Card className="bg-card text-card-foreground rounded-xl border border-none p-4 shadow-sm">
       <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20 rounded-xl">

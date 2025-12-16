@@ -30,7 +30,7 @@ export default function AccountForm({
   userId: string;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <ProfileHeader initialUser={initialUser} email={email} />
       <AccountDetailsCard user={initialUser} email={email} />
       <ProfileCard user={initialUser} email={email} />

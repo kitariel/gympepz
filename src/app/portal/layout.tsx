@@ -22,7 +22,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
     <AuthSessionProvider session={session}>
       <SidebarProvider>
         <AppSidebar enableEditing={false} />
-        <SidebarInset>
+        <SidebarInset className="border-none! ring-0 shadow-slate-200!">
           <header className="flex shrink-0 items-center gap-2 px-2 pt-2">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="" />
