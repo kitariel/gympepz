@@ -101,7 +101,7 @@ export default function ProfileSidebar(props: Props) {
           longestStreak={streakQuery.data?.longestStreak ?? 0}
         />
       </SidebarHeader>
-      <SidebarContent className="p-4 space-y-4 overflow-y-auto">
+      <SidebarContent className="p-2 space-y-2 overflow-y-auto">
 
 
 
