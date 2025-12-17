@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import WorkoutChat from "./components/workout-chat";
 import { OnboardingWizard } from "./_components/onboarding-wizard";
+import { Sparkles } from "lucide-react";
 
 export default function AIPlannerPage() {
   const { data: session } = useSession();
@@ -42,23 +43,39 @@ export default function AIPlannerPage() {
 
   if (showOnboarding && !hasSeenOnboarding) {
     return (
-      <OnboardingWizard
-        onComplete={handleOnboardingComplete}
-        onSkip={handleSkipOnboarding}
-      />
+      <div className="flex-1 p-6 pt-4">
+        <OnboardingWizard
+          onComplete={handleOnboardingComplete}
+          onSkip={handleSkipOnboarding}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <WorkoutChat
-        userId={userId}
-        goal={initialData?.goal ?? ""}
-        days={initialData?.days ?? 3}
-        experience={initialData?.experience ?? "Beginner"}
-        equipment={initialData?.equipment ?? "Full Gym"}
-        onPlanCreated={(id) => void id}
-      />
+    <div className="flex-1 flex flex-col p-6 pt-4">
+      {/* Compact Header */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="h-5 w-5 text-teal-600" />
+          <h2 className="text-2xl font-bold tracking-tight">AI Workout Planner</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Generate personalized workout plans with AI assistance
+        </p>
+      </div>
+
+      {/* Chat Interface */}
+      <div className="flex-1 min-h-0">
+        <WorkoutChat
+          userId={userId}
+          goal={initialData?.goal ?? ""}
+          days={initialData?.days ?? 3}
+          experience={initialData?.experience ?? "Beginner"}
+          equipment={initialData?.equipment ?? "Full Gym"}
+          onPlanCreated={(id) => void id}
+        />
+      </div>
     </div>
   );
 }

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Send, Sparkles, Dumbbell } from "lucide-react";
 
 type Props = {
   userId: string;
@@ -70,10 +71,8 @@ export default function WorkoutChat({
     }
   }, [plan.data, latestPlanId]);
 
-  // AI-first: no manual day parsing; agent infers intent
-
   const send = async () => {
-    if (!userId) return;
+    if (!userId || !input.trim()) return;
     const text = input.trim();
     setInput("");
     setLastText(text);
@@ -117,20 +116,31 @@ export default function WorkoutChat({
     const p = plan.data;
     if (!p || p.id !== id) return null;
     return (
-      <Card className="bg-neutral-900 p-4 text-neutral-100">
-        <div className="mb-2 font-semibold">{p.name}</div>
-        {(p.days ?? []).map((d) => (
-          <div key={d.id} className="mb-2">
-            <div className="text-sm font-medium">{d.title}</div>
-            <div className="mt-1 space-y-1">
-              {(d.items ?? []).map((it) => (
-                <div key={it.id} className="text-xs text-neutral-300">
-                  • {it.exerciseId} — {it.sets}x{it.reps}
-                </div>
-              ))}
+      <Card className="border-0 shadow-sm bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 max-w-[85%]">
+        <CardHeader className="px-4 pt-4 pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-teal-600" />
+            {p.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 space-y-3">
+          {(p.days ?? []).map((d) => (
+            <div key={d.id} className="space-y-1.5">
+              <div className="text-xs font-semibold text-foreground">{d.title}</div>
+              <div className="space-y-1">
+                {(d.items ?? []).map((it) => (
+                  <div key={it.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Dumbbell className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{it.exercise?.name ?? it.exerciseId}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {it.sets}x{it.reps}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </CardContent>
       </Card>
     );
   };
@@ -154,119 +164,148 @@ export default function WorkoutChat({
       setLatestPlanId(created.id);
       onPlanCreated(created.id);
       setPreview(null);
-      setMessages((m) => [...m, { role: "assistant", text: "Plan saved." }]);
+      setMessages((m) => [...m, { role: "assistant", text: "Plan saved successfully! 🎉" }]);
     }
   };
 
   const renderPreviewCard = () => {
     if (!preview) return null;
     return (
-      <Card className="bg-neutral-900 p-4 text-neutral-100">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="font-semibold">{preview.name}</div>
-          <Button type="button" size="sm" onClick={savePreview}>
-            Save Plan
-          </Button>
-        </div>
-        <div className="mb-3 flex flex-wrap gap-2">
-          <div className="text-xs text-neutral-400">Experience:</div>
-          {["Beginner", "Intermediate", "Advanced"].map((e) => (
-            <Button
-              key={e}
-              type="button"
-              size="sm"
-              variant={exp === e ? "default" : "outline"}
-              onClick={async () => {
-                setExp(e as typeof exp);
-                setLoading(true);
-                const sg = (await suggest.mutateAsync({
-                  goal: lastText || goal || "Workout",
-                  scheduleDays: preview.days.length,
-                  experience: e as typeof exp,
-                  equipment: equip === "Hybrid" ? undefined : equip,
-                  rawText: lastText,
-                  useAI: true,
-                })) as { ok: boolean; name: string; days: PreviewDay[] };
-                if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
-                setLoading(false);
-              }}
-            >
-              {e}
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 max-w-[85%]">
+        <CardHeader className="px-4 pt-4 pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-teal-600" />
+              {preview.name}
+            </CardTitle>
+            <Button type="button" size="sm" className="h-8 text-xs" onClick={savePreview}>
+              Save Plan
             </Button>
-          ))}
-          <div className="ml-4 text-xs text-neutral-400">Equipment:</div>
-          {[
-            { label: "Bodyweight", value: "Home Setup" },
-            { label: "Dumbbells", value: "Dumbbells" },
-            { label: "Full Gym", value: "Full Gym" },
-            { label: "Hybrid", value: "Hybrid" },
-          ].map((opt) => (
-            <Button
-              key={opt.label}
-              type="button"
-              size="sm"
-              variant={equip === opt.value ? "default" : "outline"}
-              onClick={async () => {
-                setEquip(opt.value as typeof equip);
-                setLoading(true);
-                const sg = (await suggest.mutateAsync({
-                  goal: lastText || goal || "Workout",
-                  scheduleDays: preview.days.length,
-                  experience: exp,
-                  equipment:
-                    opt.value === "Hybrid"
-                      ? undefined
-                      : (opt.value as "Full Gym" | "Dumbbells" | "Home Setup"),
-                  rawText: lastText,
-                  useAI: true,
-                })) as { ok: boolean; name: string; days: PreviewDay[] };
-                if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
-                setLoading(false);
-              }}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-        {preview.days.map((d, idx) => (
-          <div key={idx} className="mb-3">
-            <div className="text-sm font-medium">{d.title}</div>
-            <div className="mt-2 space-y-2">
-              {d.items.map((it, jdx) => (
-                <div
-                  key={it.exerciseId + jdx}
-                  className="flex items-center gap-3"
-                >
-                  <Avatar className="size-10">
-                    <AvatarImage
-                      src={`https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(it.exerciseId)}`}
-                      alt={it.exerciseName}
-                    />
-                    <AvatarFallback>
-                      {it.exerciseName.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-sm text-neutral-200">
-                    <div className="font-medium">
-                      {it.exerciseName}
-                      {it.muscleGroup && ` (${formatGroup(it.muscleGroup)})`}
-                    </div>
-                    <div className="text-xs text-neutral-400">
-                      {it.sets} sets × {it.reps} reps
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
-        ))}
+        </CardHeader>
+        <CardContent className="px-4 pb-4 space-y-3">
+          {/* Quick Adjustments */}
+          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-lg bg-background/50">
+            <span className="text-[10px] text-muted-foreground font-medium">Experience:</span>
+            {["Beginner", "Intermediate", "Advanced"].map((e) => (
+              <Button
+                key={e}
+                type="button"
+                size="sm"
+                variant={exp === e ? "default" : "outline"}
+                className="h-7 text-[10px] px-2"
+                onClick={async () => {
+                  setExp(e as typeof exp);
+                  setLoading(true);
+                  const sg = (await suggest.mutateAsync({
+                    goal: lastText || goal || "Workout",
+                    scheduleDays: preview.days.length,
+                    experience: e as typeof exp,
+                    equipment: equip === "Hybrid" ? undefined : equip,
+                    rawText: lastText,
+                    useAI: true,
+                  })) as { ok: boolean; name: string; days: PreviewDay[] };
+                  if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
+                  setLoading(false);
+                }}
+              >
+                {e}
+              </Button>
+            ))}
+            <span className="text-[10px] text-muted-foreground font-medium ml-2">Equipment:</span>
+            {[
+              { label: "Bodyweight", value: "Home Setup" },
+              { label: "Dumbbells", value: "Dumbbells" },
+              { label: "Full Gym", value: "Full Gym" },
+              { label: "Hybrid", value: "Hybrid" },
+            ].map((opt) => (
+              <Button
+                key={opt.label}
+                type="button"
+                size="sm"
+                variant={equip === opt.value ? "default" : "outline"}
+                className="h-7 text-[10px] px-2"
+                onClick={async () => {
+                  setEquip(opt.value as typeof equip);
+                  setLoading(true);
+                  const sg = (await suggest.mutateAsync({
+                    goal: lastText || goal || "Workout",
+                    scheduleDays: preview.days.length,
+                    experience: exp,
+                    equipment:
+                      opt.value === "Hybrid"
+                        ? undefined
+                        : (opt.value as "Full Gym" | "Dumbbells" | "Home Setup"),
+                    rawText: lastText,
+                    useAI: true,
+                  })) as { ok: boolean; name: string; days: PreviewDay[] };
+                  if (sg?.ok) setPreview({ name: sg.name, days: sg.days });
+                  setLoading(false);
+                }}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Plan Days */}
+          <div className="space-y-3">
+            {preview.days.map((d, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="text-xs font-semibold text-foreground">{d.title}</div>
+                <div className="space-y-1.5">
+                  {d.items.map((it, jdx) => (
+                    <div
+                      key={it.exerciseId + jdx}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+                    >
+                      <Avatar className="size-8">
+                        <AvatarImage
+                          src={`https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(it.exerciseId)}`}
+                          alt={it.exerciseName}
+                        />
+                        <AvatarFallback className="text-[10px]">
+                          {it.exerciseName.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate">
+                          {it.exerciseName}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            {it.sets} sets × {it.reps} reps
+                          </span>
+                          {it.muscleGroup && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                              {formatGroup(it.muscleGroup)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
       </Card>
     );
   };
 
   return (
-    <div className="flex h-full flex-col bg-neutral-950">
+    <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Sparkles className="h-10 w-10 text-teal-600 mb-3 opacity-50" />
+            <h3 className="text-base font-semibold mb-1">Start a conversation</h3>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Describe your fitness goals and I'll create a personalized workout plan for you
+            </p>
+          </div>
+        )}
         {messages.map((m, idx) => (
           <div
             key={idx}
@@ -275,8 +314,14 @@ export default function WorkoutChat({
             }
           >
             {m.text && (
-              <Card className="max-w-[75%] bg-neutral-900 p-3 text-neutral-100">
-                {m.text}
+              <Card className={`max-w-[75%] border-0 shadow-sm ${
+                m.role === "user" 
+                  ? "bg-teal-600 text-white" 
+                  : "bg-muted"
+              }`}>
+                <CardContent className="p-3">
+                  <p className="text-sm">{m.text}</p>
+                </CardContent>
               </Card>
             )}
             {m.planId && renderPlanCard(m.planId)}
@@ -287,32 +332,46 @@ export default function WorkoutChat({
         )}
         {loading && (
           <div className="flex justify-start">
-            <Card className="max-w-[75%] bg-neutral-900 p-3 text-neutral-100">
-              <div className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
-                <span>Thinking…</span>
-              </div>
+            <Card className="max-w-[75%] border-0 shadow-sm bg-muted">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
+                  <span className="text-sm text-muted-foreground">Thinking…</span>
+                </div>
+              </CardContent>
             </Card>
           </div>
         )}
       </div>
-      <div className="sticky bottom-0 w-full border-t border-neutral-800 bg-neutral-900 p-3">
+      <div className="sticky bottom-0 w-full border-t bg-background/95 backdrop-blur p-3">
         <div className="flex gap-2">
           <Input
-            className="bg-neutral-800 text-neutral-100"
-            placeholder="Need a workout plan?"
+            placeholder="Describe your fitness goals..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
             disabled={loading}
+            className="h-9"
           />
-          <Button type="button" onClick={send} disabled={loading}>
+          <Button 
+            type="button" 
+            onClick={send} 
+            disabled={loading || !input.trim()}
+            size="sm"
+            className="h-9 gap-2"
+          >
             {loading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
-                Thinking…
-              </span>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Send"
+              <>
+                <Send className="h-4 w-4" />
+                Send
+              </>
             )}
           </Button>
         </div>

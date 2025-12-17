@@ -53,28 +53,28 @@ export function PlanCard({
   const router = useRouter();
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 hover:border-primary/50">
-      <CardHeader className="pb-3">
+    <Card className="group hover:shadow-md transition-all border-0 shadow-sm">
+      <CardHeader className="pb-2 px-4 pt-4">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-lg truncate">{name}</h3>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="font-semibold text-sm truncate">{name}</h3>
               {isActive && (
-                <Badge variant="default" className="shrink-0">
-                  <Star className="h-3 w-3 mr-1" />
+                <Badge variant="default" className="shrink-0 text-[10px] px-1.5 py-0">
+                  <Star className="h-2.5 w-2.5 mr-1" />
                   Active
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
+                <Calendar className="h-3 w-3" />
                 {daysCount} days
               </span>
               {exercisesCount !== undefined && (
                 <span className="flex items-center gap-1">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  {exercisesCount} exercises
+                  <TrendingUp className="h-3 w-3" />
+                  {exercisesCount} ex
                 </span>
               )}
             </div>
@@ -82,31 +82,31 @@ export function PlanCard({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/portal/plans/${id}`)}>
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-3.5 w-3.5 mr-2" />
                 Edit Plan
               </DropdownMenuItem>
               {!isActive && onSetActive && (
                 <DropdownMenuItem onClick={onSetActive}>
-                  <Star className="h-4 w-4 mr-2" />
+                  <Star className="h-3.5 w-3.5 mr-2" />
                   Set as Active
                 </DropdownMenuItem>
               )}
               {onDuplicate && (
                 <DropdownMenuItem onClick={onDuplicate}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="h-3.5 w-3.5 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               {onDelete && (
                 <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
                   Delete
                 </DropdownMenuItem>
               )}
@@ -115,30 +115,31 @@ export function PlanCard({
         </div>
       </CardHeader>
 
-      <CardContent className="pb-3">
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div>Created {format(new Date(createdAt), "MMM d, yyyy")}</div>
-          <div>Updated {format(new Date(updatedAt), "MMM d, yyyy")}</div>
+      <CardContent className="px-4 pb-2">
+        <div className="text-[10px] text-muted-foreground">
+          Updated {format(new Date(updatedAt), "MMM d")}
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0 gap-2">
+      <CardFooter className="pt-2 pb-4 px-4 gap-2">
         {onStartWorkout && (
           <Button
             variant={isActive ? "default" : "outline"}
-            className="flex-1"
+            size="sm"
+            className="flex-1 h-8 text-xs"
             onClick={onStartWorkout}
           >
-            <Play className="h-4 w-4 mr-2" />
-            Start Workout
+            <Play className="h-3 w-3 mr-1.5" />
+            Start
           </Button>
         )}
         <Button
           variant="outline"
-          className="flex-1"
+          size="sm"
+          className="flex-1 h-8 text-xs"
           onClick={() => router.push(`/portal/plans/${id}`)}
         >
-          View Details
+          Edit
         </Button>
       </CardFooter>
     </Card>

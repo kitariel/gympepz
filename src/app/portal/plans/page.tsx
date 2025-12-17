@@ -85,24 +85,24 @@ export default function PlansPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      {/* Header */}
+    <div className="flex-1 space-y-4 p-6 pt-4">
+      {/* Compact Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Workout Plans</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold tracking-tight">Workout Plans</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Manage your workout programs and training splits
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/portal/ai-planner")}>
-            <Sparkles className="mr-2 h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={() => router.push("/portal/ai-planner")} className="gap-2">
+            <Sparkles className="h-4 w-4" />
             AI Generator
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
                 New Plan
               </Button>
             </DialogTrigger>
@@ -113,7 +113,7 @@ export default function PlansPage() {
               <div className="space-y-6">
                 {/* Quick Create */}
                 <div className="space-y-3">
-                  <h3 className="font-semibold">Create from Scratch</h3>
+                  <h3 className="font-semibold text-sm">Create from Scratch</h3>
                   <div className="flex gap-2">
                     <Input
                       placeholder="Enter plan name (e.g., My Custom Split)"
@@ -148,45 +148,45 @@ export default function PlansPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Folder className="h-6 w-6 text-primary" />
+      {/* Compact Stats */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Folder className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total Plans</p>
+                <p className="text-xl font-bold">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">Total Plans</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-500/10">
-                <Star className="h-6 w-6 text-green-500" />
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Star className="h-4 w-4 text-green-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.active}</p>
-                <p className="text-sm text-muted-foreground">Active Plans</p>
+                <p className="text-xl font-bold">{stats.active}</p>
+                <p className="text-xs text-muted-foreground">Active Plans</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-500/10">
-                <Dumbbell className="h-6 w-6 text-blue-500" />
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Dumbbell className="h-4 w-4 text-blue-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.totalDays}</p>
-                <p className="text-sm text-muted-foreground">Total Workout Days</p>
+                <p className="text-xl font-bold">{stats.totalDays}</p>
+                <p className="text-xs text-muted-foreground">Total Days</p>
               </div>
             </div>
           </CardContent>
@@ -195,20 +195,20 @@ export default function PlansPage() {
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">
-            <Folder className="h-4 w-4 mr-2" />
-            All Plans ({plans.length})
+        <TabsList className="h-9">
+          <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm">
+            <Folder className="h-3.5 w-3.5" />
+            All ({plans.length})
           </TabsTrigger>
-          <TabsTrigger value="active">
-            <Star className="h-4 w-4 mr-2" />
+          <TabsTrigger value="active" className="gap-1.5 text-xs sm:text-sm">
+            <Star className="h-3.5 w-3.5" />
             Active ({stats.active})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-4">
+        <TabsContent value="all" className="space-y-4 mt-4">
           {filteredPlans.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {filteredPlans.map((plan) => (
                 <PlanCard
                   key={plan.id}
@@ -226,20 +226,20 @@ export default function PlansPage() {
               ))}
             </div>
           ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Dumbbell className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No plans yet</h3>
-                <p className="text-sm text-muted-foreground mb-4 text-center">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <Dumbbell className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+                <h3 className="text-base font-semibold mb-1">No plans yet</h3>
+                <p className="text-xs text-muted-foreground mb-3 text-center">
                   Create your first workout plan or generate one with AI
                 </p>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
                     Create Plan
                   </Button>
-                  <Button onClick={() => router.push("/portal/ai-planner")}>
-                    <Sparkles className="mr-2 h-4 w-4" />
+                  <Button size="sm" onClick={() => router.push("/portal/ai-planner")} className="gap-2">
+                    <Sparkles className="h-4 w-4" />
                     AI Generator
                   </Button>
                 </div>
@@ -248,9 +248,9 @@ export default function PlansPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="active" className="space-y-4">
+        <TabsContent value="active" className="space-y-4 mt-4">
           {filteredPlans.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {filteredPlans.map((plan) => (
                 <PlanCard
                   key={plan.id}
@@ -267,14 +267,14 @@ export default function PlansPage() {
               ))}
             </div>
           ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Star className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No active plan</h3>
-                <p className="text-sm text-muted-foreground mb-4 text-center">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <Star className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+                <h3 className="text-base font-semibold mb-1">No active plan</h3>
+                <p className="text-xs text-muted-foreground mb-3 text-center">
                   Set a plan as active to start tracking your workouts
                 </p>
-                <Button variant="outline" onClick={() => setSelectedTab("all")}>
+                <Button variant="outline" size="sm" onClick={() => setSelectedTab("all")}>
                   View All Plans
                 </Button>
               </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { api } from "@/trpc/react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,12 +23,16 @@ import {
   Dumbbell,
   Save,
   Eye,
+  Calendar,
 } from "lucide-react";
 
-export default function PlanDetailPage() {
-  const params = useParams();
+export default function PlanDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
-  const id = String(params?.id ?? "");
 
   const [planName, setPlanName] = useState("");
   const [isAddDayDialogOpen, setIsAddDayDialogOpen] = useState(false);
@@ -112,40 +116,45 @@ export default function PlanDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Dumbbell className="h-12 w-12 animate-pulse mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">Loading plan...</p>
+          <Dumbbell className="h-10 w-10 animate-pulse mx-auto mb-3 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading plan...</p>
         </div>
       </div>
     );
   }
 
+  const totalExercises = p?.days?.reduce(
+    (sum: number, d: any) => sum + (d.items?.length ?? 0),
+    0
+  ) ?? 0;
+
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      {/* Header */}
+    <div className="flex-1 space-y-4 p-6 pt-4">
+      {/* Compact Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Edit Plan</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-bold tracking-tight">Edit Plan</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Customize your workout program
             </p>
           </div>
         </div>
-        <Button onClick={() => router.push(`/portal/log`)}>
-          <Eye className="mr-2 h-4 w-4" />
-          Preview Workout
+        <Button size="sm" onClick={() => router.push(`/portal/log`)} className="gap-2">
+          <Eye className="h-4 w-4" />
+          Preview
         </Button>
       </div>
 
-      {/* Plan Name */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Plan Details</CardTitle>
+      {/* Plan Name - Compact */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="px-4 pt-4 pb-3">
+          <CardTitle className="text-sm">Plan Details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="px-4 pb-4 space-y-2.5">
           <div className="flex gap-2">
             <Input
               placeholder="Plan name"
@@ -156,40 +165,40 @@ export default function PlanDetailPage() {
                   handleSaveName();
                 }
               }}
+              className="h-9"
             />
             <Button
+              size="sm"
               onClick={handleSaveName}
               disabled={updateMeta.isPending || !planName}
+              className="h-9"
             >
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-3.5 w-3.5 mr-1.5" />
               {updateMeta.isPending ? "Saving..." : "Save"}
             </Button>
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{p?.days?.length ?? 0} workout days</span>
-            <span>•</span>
-            <span>
-              {p?.days?.reduce(
-                (sum: number, d: any) => sum + (d.items?.length ?? 0),
-                0
-              ) ?? 0}{" "}
-              total exercises
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {p?.days?.length ?? 0} days
             </span>
+            <span>•</span>
+            <span>{totalExercises} exercises</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Workout Days */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Workout Days</h3>
+          <h3 className="text-base font-semibold">Workout Days</h3>
           <Dialog
             open={isAddDayDialogOpen}
             onOpenChange={setIsAddDayDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
                 Add Day
               </Button>
             </DialogTrigger>
@@ -221,78 +230,78 @@ export default function PlanDetailPage() {
         </div>
 
         {(p?.days ?? []).length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Dumbbell className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No workout days yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="flex flex-col items-center justify-center py-10">
+              <Dumbbell className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+              <h3 className="text-base font-semibold mb-1">No workout days yet</h3>
+              <p className="text-xs text-muted-foreground mb-3 text-center">
                 Add your first workout day to get started
               </p>
-              <Button onClick={() => setIsAddDayDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button size="sm" onClick={() => setIsAddDayDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
                 Add Day
               </Button>
             </CardContent>
           </Card>
         ) : (
           (p?.days ?? []).map((day: any, dayIndex: number) => (
-            <Card key={day.id}>
-              <CardHeader>
+            <Card key={day.id} className="border-0 shadow-sm">
+              <CardHeader className="px-4 pt-4 pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <CardTitle className="text-lg">{day.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-sm">{day.title}</CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {day.items?.length ?? 0} exercises
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-8 text-xs"
                       onClick={() => {
                         setTargetDayId(day.id);
                         setIsAddExerciseDialogOpen(true);
                       }}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Exercise
+                      <Plus className="h-3 w-3 mr-1.5" />
+                      Add
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
+                      className="h-8 w-8 p-0"
                       onClick={() => handleDeleteDay(day.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               {(day.items ?? []).length > 0 && (
-                <CardContent className="space-y-3">
+                <CardContent className="px-4 pb-4 space-y-2">
                   {(day.items ?? []).map((item: any, itemIndex: number) => (
                     <div key={item.id}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 grid grid-cols-4 gap-3 items-center">
-                          <div className="col-span-1">
-                            <p className="text-sm font-medium truncate">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 grid grid-cols-4 gap-2 items-center">
+                          <div className="col-span-1 min-w-0">
+                            <p className="text-xs font-medium truncate">
                               {item.exercise?.name ?? item.exerciseId}
                             </p>
                             {item.exercise?.muscleGroup && (
-                              <Badge variant="outline" className="text-xs mt-1">
+                              <Badge variant="outline" className="text-[9px] mt-1 px-1.5 py-0">
                                 {item.exercise.muscleGroup}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              Sets:
-                            </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">Sets:</span>
                             <Input
                               type="number"
-                              className="w-20 h-9"
+                              className="w-16 h-8 text-xs"
                               value={item.sets ?? 3}
                               onChange={(e) =>
                                 handleUpdateItem(
@@ -304,13 +313,11 @@ export default function PlanDetailPage() {
                               onBlur={() => plan.refetch()}
                             />
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              Reps:
-                            </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">Reps:</span>
                             <Input
                               type="number"
-                              className="w-20 h-9"
+                              className="w-16 h-8 text-xs"
                               value={item.reps ?? 10}
                               onChange={(e) =>
                                 handleUpdateItem(
@@ -322,13 +329,11 @@ export default function PlanDetailPage() {
                               onBlur={() => plan.refetch()}
                             />
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              Weight:
-                            </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">Weight:</span>
                             <Input
                               type="number"
-                              className="w-20 h-9"
+                              className="w-16 h-8 text-xs"
                               value={item.weight ?? ""}
                               placeholder="kg"
                               onChange={(e) =>
@@ -345,14 +350,14 @@ export default function PlanDetailPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9"
+                          className="h-8 w-8"
                           onClick={() => handleDeleteItem(item.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                       {itemIndex < (day.items?.length ?? 0) - 1 && (
-                        <Separator className="mt-3" />
+                        <Separator className="mt-2" />
                       )}
                     </div>
                   ))}
@@ -383,19 +388,19 @@ export default function PlanDetailPage() {
                 <Button
                   key={ex.id}
                   variant="outline"
-                  className="w-full justify-start h-auto py-3"
+                  className="w-full justify-start h-auto py-2.5"
                   onClick={() => handleAddExercise(ex.id)}
                 >
-                  <div className="flex items-start gap-3 text-left">
-                    <Dumbbell className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{ex.name}</p>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
+                  <div className="flex items-start gap-2.5 text-left w-full">
+                    <Dumbbell className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{ex.name}</p>
+                      <div className="flex gap-1.5 mt-1">
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0">
                           {ex.muscleGroup}
                         </Badge>
                         {ex.equipment && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0">
                             {ex.equipment}
                           </Badge>
                         )}
@@ -405,7 +410,7 @@ export default function PlanDetailPage() {
                 </Button>
               ))}
               {searchQuery && exercises.data?.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-4">
+                <p className="text-center text-xs text-muted-foreground py-4">
                   No exercises found.
                 </p>
               )}

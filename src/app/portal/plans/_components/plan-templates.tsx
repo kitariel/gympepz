@@ -19,7 +19,7 @@ const TEMPLATES: PlanTemplate[] = [
   {
     id: "ppl",
     name: "Push/Pull/Legs",
-    description: "Classic 6-day split targeting major muscle groups with dedicated push, pull, and leg days",
+    description: "Classic 6-day split targeting major muscle groups",
     daysCount: 6,
     level: "Intermediate",
     focus: "Hypertrophy",
@@ -28,7 +28,7 @@ const TEMPLATES: PlanTemplate[] = [
   {
     id: "upper-lower",
     name: "Upper/Lower Split",
-    description: "4-day program alternating between upper and lower body workouts for balanced development",
+    description: "4-day program alternating upper and lower body",
     daysCount: 4,
     level: "Beginner",
     focus: "Strength",
@@ -37,7 +37,7 @@ const TEMPLATES: PlanTemplate[] = [
   {
     id: "full-body",
     name: "Full Body 3x",
-    description: "Hit all major muscle groups three times per week for maximum frequency and recovery",
+    description: "Hit all major muscle groups three times per week",
     daysCount: 3,
     level: "Beginner",
     focus: "General Fitness",
@@ -46,7 +46,7 @@ const TEMPLATES: PlanTemplate[] = [
   {
     id: "bro-split",
     name: "Bro Split",
-    description: "Classic 5-day bodybuilding split with one muscle group per day for maximum volume",
+    description: "5-day bodybuilding split with one muscle group per day",
     daysCount: 5,
     level: "Advanced",
     focus: "Bodybuilding",
@@ -73,46 +73,48 @@ export function PlanTemplates({ onSelectTemplate }: PlanTemplatesProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Start with a Template</h3>
-        <p className="text-sm text-muted-foreground">
-          Choose from proven workout programs or create your own from scratch
+        <h3 className="text-sm font-semibold mb-1">Start with a Template</h3>
+        <p className="text-xs text-muted-foreground">
+          Choose from proven workout programs or create your own
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         {TEMPLATES.map((template) => {
           const Icon = template.icon;
           return (
-            <Card key={template.id} className="hover:border-primary/50 transition-colors">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base mb-1">{template.name}</CardTitle>
-                      <CardDescription className="text-sm">
-                        {template.description}
-                      </CardDescription>
-                    </div>
+            <Card key={template.id} className="hover:border-primary/50 transition-colors border-0 shadow-sm">
+              <CardHeader className="pb-2 px-4 pt-4">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-sm mb-0.5">{template.name}</CardTitle>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {template.description}
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className={getLevelColor(template.level)}>
+              <CardContent className="px-4 pb-4 space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 ${getLevelColor(template.level)}`}>
                     {template.level}
                   </Badge>
-                  <Badge variant="outline">{template.daysCount} days/week</Badge>
-                  <Badge variant="outline">{template.focus}</Badge>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                    {template.daysCount} days
+                  </Badge>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                    {template.focus}
+                  </Badge>
                 </div>
 
                 <Button
-                  className="w-full"
+                  className="w-full h-8 text-xs"
                   variant="outline"
                   onClick={() => onSelectTemplate(template)}
                 >
