@@ -58,7 +58,12 @@ export const planRouter = createTRPCRouter({
       const plans = await ctx.db.plan.findMany({
         where: { userId: input.userId },
         orderBy: { updatedAt: "desc" },
-        include: { _count: { select: { days: true } } },
+        include: { 
+          _count: { select: { days: true } },
+          days: {
+            select: { id: true, title: true, order: true }
+          }
+        },
       });
       const user = await ctx.db.user.findUnique({
         where: { id: input.userId },
@@ -72,6 +77,7 @@ export const planRouter = createTRPCRouter({
         updatedAt: p.updatedAt,
         daysCount: (p as { _count?: { days?: number } })._count?.days ?? 0,
         isActive: user?.activePlanId === p.id,
+        days: p.days,
       }));
     }),
   get: publicProcedure

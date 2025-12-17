@@ -24,4 +24,7 @@ model User {
     plans        Plan[]
     activePlanId String?       @unique
     activePlan   Plan?         @relation("UserActivePlan", fields: [activePlanId], references: [id])
+
+    workoutLogs     WorkoutLog[]
+    progressEntries ProgressEntry[]
 }

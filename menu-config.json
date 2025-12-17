@@ -14,21 +14,26 @@
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        { "title": "AI Workout Creator", "url": "/portal/ai-planner", "enabled": true },
+        {
+          "title": "AI Workout Creator",
+          "url": "/portal/ai-planner",
+          "enabled": true
+        },
         { "title": "My Plans", "url": "/portal/plans", "enabled": true },
-        { "title": "Exercise Library", "url": "/portal/exercises", "enabled": true }
+        {
+          "title": "Exercise Library",
+          "url": "/portal/exercises",
+          "enabled": true
+        }
       ]
     },
     {
       "title": "Logs",
-      "url": "#",
+      "url": "/portal/log",
       "iconName": "NotebookPen",
       "iconPlatform": "lucide",
       "enabled": true,
-      "items": [
-        { "title": "Workout Log", "url": "/log", "enabled": true },
-        { "title": "Progress Charts", "url": "/progress", "enabled": true }
-      ]
+      "items": []
     },
     {
       "title": "AI Coach",

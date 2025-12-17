@@ -7,6 +7,8 @@ import { locationRouter } from "./routers/location";
 import { galleryRouter } from "./routers/gallery";
 import { exerciseRouter } from "./routers/exercise";
 import { planRouter } from "./routers/plan";
+import { workoutLogRouter } from "./routers/workout-log";
+import { progressRouter } from "./routers/progress";
 
 /**
  * This is the primary router for your server.
@@ -22,6 +24,8 @@ export const appRouter = createTRPCRouter({
   gallery: galleryRouter,
   exercise: exerciseRouter,
   plan: planRouter,
+  workoutLog: workoutLogRouter,
+  progress: progressRouter,
 });
 
 // export type definition of API

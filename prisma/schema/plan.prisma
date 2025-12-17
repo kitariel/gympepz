@@ -18,6 +18,7 @@ model PlanDay {
 
   plan  Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
   items PlanExercise[]
+  workoutLogs WorkoutLog[]
 }
 
 model PlanExercise {
