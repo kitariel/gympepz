@@ -8,7 +8,6 @@ import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import {
   ProfileHeader,
   QuickActions,
-  MonthlyStats,
   RecentPRs,
   RecentActivity,
   BodyStats,
@@ -106,11 +105,9 @@ export default function ProfileSidebar(props: Props) {
 
 
 
-        {/* Quick Actions */}
-        <QuickActions activePlanId={activePlan?.id} />
-
-        {/* Monthly Stats */}
-        <MonthlyStats
+        {/* Quick Actions with Monthly Stats */}
+        <QuickActions
+          activePlanId={activePlan?.id}
           workouts={stats.workouts}
           volume={analyticsQuery.data?.totalVolume ?? 0}
           averageDuration={analyticsQuery.data?.averageDuration}

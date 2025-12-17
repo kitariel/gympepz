@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Flame, Check, X } from "lucide-react";
+import { Flame, Check, X, Target, Dumbbell, Award } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface DayProgress {
@@ -89,40 +89,49 @@ export function ProfileHeader({
         </div>
       </div>
 
-      <CardContent className="p-4 space-y-4">
-        {/* Quick Stats - Compact Grid */}
-        <div className="grid grid-cols-3 gap-2">
+      <CardContent className="p-3 space-y-3">
+        {/* Quick Stats - Ultra Compact Inline */}
+        <div className="flex items-center justify-between bg-gradient-to-r from-teal-50/50 to-emerald-50/50 dark:from-teal-950/20 dark:to-emerald-950/20 rounded-lg px-2.5 py-1.5 gap-2">
           <button
             onClick={() => router.push("/portal/plans")}
-            className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 rounded-lg p-2.5 text-center hover:shadow-md transition-all group"
+            className="flex items-center gap-1.5 flex-1 hover:bg-white/50 dark:hover:bg-white/5 rounded px-1.5 py-1 transition-all group"
           >
-            <div className="text-2xl font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
-              {stats.plans}
-            </div>
-            <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
-              Plans
+            <Target className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-base font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
+                {stats.plans}
+              </span>
+              <span className="text-[9px] text-muted-foreground font-medium">Plans</span>
             </div>
           </button>
+          
+          <div className="h-4 w-px bg-teal-200 dark:bg-teal-800" />
+          
           <button
             onClick={() => router.push("/portal/log")}
-            className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 rounded-lg p-2.5 text-center hover:shadow-md transition-all group"
+            className="flex items-center gap-1.5 flex-1 hover:bg-white/50 dark:hover:bg-white/5 rounded px-1.5 py-1 transition-all group"
           >
-            <div className="text-2xl font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
-              {stats.workouts}
-            </div>
-            <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
-              Workouts
+            <Dumbbell className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-base font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
+                {stats.workouts}
+              </span>
+              <span className="text-[9px] text-muted-foreground font-medium">Workouts</span>
             </div>
           </button>
+          
+          <div className="h-4 w-px bg-teal-200 dark:bg-teal-800" />
+          
           <button
             onClick={() => router.push("/portal/log")}
-            className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 rounded-lg p-2.5 text-center hover:shadow-md transition-all group"
+            className="flex items-center gap-1.5 flex-1 hover:bg-white/50 dark:hover:bg-white/5 rounded px-1.5 py-1 transition-all group"
           >
-            <div className="text-2xl font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
-              {stats.prs}
-            </div>
-            <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
-              PRs
+            <Award className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-base font-bold text-teal-700 dark:text-teal-400 group-hover:scale-110 transition-transform">
+                {stats.prs}
+              </span>
+              <span className="text-[9px] text-muted-foreground font-medium">PRs</span>
             </div>
           </button>
         </div>
