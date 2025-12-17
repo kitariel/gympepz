@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
-import { Plus } from "lucide-react";
+import { Plus, Clock, Dumbbell } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ export function WorkoutLogList() {
   };
 
   const logs = api.workoutLog.list.useQuery(
-    { userId, limit: 10 },
+    { userId, limit: 20 },
     { enabled: !!userId },
   );
   const plans = api.plan.listByUser.useQuery(
@@ -63,13 +63,18 @@ export function WorkoutLogList() {
   const selectedPlan = plans.data?.find((p) => p.id === selectedPlanId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Recent Workouts</h2>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight">Workouts</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            View and manage your workout history
+          </p>
+        </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
               Start Workout
             </Button>
           </DialogTrigger>
@@ -79,9 +84,8 @@ export function WorkoutLogList() {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">
-                  Select a plan and day to start, or leave blank for an empty
-                  workout.
+                <p className="text-sm text-muted-foreground">
+                  Select a plan and day to start, or leave blank for an empty workout.
                 </p>
 
                 <div className="grid gap-2">
@@ -144,30 +148,43 @@ export function WorkoutLogList() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {logs.data?.items.map((log) => (
           <Card
             key={log.id}
-            className="hover:bg-accent/50 cursor-pointer transition-colors"
+            className="hover:bg-accent/50 cursor-pointer transition-all border-0 shadow-sm"
             onClick={() => router.push(`/portal/log/workout/${log.id}`)}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base font-semibold">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+              <CardTitle className="text-sm font-semibold">
                 {log.planDay?.title ?? "Untitled Workout"}
               </CardTitle>
-              <span className="text-muted-foreground text-sm">
-                {format(new Date(log.date), "PPP")}
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(log.date), "MMM d")}
               </span>
             </CardHeader>
-            <CardContent>
-              <div className="flex justify-between text-sm">
-                <span>
-                  {log.duration ? `${log.duration} mins` : "In Progress"}
-                </span>
-                <span>{log._count?.exercises ?? 0} Exercises</span>
+            <CardContent className="px-4 pb-4">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-3">
+                  {log.duration && (
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{log.duration} mins</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Dumbbell className="h-3 w-3" />
+                    <span>{log._count?.exercises ?? 0} exercises</span>
+                  </div>
+                </div>
+                {log.totalVolume && (
+                  <span className="font-medium">
+                    {Math.round(log.totalVolume)} kg
+                  </span>
+                )}
               </div>
               {log.notes && (
-                <p className="text-muted-foreground mt-2 line-clamp-1 text-sm">
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
                   {log.notes}
                 </p>
               )}
@@ -176,7 +193,8 @@ export function WorkoutLogList() {
         ))}
         {logs.data?.items.length === 0 && (
           <div className="text-muted-foreground py-12 text-center">
-            No workouts logged yet. Start one today!
+            <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No workouts logged yet. Start one today!</p>
           </div>
         )}
       </div>

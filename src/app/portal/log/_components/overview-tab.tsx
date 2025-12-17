@@ -3,7 +3,7 @@
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, TrendingUp, Flame, Calendar } from "lucide-react";
+import { Dumbbell, TrendingUp, Flame, Calendar, Play, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 
@@ -30,118 +30,114 @@ export function OverviewTab({ userId }: OverviewTabProps) {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
-            <Dumbbell className="h-4 w-4 text-muted-foreground" />
+    <div className="space-y-4">
+      {/* Compact Quick Stats */}
+      <div className="grid gap-3 md:grid-cols-4">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-xs font-medium">This Week</CardTitle>
+            <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-4 pb-4">
+            <div className="text-xl font-bold">
               {analytics.data?.totalWorkouts ?? 0}
             </div>
-            <p className="text-xs text-muted-foreground">workouts completed</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">workouts</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-            <Flame className="h-4 w-4 text-orange-500" />
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-xs font-medium">Streak</CardTitle>
+            <Flame className="h-3.5 w-3.5 text-orange-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-4 pb-4">
+            <div className="text-xl font-bold">
               {streak.data?.currentStreak ?? 0}
             </div>
-            <p className="text-xs text-muted-foreground">days in a row</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">days</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-xs font-medium">Volume</CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-4 pb-4">
+            <div className="text-xl font-bold">
               {Math.round((analytics.data?.totalVolume ?? 0) / 1000)}k
             </div>
-            <p className="text-xs text-muted-foreground">kg lifted this week</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">kg</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-xs font-medium">Avg Time</CardTitle>
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-4 pb-4">
+            <div className="text-xl font-bold">
               {analytics.data?.avgDuration ?? 0}
             </div>
-            <p className="text-xs text-muted-foreground">minutes per workout</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">mins</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
-          <Button
-            onClick={() => quickStart.mutate({ userId })}
-            disabled={quickStart.isPending}
-            size="lg"
-            className="h-16"
-          >
-            <Dumbbell className="mr-2 h-5 w-5" />
-            {quickStart.isPending
-              ? "Starting..."
-              : "Continue Active Plan"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => createEmpty.mutate({ userId })}
-            disabled={createEmpty.isPending}
-            size="lg"
-            className="h-16"
-          >
-            {createEmpty.isPending ? "Starting..." : "Start Empty Workout"}
-          </Button>
+      {/* Quick Actions - Compact */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              onClick={() => quickStart.mutate({ userId })}
+              disabled={quickStart.isPending}
+              className="h-11 bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              {quickStart.isPending ? "Starting..." : "Continue Plan"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => createEmpty.mutate({ userId })}
+              disabled={createEmpty.isPending}
+              className="h-11"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {createEmpty.isPending ? "Starting..." : "Empty Workout"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Workouts</CardTitle>
+      {/* Recent Activity - Compact */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="px-4 pt-4 pb-3">
+          <CardTitle className="text-base">Recent Workouts</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+        <CardContent className="px-4 pb-4">
+          <div className="space-y-2">
             {recentLogs.data?.items.map((log) => (
               <div
                 key={log.id}
-                className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all group"
                 onClick={() => router.push(`/portal/log/workout/${log.id}`)}
               >
-                <div>
-                  <p className="font-medium">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
                     {log.planDay?.title ?? "Untitled Workout"}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(log.date), "EEEE, MMM d")}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {format(new Date(log.date), "MMM d, yyyy")}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {log.duration ? `${log.duration} mins` : "In Progress"}
+                <div className="text-right ml-3 shrink-0">
+                  <p className="text-xs font-medium">
+                    {log.duration ? `${log.duration}m` : "In Progress"}
                   </p>
                   {log.totalVolume && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       {Math.round(log.totalVolume)} kg
                     </p>
                   )}
@@ -150,30 +146,31 @@ export function OverviewTab({ userId }: OverviewTabProps) {
             ))}
 
             {recentLogs.data?.items.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No workouts yet. Start your first one!</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No workouts yet. Start your first one!</p>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Streak Card */}
+      {/* Streak Card - Compact */}
       {(streak.data?.currentStreak ?? 0) > 0 && (
-        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Flame className="h-12 w-12 mx-auto mb-3 text-orange-500" />
-              <h3 className="text-2xl font-bold mb-2">
-                {streak.data?.currentStreak} Day Streak! 🔥
-              </h3>
-              <p className="text-muted-foreground">
-                Your longest streak: {streak.data?.longestStreak} days
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Keep going! You're on fire 💪
-              </p>
+        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                <Flame className="h-5 w-5 text-orange-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold">
+                  {streak.data?.currentStreak} Day Streak! 🔥
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Longest: {streak.data?.longestStreak} days • Keep going! 💪
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
