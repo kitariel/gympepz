@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,10 +24,10 @@ import { useWorkoutTimer, useRestTimer } from "@/hooks/useWorkoutTimer";
 export default function ActiveWorkoutPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const logId = params.id;
+  const { id: logId } = use(params);
   const [exerciseSearch, setExerciseSearch] = useState("");
   const [isAddingExercise, setIsAddingExercise] = useState(false);
 
@@ -122,29 +122,69 @@ export default function ActiveWorkoutPage({
 
   const workout = log.data;
 
-  // Group sets by exercise
-  const exerciseGroups = workout.sets.reduce(
-    (acc, set) => {
-      const exerciseId = set.exerciseId;
-      if (!acc[exerciseId]) {
-        acc[exerciseId] = {
-          exercise: set.exercise,
-          sets: [],
-        };
-      }
-      acc[exerciseId].sets.push(set);
-      return acc;
-    },
-    {} as Record<string, { exercise: any; sets: any[] }>
-  );
+  // Group sets by exercise - handle both sets and exercises
+  const exerciseGroups = (() => {
+    // If sets exist (WorkoutSet[]), use them
+    if (workout.sets && Array.isArray(workout.sets) && workout.sets.length > 0) {
+      return workout.sets.reduce(
+        (acc, set) => {
+          const exerciseId = set.exerciseId;
+          if (!acc[exerciseId]) {
+            acc[exerciseId] = {
+              exercise: set.exercise,
+              sets: [],
+            };
+          }
+          acc[exerciseId].sets.push(set);
+          return acc;
+        },
+        {} as Record<string, { exercise: any; sets: any[] }>
+      );
+    }
+    
+    // Otherwise, use exercises (WorkoutLogExercise[]) and create mock sets
+    if (workout.exercises && Array.isArray(workout.exercises)) {
+      return workout.exercises.reduce(
+        (acc, exerciseLog) => {
+          const exerciseId = exerciseLog.exerciseId;
+          if (!acc[exerciseId]) {
+            acc[exerciseId] = {
+              exercise: exerciseLog.exercise,
+              sets: [],
+            };
+            // Create mock sets from exercise data
+            for (let i = 0; i < exerciseLog.sets; i++) {
+              acc[exerciseId].sets.push({
+                id: `${exerciseId}-${i}`,
+                exerciseId,
+                setNumber: i + 1,
+                targetReps: exerciseLog.reps,
+                actualReps: exerciseLog.reps,
+                targetWeight: exerciseLog.weight,
+                actualWeight: exerciseLog.weight,
+                rpe: exerciseLog.rpe,
+                completed: false,
+                exercise: exerciseLog.exercise,
+              });
+            }
+          }
+          return acc;
+        },
+        {} as Record<string, { exercise: any; sets: any[] }>
+      );
+    }
+    
+    return {};
+  })();
 
   // Calculate stats
-  const totalVolume = workout.sets.reduce((sum, set) => {
-    return sum + (set.actualWeight ?? 0) * set.actualReps;
+  const allSets = Object.values(exerciseGroups).flatMap((group) => group.sets);
+  const totalVolume = allSets.reduce((sum, set) => {
+    return sum + ((set.actualWeight ?? set.targetWeight ?? 0) * (set.actualReps ?? set.targetReps ?? 0));
   }, 0);
 
-  const completedSets = workout.sets.filter((s) => s.completed).length;
-  const totalSets = workout.sets.length;
+  const completedSets = allSets.filter((s) => s.completed).length;
+  const totalSets = allSets.length;
 
   const handleFinish = () => {
     completeWorkout.mutate({
@@ -243,6 +283,8 @@ export default function ActiveWorkoutPage({
             // Find last workout data for this exercise
             const lastWorkoutSet = workout.lastWorkout?.sets?.find(
               (s) => s.exerciseId === exerciseId && s.completed
+            ) || workout.lastWorkout?.exercises?.find(
+              (e) => e.exerciseId === exerciseId
             );
 
             return (
@@ -263,8 +305,8 @@ export default function ActiveWorkoutPage({
                 lastWorkoutData={
                   lastWorkoutSet
                     ? {
-                        weight: lastWorkoutSet.actualWeight ?? 0,
-                        reps: lastWorkoutSet.actualReps,
+                        weight: (lastWorkoutSet as any).actualWeight ?? (lastWorkoutSet as any).weight ?? 0,
+                        reps: (lastWorkoutSet as any).actualReps ?? (lastWorkoutSet as any).reps ?? 0,
                         date: workout.lastWorkout!.date,
                       }
                     : undefined
