@@ -27,4 +27,6 @@ model User {
 
     workoutLogs     WorkoutLog[]
     progressEntries ProgressEntry[]
+    prs             ExercisePR[]
+    streak          WorkoutStreak?
 }

@@ -9,8 +9,11 @@ model ProgressEntry {
   hips      Float?
   arms      Float?
   thighs    Float?
+  neck      Float?
+  shoulders Float?
   notes     String?
   imageUrl  String?
+  mood      String?  // "great", "good", "tired", "sore"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

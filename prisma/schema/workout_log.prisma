@@ -1,17 +1,24 @@
 model WorkoutLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   planDayId   String?
-  date        DateTime @default(now())
-  duration    Int?     // in minutes
+  date        DateTime  @default(now())
+  startTime   DateTime  @default(now())
+  endTime     DateTime?
+  duration    Int?      // in minutes
   notes       String?
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  completed   Boolean   @default(false)
+  totalVolume Float?    // Total kg lifted (calculated)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planDay   PlanDay?           @relation(fields: [planDayId], references: [id], onDelete: SetNull)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planDay   PlanDay?             @relation(fields: [planDayId], references: [id], onDelete: SetNull)
   exercises WorkoutLogExercise[]
+  sets      WorkoutSet[]
+  prs       ExercisePR[]
+
+  @@index([userId, date])
 }
 
 model WorkoutLogExercise {
@@ -27,4 +34,62 @@ model WorkoutLogExercise {
 
   workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
   exercise   Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([workoutLogId, exerciseId])
+}
+
+// NEW: Granular set-by-set tracking
+model WorkoutSet {
+  id           String   @id @default(cuid())
+  workoutLogId String
+  exerciseId   String
+  setNumber    Int      // 1, 2, 3, 4...
+  targetReps   Int?     // Planned reps
+  actualReps   Int      // Performed reps
+  targetWeight Float?   // Planned weight (kg)
+  actualWeight Float?   // Performed weight (kg)
+  rpe          Int?     // 1-10 Rate of Perceived Exertion
+  completed    Boolean  @default(false)
+  restSeconds  Int?     // Rest time after this set
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([workoutLogId, exerciseId])
+  @@index([workoutLogId, exerciseId, setNumber])
+}
+
+// NEW: Track personal records
+model ExercisePR {
+  id           String      @id @default(cuid())
+  userId       String
+  exerciseId   String
+  prType       String      // "1RM", "volume", "reps", "weight"
+  value        Float
+  reps         Int?        // For context (e.g., 100kg x 5 reps)
+  date         DateTime
+  workoutLogId String?
+  notes        String?
+  createdAt    DateTime    @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise   Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  workoutLog WorkoutLog? @relation(fields: [workoutLogId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, exerciseId, prType])
+  @@index([userId, exerciseId])
+}
+
+// NEW: Track workout streaks
+model WorkoutStreak {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastWorkout   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
