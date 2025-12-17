@@ -1,8 +1,11 @@
 "use client";
 
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
+import { Lock, Shield, Monitor, CheckCircle2 } from "lucide-react";
+import { format } from "date-fns";
 
 type AccountUser = {
   hasPassword?: boolean;
@@ -21,54 +24,67 @@ export function SecurityCard({
   );
 
   return (
-    <Card className="bg-card text-card-foreground from-primary to-primary/80 rounded-xl border border-none shadow-sm">
-      <CardHeader className="border-b py-4">
-        <div>
-          <div className="text-sm font-semibold">Security</div>
-          <div className="text-muted-foreground text-xs">Password and sign-in settings</div>
-        </div>
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="px-4 pt-4 pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Shield className="h-4 w-4 text-teal-600" />
+          Security
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">
+          Password and sign-in settings
+        </p>
       </CardHeader>
-      <CardContent className="text-card-foreground rounded-b-xl pb-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+      <CardContent className="px-4 pb-4 space-y-3">
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+          <div className="flex items-center gap-2.5">
+            <Lock className="h-4 w-4 text-muted-foreground" />
             <div>
-              <div className="text-sm font-medium">Password</div>
-              <div className="text-muted-foreground text-xs">
+              <div className="text-xs font-medium">Password</div>
+              <div className="text-[10px] text-muted-foreground">
                 {user?.hasPassword ? "Password set" : "No password set yet"}
               </div>
             </div>
-            <Button type="button" variant="outline" size="sm">Change password</Button>
           </div>
-          <div className="flex items-center justify-between">
+          <Button type="button" variant="outline" size="sm" className="h-8 text-xs">
+            Change
+          </Button>
+        </div>
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+          <div className="flex items-center gap-2.5">
+            <Shield className="h-4 w-4 text-muted-foreground" />
             <div>
-              <div className="text-sm font-medium">Two-factor authentication</div>
-              <div className="text-muted-foreground text-xs">Not available yet</div>
+              <div className="text-xs font-medium">Two-factor authentication</div>
+              <div className="text-[10px] text-muted-foreground">Not available yet</div>
             </div>
-            <Button type="button" variant="outline" size="sm" disabled>Configure</Button>
           </div>
-          <div>
-            <div className="text-sm font-medium">Sessions</div>
-            <div className="text-muted-foreground text-xs">
-              {Array.isArray(sessionsQuery.data)
-                ? `${sessionsQuery.data.length} active session${sessionsQuery.data.length === 1 ? "" : "s"}`
-                : "Loading..."}
+          <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled>
+            Configure
+          </Button>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4 text-muted-foreground" />
+            <div className="text-xs font-medium">
+              Active Sessions ({Array.isArray(sessionsQuery.data) ? sessionsQuery.data.length : 0})
             </div>
-            <div className="mt-3 overflow-hidden rounded-md border">
-              <div className="bg-muted/50 grid grid-cols-2 px-3 py-2 text-xs font-medium">
-                <div>ID</div>
-                <div>Expires</div>
-              </div>
-              <div className="divide-y">
-                {(Array.isArray(sessionsQuery.data) ? sessionsQuery.data : []).map((s) => (
-                  <div key={s.id} className="grid grid-cols-2 px-3 py-2 text-xs">
-                    <div className="truncate">{s.id}</div>
-                    <div>{new Date(s.expires).toLocaleString()}</div>
-                  </div>
-                ))}
-                {Array.isArray(sessionsQuery.data) && sessionsQuery.data.length === 0 && (
-                  <div className="text-muted-foreground px-3 py-2 text-xs">No sessions found</div>
-                )}
-              </div>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-border/50">
+            <div className="bg-muted/50 grid grid-cols-2 px-2.5 py-2 text-[10px] font-medium">
+              <div>Session ID</div>
+              <div>Expires</div>
+            </div>
+            <div className="divide-y">
+              {(Array.isArray(sessionsQuery.data) ? sessionsQuery.data : []).map((s) => (
+                <div key={s.id} className="grid grid-cols-2 px-2.5 py-2 text-[10px]">
+                  <div className="truncate font-mono">{s.id.slice(0, 12)}...</div>
+                  <div>{format(new Date(s.expires), "MMM d, yyyy")}</div>
+                </div>
+              ))}
+              {Array.isArray(sessionsQuery.data) && sessionsQuery.data.length === 0 && (
+                <div className="text-muted-foreground px-2.5 py-2 text-[10px] text-center">
+                  No sessions found
+                </div>
+              )}
             </div>
           </div>
         </div>

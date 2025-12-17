@@ -2,9 +2,10 @@
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { api } from "@/trpc/react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
 
 export function AddressCard({ email }: { email: string }) {
   const [country, setCountry] = useState<string>("");
@@ -29,25 +30,26 @@ export function AddressCard({ email }: { email: string }) {
   }, [locationQuery.data]);
 
   return (
-    <Card className="bg-card text-card-foreground from-primary to-primary/80 rounded-xl border border-none shadow-sm">
-      <CardHeader className="border-b py-4">
-        <div>
-          <div className="text-sm font-semibold">Address</div>
-          <div className="text-muted-foreground text-xs">
-            Where you usually train
-          </div>
-        </div>
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="px-4 pt-4 pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-teal-600" />
+          Address
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">
+          Where you usually train
+        </p>
       </CardHeader>
-      <CardContent className="text-card-foreground rounded-b-xl pb-4">
+      <CardContent className="px-4 pb-4">
         <form
-          className="grid gap-4 md:grid-cols-2"
+          className="grid gap-3 md:grid-cols-2"
           onSubmit={async (e: FormEvent<HTMLFormElement>) => {
             e.preventDefault();
             if (!email || !country) return;
             await upsertLocation.mutateAsync({ email, country, region });
           }}
         >
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <label htmlFor="country" className="text-xs font-medium">
               Country
             </label>
@@ -58,11 +60,12 @@ export function AddressCard({ email }: { email: string }) {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setCountry(e.target.value)
               }
+              className="h-9"
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <label htmlFor="region" className="text-xs font-medium">
-              City / region
+              City / Region
             </label>
             <Input
               id="region"
@@ -71,13 +74,16 @@ export function AddressCard({ email }: { email: string }) {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setRegion(e.target.value)
               }
+              className="h-9"
             />
           </div>
           <div className="flex justify-end md:col-span-2">
             <Button
               type="submit"
+              size="sm"
               disabled={upsertLocation.isPending}
               aria-busy={upsertLocation.isPending}
+              className="h-9"
             >
               {upsertLocation.isPending ? "Saving..." : "Save address"}
             </Button>

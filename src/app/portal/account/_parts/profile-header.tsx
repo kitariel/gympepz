@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { api } from "@/trpc/react";
 import { UploadButton } from "@/components/uploadthing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Sparkles } from "lucide-react";
 
 type AccountUser = {
   id: string;
@@ -51,50 +53,56 @@ export function ProfileHeader({
   const planLabel = "Free Plan";
 
   return (
-    <Card className="bg-card text-card-foreground rounded-xl border border-none p-4 shadow-sm">
-      <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-20 w-20 rounded-xl">
-            <AvatarImage
-              src={image}
-              alt={user?.name ?? email ?? "User avatar"}
-            />
-            <AvatarFallback className="rounded-xl text-lg">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="text-lg font-medium">{user?.name ?? "Member"}</div>
-            <div className="text-muted-foreground text-sm">{email}</div>
-            <div className="text-muted-foreground mt-1 text-xs">
-              {locationQuery.data?.country && locationQuery.data?.region
-                ? `${locationQuery.data.region}, ${locationQuery.data.country}`
-                : (locationQuery.data?.country ?? "Location not set")}
+    <Card className="border-0 shadow-sm bg-gradient-to-br from-teal-600 to-teal-700">
+      <CardContent className="p-4">
+        <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-16 w-16 ring-2 ring-white/30">
+              <AvatarImage
+                src={image}
+                alt={user?.name ?? email ?? "User avatar"}
+              />
+              <AvatarFallback className="bg-white/20 text-white text-base font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="text-lg font-semibold text-white">{user?.name ?? "Member"}</div>
+              <div className="text-white/80 text-xs mt-0.5">{email}</div>
+              {locationQuery.data?.country && (
+                <div className="flex items-center gap-1 text-white/70 text-xs mt-1">
+                  <MapPin className="h-3 w-3" />
+                  {locationQuery.data?.region
+                    ? `${locationQuery.data.region}, ${locationQuery.data.country}`
+                    : locationQuery.data.country}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-        <div className="flex flex-col items-stretch gap-2 md:items-end">
-          <div className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-            {planLabel}
+          <div className="flex flex-col items-stretch gap-2 md:items-end w-full md:w-auto">
+            <Badge className="bg-white/20 text-white border-white/30 text-xs px-2.5 py-0.5">
+              <Sparkles className="h-3 w-3 mr-1" />
+              {planLabel}
+            </Badge>
+            <UploadButton
+              endpoint="avatarUploader"
+              onClientUploadComplete={async (
+                res: Array<{ serverData?: { url?: string }; url?: string }>,
+              ) => {
+                const first = Array.isArray(res) ? res[0] : undefined;
+                const url = first?.serverData?.url ?? first?.url;
+                if (!url || !email) return;
+                await updateProfile.mutateAsync({ email, image: url });
+                setImage(url);
+              }}
+              onUploadError={(error: Error) => {
+                console.error("Upload error", error);
+                alert(`Upload error: ${error.message}`);
+              }}
+            />
           </div>
-          <UploadButton
-            endpoint="avatarUploader"
-            onClientUploadComplete={async (
-              res: Array<{ serverData?: { url?: string }; url?: string }>,
-            ) => {
-              const first = Array.isArray(res) ? res[0] : undefined;
-              const url = first?.serverData?.url ?? first?.url;
-              if (!url || !email) return;
-              await updateProfile.mutateAsync({ email, image: url });
-              setImage(url);
-            }}
-            onUploadError={(error: Error) => {
-              console.error("Upload error", error);
-              alert(`Upload error: ${error.message}`);
-            }}
-          />
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
