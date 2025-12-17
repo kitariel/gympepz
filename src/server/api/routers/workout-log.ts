@@ -257,6 +257,8 @@ export const workoutLogRouter = createTRPCRouter({
             orderBy: { createdAt: "asc" },
           },
           planDay: true,
+          // Note: sets relation will be available after migration
+          // Frontend handles fallback to exercises if sets don't exist
         },
       });
 

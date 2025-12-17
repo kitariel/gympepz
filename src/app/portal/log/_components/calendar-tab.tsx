@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, Calendar as CalendarIcon } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -52,39 +52,43 @@ export function CalendarTab({ userId }: CalendarTabProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Month Navigation */}
-      <Card>
-        <CardHeader>
+    <div className="space-y-4">
+      {/* Month Navigation - Compact */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="px-4 pt-4 pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>{format(currentDate, "MMMM yyyy")}</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={previousMonth}>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-teal-600" />
+              {format(currentDate, "MMMM yyyy")}
+            </CardTitle>
+            <div className="flex gap-1.5">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={previousMonth}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 text-xs"
                 onClick={() => setCurrentDate(new Date())}
               >
                 Today
               </Button>
-              <Button variant="outline" size="icon" onClick={nextMonth}>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={nextMonth}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-4">
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1.5">
             {/* Day headers */}
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div
                 key={day}
-                className="text-center text-sm font-medium text-muted-foreground py-2"
+                className="text-center text-[10px] font-medium text-muted-foreground py-1.5"
               >
-                {day}
+                {day.slice(0, 1)}
               </div>
             ))}
 
@@ -103,21 +107,21 @@ export function CalendarTab({ userId }: CalendarTabProps) {
                   key={day.toISOString()}
                   onClick={() => workout && router.push(`/portal/log/workout/${workout.id}`)}
                   className={cn(
-                    "aspect-square p-2 rounded-lg border transition-colors relative",
+                    "aspect-square p-1.5 rounded-lg border transition-colors relative text-xs",
                     !isCurrentMonth && "text-muted-foreground opacity-50",
-                    isToday && "border-primary ring-2 ring-primary/20",
+                    isToday && "border-teal-500 ring-2 ring-teal-500/20 bg-teal-50/50 dark:bg-teal-950/20",
                     workout && "bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800",
-                    !workout && "hover:bg-accent",
+                    !workout && !isToday && "hover:bg-accent/50",
                     !isCurrentMonth && "cursor-default"
                   )}
-                  disabled={!workout}
+                  disabled={!workout && !isToday}
                 >
-                  <div className="text-sm font-medium">
+                  <div className="text-xs font-medium">
                     {format(day, "d")}
                   </div>
                   {workout && (
-                    <div className="absolute inset-x-0 bottom-1 flex justify-center">
-                      <Dumbbell className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    <div className="absolute inset-x-0 bottom-0.5 flex justify-center">
+                      <Dumbbell className="h-2.5 w-2.5 text-green-600 dark:text-green-400" />
                     </div>
                   )}
                 </button>
@@ -125,49 +129,49 @@ export function CalendarTab({ userId }: CalendarTabProps) {
             })}
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center gap-4 mt-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-primary" />
+          {/* Legend - Compact */}
+          <div className="flex items-center gap-3 mt-4 pt-3 border-t text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded border-2 border-teal-500" />
               <span>Today</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-green-50 border-green-200 dark:bg-green-950/20 flex items-center justify-center">
-                <Dumbbell className="h-2.5 w-2.5 text-green-600 dark:text-green-400" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-green-50 border-green-200 dark:bg-green-950/20 flex items-center justify-center">
+                <Dumbbell className="h-2 w-2 text-green-600 dark:text-green-400" />
               </div>
-              <span>Workout completed</span>
+              <span>Workout</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Workouts this month */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Workouts This Month</CardTitle>
+      {/* Workouts this month - Compact */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="px-4 pt-4 pb-3">
+          <CardTitle className="text-sm">Workouts This Month</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-4">
           <div className="space-y-2">
             {calendar.data?.map((log) => (
               <div
                 key={log.id}
-                className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all group"
                 onClick={() => router.push(`/portal/log/workout/${log.id}`)}
               >
-                <div>
-                  <p className="font-medium">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
                     {log.planDay?.title ?? "Untitled Workout"}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(log.date), "EEEE, MMMM d")}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {format(new Date(log.date), "MMM d, yyyy")}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {log.duration ? `${log.duration} mins` : "Completed"}
+                <div className="text-right ml-3 shrink-0">
+                  <p className="text-xs font-medium">
+                    {log.duration ? `${log.duration}m` : "Completed"}
                   </p>
                   {log.totalVolume && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       {Math.round(log.totalVolume)} kg
                     </p>
                   )}
@@ -176,9 +180,9 @@ export function CalendarTab({ userId }: CalendarTabProps) {
             ))}
 
             {(!calendar.data || calendar.data.length === 0) && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No workouts this month yet.</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No workouts this month yet.</p>
               </div>
             )}
           </div>
