@@ -704,19 +704,19 @@ export default function WorkoutBuilderPage() {
   // Quick Mode View
   if (isQuickMode) {
     return (
-      <div className="flex-1 space-y-4 p-6 pt-4">
+      <div className="flex-1 space-y-4 p-4 sm:p-6 pt-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Quick Workout Builder</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Quick Workout Builder</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Set up your week - add exercises or mark rest days
             </p>
           </div>
           <Button
             onClick={save}
             disabled={!canSave || create.isPending}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
             size="sm"
           >
             <Save className="h-4 w-4" />
@@ -745,16 +745,16 @@ export default function WorkoutBuilderPage() {
 
         {/* View Toggle and Navigation */}
         <Card className="border-0 shadow-sm">
-          <CardContent className="px-4 py-3">
-            <div className="flex items-center justify-between">
+          <CardContent className="px-3 sm:px-4 py-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "week" | "month")}>
-                <TabsList>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="week" className="flex-1 sm:flex-none">Week</TabsTrigger>
+                  <TabsTrigger value="month" className="flex-1 sm:flex-none">Month</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-end gap-2">
                 {viewMode === "week" ? (
                   <>
                     <Button
@@ -792,8 +792,8 @@ export default function WorkoutBuilderPage() {
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-sm font-medium min-w-[120px] text-center">
-                      {format(currentMonth, "MMMM yyyy")}
+                    <div className="text-sm font-medium min-w-[120px] text-center px-2">
+                      {format(currentMonth, "MMM yyyy")}
                     </div>
                     <Button
                       variant="outline"
@@ -893,9 +893,9 @@ export default function WorkoutBuilderPage() {
                             <Plus className="h-4 w-4" />
                             Add Exercise
                           </Button>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle>
+                              <DialogTitle className="text-base sm:text-lg">
                                 Select Exercise for {day.dayName} ({format(day.date, "MMM d")})
                               </DialogTitle>
                             </DialogHeader>
@@ -921,7 +921,7 @@ export default function WorkoutBuilderPage() {
                                     </Button>
                                   )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   <Select
                                     value={selectedMuscle}
                                     onValueChange={setSelectedMuscle}
@@ -985,7 +985,7 @@ export default function WorkoutBuilderPage() {
                                     </Button>
                                   </div>
 
-                                  <div className="grid grid-cols-3 gap-3">
+                                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                     <div className="space-y-2">
                                       <label className="text-xs font-medium text-muted-foreground">
                                         Sets
@@ -1069,7 +1069,7 @@ export default function WorkoutBuilderPage() {
                               ) : (
                                 <>
                                   {/* Exercise List */}
-                                  <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                                  <div className="max-h-[300px] sm:max-h-[400px] overflow-y-auto space-y-1.5 -mx-1 px-1">
                                     {exercises.length === 0 ? (
                                       <div className="text-center py-8 text-muted-foreground text-sm">
                                         <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -1080,7 +1080,7 @@ export default function WorkoutBuilderPage() {
                                         <Button
                                           key={ex.id}
                                           variant="ghost"
-                                          className="w-full justify-start h-auto p-3 hover:bg-accent"
+                                          className="w-full justify-start h-auto p-3 hover:bg-accent touch-manipulation"
                                           onClick={() =>
                                             handleExerciseSelect(ex.id, ex.name)
                                           }
@@ -1430,9 +1430,9 @@ export default function WorkoutBuilderPage() {
                                 <Plus className="h-4 w-4" />
                                 Add Exercise
                               </Button>
-                              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
                                 <DialogHeader>
-                                  <DialogTitle>
+                                  <DialogTitle className="text-base sm:text-lg">
                                     Select Exercise for {format(day.date, "MMM d")}
                                   </DialogTitle>
                                 </DialogHeader>
@@ -1458,7 +1458,7 @@ export default function WorkoutBuilderPage() {
                                         </Button>
                                       )}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       <Select
                                         value={selectedMuscle}
                                         onValueChange={setSelectedMuscle}
@@ -1522,7 +1522,7 @@ export default function WorkoutBuilderPage() {
                                         </Button>
                                       </div>
 
-                                      <div className="grid grid-cols-3 gap-3">
+                                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                         <div className="space-y-2">
                                           <label className="text-xs font-medium text-muted-foreground">
                                             Sets
@@ -1606,7 +1606,7 @@ export default function WorkoutBuilderPage() {
                                   ) : (
                                     <>
                                       {/* Exercise List */}
-                                      <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                                      <div className="max-h-[300px] sm:max-h-[400px] overflow-y-auto space-y-1.5 -mx-1 px-1">
                                         {exercises.length === 0 ? (
                                           <div className="text-center py-8 text-muted-foreground text-sm">
                                             <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -1786,19 +1786,19 @@ export default function WorkoutBuilderPage() {
 
   // Normal Mode View (existing code)
   return (
-    <div className="flex-1 space-y-4 p-6 pt-4">
+    <div className="flex-1 space-y-4 p-4 sm:p-6 pt-4">
       {/* Compact Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Workout Builder</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Workout Builder</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Create a custom workout plan
           </p>
         </div>
         <Button
           onClick={save}
           disabled={!canSave || create.isPending}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
           size="sm"
         >
           <Save className="h-4 w-4" />
@@ -1912,9 +1912,9 @@ export default function WorkoutBuilderPage() {
                       Add Exercise
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Select Exercise</DialogTitle>
+                      <DialogTitle className="text-base sm:text-lg">Select Exercise</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       {/* Search and Filters */}
@@ -1939,13 +1939,13 @@ export default function WorkoutBuilderPage() {
                           )}
                         </div>
                         {/* Quick Body Part Filters */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           {(["Push", "Pull", "Legs"] as const).map((bodyPart) => (
                             <Button
                               key={bodyPart}
                               variant={selectedBodyPart === bodyPart ? "default" : "outline"}
                               size="sm"
-                              className="h-8 text-xs"
+                              className="h-9 sm:h-8 text-xs flex-1 sm:flex-none min-w-[80px] touch-manipulation"
                               onClick={() => {
                                 if (selectedBodyPart === bodyPart) {
                                   setSelectedBodyPart(null);
@@ -2125,18 +2125,18 @@ export default function WorkoutBuilderPage() {
                             </div>
                           ) : (
                             filteredExercisesNormal.map((ex) => (
-                              <Button
-                                key={ex.id}
-                                variant="ghost"
-                                className="w-full justify-start h-auto p-3 hover:bg-accent"
-                                onClick={() => {
-                                  if (!isQuickMode) {
-                                    handleExerciseSelect(ex.id, ex.name);
-                                  } else {
-                                    addExercise(ex.id);
-                                  }
-                                }}
-                              >
+                            <Button
+                              key={ex.id}
+                              variant="ghost"
+                              className="w-full justify-start h-auto p-3 hover:bg-accent touch-manipulation"
+                              onClick={() => {
+                                if (!isQuickMode) {
+                                  handleExerciseSelect(ex.id, ex.name);
+                                } else {
+                                  addExercise(ex.id);
+                                }
+                              }}
+                            >
                                 <div className="flex items-start gap-3 w-full text-left">
                                   <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
                                     <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
