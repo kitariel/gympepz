@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
+import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 
 export default function LogPage() {
   const { data: session } = useSession();
@@ -23,6 +24,8 @@ export default function LogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const hasProcessedQuickStart = useRef(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingQuickStart, setPendingQuickStart] = useState<{ planId: string; dayId: string } | null>(null);
 
   // Handle quickStart URL parameter - start workout from specific plan
   const quickStartPlanId = searchParams?.get("quickStart");
@@ -30,30 +33,62 @@ export default function LogPage() {
     { id: quickStartPlanId ?? "" },
     { enabled: !!quickStartPlanId && !!userId }
   );
+
+  // Check for recent completed workout
+  const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
+    { userId, hoursBack: 6 },
+    { enabled: !!userId }
+  );
+
   const createLogFromPlan = api.workoutLog.create.useMutation({
     onSuccess: (log) => {
       router.replace("/portal/log"); // Remove query param
       router.push(`/portal/log/workout/${log.id}`);
+      setPendingQuickStart(null);
     },
   });
 
+  const handleCreateFromPlan = (planId: string, dayId: string) => {
+    // Check if there's a recent completed workout
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setPendingQuickStart({ planId, dayId });
+      setShowWarningDialog(true);
+      return;
+    }
+
+    // No recent workout, create immediately
+    createLogFromPlan.mutate({
+      userId,
+      planDayId: dayId,
+      date: new Date(),
+    });
+  };
+
+  const handleConfirmStart = () => {
+    setShowWarningDialog(false);
+    if (pendingQuickStart) {
+      createLogFromPlan.mutate({
+        userId,
+        planDayId: pendingQuickStart.dayId,
+        date: new Date(),
+      });
+    }
+  };
+
   useEffect(() => {
-    if (quickStartPlanId && userId && planQuery.data && !hasProcessedQuickStart.current) {
+    if (quickStartPlanId && userId && planQuery.data && !hasProcessedQuickStart.current && recentWorkoutCheck.data !== undefined) {
       hasProcessedQuickStart.current = true;
       const plan = planQuery.data;
       if (plan.days && plan.days.length > 0) {
         // Get the first day (or could implement logic to get next day)
         const firstDay = plan.days.sort((a, b) => a.order - b.order)[0];
         if (firstDay) {
-          createLogFromPlan.mutate({
-            userId,
-            planDayId: firstDay.id,
-            date: new Date(),
-          });
+          handleCreateFromPlan(plan.id, firstDay.id);
         }
       }
     }
-  }, [quickStartPlanId, userId, planQuery.data, createLogFromPlan, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quickStartPlanId, userId, planQuery.data, recentWorkoutCheck.data]);
 
   if (!userId) {
     return (
@@ -98,6 +133,19 @@ export default function LogPage() {
         <TabsContent value="workouts" className="space-y-4 mt-4">
           <WorkoutLogList />
         </TabsContent>
+
+        {/* Rest Warning Dialog */}
+        <WorkoutRestWarning
+          open={showWarningDialog}
+          onOpenChange={setShowWarningDialog}
+          onConfirm={handleConfirmStart}
+          onCancel={() => {
+            setShowWarningDialog(false);
+            setPendingQuickStart(null);
+            router.replace("/portal/log"); // Remove query param on cancel
+          }}
+          recentWorkout={recentWorkoutCheck.data?.workout ?? null}
+        />
 
         <TabsContent value="progress" className="space-y-4 mt-4">
           <ProgressView />

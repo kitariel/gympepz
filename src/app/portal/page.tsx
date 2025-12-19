@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
+import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +40,17 @@ export default function PortalPage() {
   const { data: session } = useSession();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   const router = useRouter();
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"quickStart" | "empty" | null>(null);
 
   // Data queries
   const streak = api.workoutLog.getStreak.useQuery({ userId }, { enabled: !!userId });
+  
+  // Check for recent completed workout
+  const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
+    { userId, hoursBack: 6 },
+    { enabled: !!userId }
+  );
   const weekAgo = useMemo(() => {
     const date = new Date();
     date.setDate(date.getDate() - 7);
@@ -107,6 +116,52 @@ export default function PortalPage() {
   const createEmpty = api.workoutLog.create.useMutation({
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
+
+  const handleQuickStart = () => {
+    if (!userId) return;
+    
+    // Check if there's a recent completed workout
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setPendingAction("quickStart");
+      setShowWarningDialog(true);
+      return;
+    }
+    
+    if (activePlan) {
+      quickStart.mutate({ userId });
+    } else {
+      router.push("/portal/log");
+    }
+  };
+
+  const handleCreateEmpty = () => {
+    if (!userId) return;
+    
+    // Check if there's a recent completed workout
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setPendingAction("empty");
+      setShowWarningDialog(true);
+      return;
+    }
+    
+    createEmpty.mutate({ userId });
+  };
+
+  const handleConfirmStart = () => {
+    setShowWarningDialog(false);
+    if (!userId) return;
+    
+    if (pendingAction === "quickStart") {
+      if (activePlan) {
+        quickStart.mutate({ userId });
+      } else {
+        router.push("/portal/log");
+      }
+    } else if (pendingAction === "empty") {
+      createEmpty.mutate({ userId });
+    }
+    setPendingAction(null);
+  };
 
   const activePlan = plans.data?.find((p) => p.isActive);
 
@@ -205,13 +260,7 @@ export default function PortalPage() {
             <CardContent className="p-4">
               <div className="grid gap-2 sm:grid-cols-2">
                 <Button
-                  onClick={() => {
-                    if (activePlan) {
-                      quickStart.mutate({ userId });
-                    } else {
-                      router.push("/portal/log");
-                    }
-                  }}
+                  onClick={handleQuickStart}
                   disabled={quickStart.isPending}
                   className="h-11 bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white"
                 >
@@ -224,7 +273,7 @@ export default function PortalPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => createEmpty.mutate({ userId })}
+                  onClick={handleCreateEmpty}
                   disabled={createEmpty.isPending}
                   className="h-11"
                 >
@@ -414,7 +463,7 @@ export default function PortalPage() {
                       size="sm"
                       variant="outline"
                       className="mt-3 gap-2"
-                      onClick={() => createEmpty.mutate({ userId })}
+                      onClick={handleCreateEmpty}
                     >
                       <Plus className="h-4 w-4" />
                       Start Workout
@@ -551,6 +600,18 @@ export default function PortalPage() {
           </Card>
         </div>
       </div>
+
+      {/* Rest Warning Dialog */}
+      <WorkoutRestWarning
+        open={showWarningDialog}
+        onOpenChange={setShowWarningDialog}
+        onConfirm={handleConfirmStart}
+        onCancel={() => {
+          setShowWarningDialog(false);
+          setPendingAction(null);
+        }}
+        recentWorkout={recentWorkoutCheck.data?.workout ?? null}
+      />
     </div>
   );
 }

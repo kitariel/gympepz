@@ -72,3 +72,19 @@ for the start workout page with workout/id
 we need to redesign and modify to be mobile friendly and easy to use 
 
 
+
+
+Scenario
+Start workout now
+    working out 
+    then finish workout then if i got to start a workout it will say you are already finish get some rest now 
+    or do you to wokrout again "note bad for your heathl "
+
+
+
+
+Logs menu
+Workouts tab
+it should have a status in workout or done workout
+skip or did not workout 
+then can be duplicate the workout or rescdule or re use then reschedule

@@ -490,4 +490,117 @@ export const workoutLogRouter = createTRPCRouter({
         data: { duration: input.duration },
       });
     }),
+
+  // Check for recent completed workouts (within last 6 hours)
+  checkRecentWorkout: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        hoursBack: z.number().default(6), // Default: check last 6 hours
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const hoursAgo = new Date();
+      hoursAgo.setHours(hoursAgo.getHours() - input.hoursBack);
+
+      const recentWorkout = await ctx.db.workoutLog.findFirst({
+        where: {
+          userId: input.userId,
+          completed: true,
+          date: {
+            gte: hoursAgo,
+          },
+        },
+        orderBy: { date: "desc" },
+        include: {
+          planDay: {
+            select: {
+              title: true,
+            },
+          },
+        },
+      });
+
+      if (!recentWorkout) {
+        return { hasRecentWorkout: false, workout: null };
+      }
+
+      const timeDiff = Date.now() - recentWorkout.date.getTime();
+      const hoursSince = Math.floor(timeDiff / (1000 * 60 * 60));
+      const minutesSince = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+      return {
+        hasRecentWorkout: true,
+        workout: {
+          id: recentWorkout.id,
+          title: recentWorkout.planDay?.title ?? "Workout",
+          date: recentWorkout.date,
+          duration: recentWorkout.duration,
+          hoursSince,
+          minutesSince,
+        },
+      };
+    }),
+
+  // Duplicate a workout (create a new workout with same exercises)
+  duplicate: publicProcedure
+    .input(z.object({ id: z.string().min(1), date: z.date().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const sourceLog = await ctx.db.workoutLog.findUnique({
+        where: { id: input.id },
+        include: {
+          exercises: true,
+          planDay: true,
+        },
+      });
+
+      if (!sourceLog) {
+        throw new Error("Workout log not found");
+      }
+
+      // Create new workout log
+      const newLog = await ctx.db.workoutLog.create({
+        data: {
+          userId: sourceLog.userId,
+          planDayId: sourceLog.planDayId,
+          date: input.date ?? new Date(),
+          notes: sourceLog.notes,
+          completed: false,
+        },
+      });
+
+      // Copy exercises
+      if (sourceLog.exercises.length > 0) {
+        await ctx.db.workoutLogExercise.createMany({
+          data: sourceLog.exercises.map((ex) => ({
+            workoutLogId: newLog.id,
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+            reps: ex.reps,
+            weight: ex.weight,
+            rpe: ex.rpe,
+            notes: ex.notes,
+          })),
+        });
+      }
+
+      return newLog;
+    }),
+
+  // Reschedule a workout (change date)
+  reschedule: publicProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        date: z.date(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.workoutLog.update({
+        where: { id: input.id },
+        data: {
+          date: input.date,
+        },
+      });
+    }),
 });

@@ -37,8 +37,9 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -115,11 +116,37 @@ export function PortalHeader() {
     { enabled: !!session?.user?.id }
   );
   const activePlanData = activePlan.data?.find((p) => p.isActive);
+  
+  // Check for recent completed workout
+  const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
+    { userId: session?.user?.id ?? "", hoursBack: 6 },
+    { enabled: !!session?.user?.id }
+  );
+  
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  
   const quickStart = api.workoutLog.quickStart.useMutation({
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
 
   const handleQuickStart = () => {
+    if (!session?.user?.id) return;
+    
+    // Check if there's a recent completed workout
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setShowWarningDialog(true);
+      return;
+    }
+    
+    if (activePlanData) {
+      quickStart.mutate({ userId: session.user.id });
+    } else {
+      router.push("/portal/log");
+    }
+  };
+
+  const handleConfirmStart = () => {
+    setShowWarningDialog(false);
     if (activePlanData && session?.user?.id) {
       quickStart.mutate({ userId: session.user.id });
     } else {
@@ -272,6 +299,15 @@ export function PortalHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Rest Warning Dialog */}
+      <WorkoutRestWarning
+        open={showWarningDialog}
+        onOpenChange={setShowWarningDialog}
+        onConfirm={handleConfirmStart}
+        onCancel={() => setShowWarningDialog(false)}
+        recentWorkout={recentWorkoutCheck.data?.workout ?? null}
+      />
     </header>
   );
 }

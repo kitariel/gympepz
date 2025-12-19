@@ -20,6 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { QuickPlanWizard } from "./_components/quick-plan-wizard";
+import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 
 export default function StartWorkoutPage() {
   const { data: session } = useSession();
@@ -28,10 +29,17 @@ export default function StartWorkoutPage() {
   const [showPlanChoices, setShowPlanChoices] = useState(false);
   const [showQuickWizard, setShowQuickWizard] = useState(false);
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
 
   // Get today's workout
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId },
+    { enabled: !!userId }
+  );
+
+  // Check for recent completed workout
+  const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
+    { userId, hoursBack: 6 },
     { enabled: !!userId }
   );
 
@@ -46,6 +54,20 @@ export default function StartWorkoutPage() {
   });
 
   const handleStartWorkout = () => {
+    if (!userId) return;
+    
+    // Check if there's a recent completed workout
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setShowWarningDialog(true);
+      return;
+    }
+    
+    // No recent workout, start immediately
+    quickStart.mutate({ userId });
+  };
+
+  const handleConfirmStart = () => {
+    setShowWarningDialog(false);
     if (!userId) return;
     quickStart.mutate({ userId });
   };
@@ -377,6 +399,15 @@ export default function StartWorkoutPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Rest Warning Dialog */}
+      <WorkoutRestWarning
+        open={showWarningDialog}
+        onOpenChange={setShowWarningDialog}
+        onConfirm={handleConfirmStart}
+        onCancel={() => setShowWarningDialog(false)}
+        recentWorkout={recentWorkoutCheck.data?.workout ?? null}
+      />
     </div>
   );
 }
