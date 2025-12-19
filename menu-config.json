@@ -1,5 +1,6 @@
 {
   "navMain": [
+
     {
       "title": "Dashboard",
       "url": "/portal",
@@ -41,7 +42,6 @@
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        { "title": "Profile", "url": "/portal/account", "enabled": true },
         { "title": "Account", "url": "/portal/account", "enabled": true }
       ]
     }
