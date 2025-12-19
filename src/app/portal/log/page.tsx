@@ -6,11 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkoutLogList } from "./workout-log-list";
 import { ProgressView } from "./progress-view";
-import { OverviewTab } from "./_components/overview-tab";
 import { AnalyticsTab } from "./_components/analytics-tab";
 import { CalendarTab } from "./_components/calendar-tab";
 import {
-  LayoutDashboard,
   Dumbbell,
   TrendingUp,
   BarChart3,
@@ -77,12 +75,8 @@ export default function LogPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto h-9">
-          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
+      <Tabs defaultValue="workouts" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto h-9">
           <TabsTrigger value="workouts" className="gap-1.5 text-xs sm:text-sm">
             <Dumbbell className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Workouts</span>
@@ -100,10 +94,6 @@ export default function LogPage() {
             <span className="hidden sm:inline">Calendar</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-4 mt-4">
-          <OverviewTab userId={userId} />
-        </TabsContent>
 
         <TabsContent value="workouts" className="space-y-4 mt-4">
           <WorkoutLogList />
