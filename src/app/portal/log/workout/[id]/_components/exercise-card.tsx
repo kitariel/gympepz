@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronDown, ChevronUp, Trash2, TrendingUp } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Trash2, TrendingUp, CheckCircle2, Circle } from "lucide-react";
 import { SetRow } from "./set-row";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +34,9 @@ interface ExerciseCardProps {
   onDeleteSet: (setId: string) => void;
   onDeleteExercise: () => void;
   onStartRestTimer?: () => void;
+  isMarkedDone?: boolean;
+  onToggleDone?: () => void;
+  exerciseId?: string;
 }
 
 export function ExerciseCard({
@@ -47,24 +50,54 @@ export function ExerciseCard({
   onDeleteSet,
   onDeleteExercise,
   onStartRestTimer,
+  isMarkedDone = false,
+  onToggleDone,
+  exerciseId,
 }: ExerciseCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const completedSets = sets.filter((s) => s.completed).length;
   const totalSets = sets.length;
   const allCompleted = completedSets === totalSets && totalSets > 0;
+  const isDone = isMarkedDone || allCompleted;
 
   return (
-    <Card className={cn(allCompleted && "border-green-500 bg-green-50/50 dark:bg-green-950/20")}>
+    <Card className={cn(
+      isDone && "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20",
+      allCompleted && !isMarkedDone && "border-green-500 bg-green-50/50 dark:bg-green-950/20"
+    )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base">{exerciseName}</CardTitle>
-              {allCompleted && (
+              {onToggleDone && (
+                <button
+                  onClick={onToggleDone}
+                  className="shrink-0 mt-0.5"
+                  aria-label={isMarkedDone ? "Mark as incomplete" : "Mark exercise as done"}
+                >
+                  {isMarkedDone ? (
+                    <CheckCircle2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
+                  )}
+                </button>
+              )}
+              <CardTitle className={cn(
+                "text-base",
+                isMarkedDone && "line-through text-muted-foreground"
+              )}>
+                {exerciseName}
+              </CardTitle>
+              {allCompleted && !isMarkedDone && (
                 <Badge variant="success">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   Complete
+                </Badge>
+              )}
+              {isMarkedDone && (
+                <Badge variant="secondary" className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+                  Done
                 </Badge>
               )}
             </div>

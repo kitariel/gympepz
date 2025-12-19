@@ -14,6 +14,8 @@ import {
   Plus,
   Target,
   Calendar,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +27,7 @@ export default function StartWorkoutPage() {
   const router = useRouter();
   const [showPlanChoices, setShowPlanChoices] = useState(false);
   const [showQuickWizard, setShowQuickWizard] = useState(false);
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
   // Get today's workout
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
@@ -251,36 +254,66 @@ export default function StartWorkoutPage() {
                 <div className="bg-white/50 dark:bg-background/50 rounded-lg p-4 space-y-3">
                   {todayWorkout.exercises.length > 0 ? (
                     <div className="space-y-2">
-                      {todayWorkout.exercises.slice(0, 5).map((exercise, idx) => (
-                        <div
-                          key={exercise.id}
-                          className="flex items-center justify-between text-sm py-2 border-b last:border-0"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-muted-foreground text-xs w-6">
-                              {idx + 1}
-                            </span>
-                            <div>
-                              <p className="font-medium">{exercise.exerciseName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {exercise.muscleGroup}
+                      {todayWorkout.exercises.map((exercise, idx) => {
+                        const isCompleted = completedExercises.has(exercise.id);
+                        return (
+                          <div
+                            key={exercise.id}
+                            className={`flex items-center justify-between text-sm py-2 px-2 rounded-lg border-b last:border-0 transition-colors ${
+                              isCompleted 
+                                ? "bg-teal-50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-800" 
+                                : "hover:bg-white/70 dark:hover:bg-background/70"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <button
+                                onClick={() => {
+                                  const newCompleted = new Set(completedExercises);
+                                  if (isCompleted) {
+                                    newCompleted.delete(exercise.id);
+                                  } else {
+                                    newCompleted.add(exercise.id);
+                                  }
+                                  setCompletedExercises(newCompleted);
+                                }}
+                                className="shrink-0"
+                                aria-label={isCompleted ? "Mark as incomplete" : "Mark as done"}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
+                                )}
+                              </button>
+                              <span className="text-muted-foreground text-xs w-6 shrink-0">
+                                {idx + 1}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-medium ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                                  {exercise.exerciseName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exercise.muscleGroup}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground shrink-0 ml-2">
+                              <p>
+                                {exercise.sets} sets × {exercise.reps} reps
                               </p>
+                              {exercise.weight && (
+                                <p>{exercise.weight} kg</p>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right text-xs text-muted-foreground">
-                            <p>
-                              {exercise.sets} sets × {exercise.reps} reps
-                            </p>
-                            {exercise.weight && (
-                              <p>{exercise.weight} kg</p>
-                            )}
-                          </div>
+                        );
+                      })}
+                      {completedExercises.size > 0 && (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-center text-muted-foreground">
+                            {completedExercises.size} of {todayWorkout.exercises.length} exercises completed
+                          </p>
                         </div>
-                      ))}
-                      {todayWorkout.exercises.length > 5 && (
-                        <p className="text-xs text-muted-foreground text-center pt-2">
-                          + {todayWorkout.exercises.length - 5} more exercises
-                        </p>
                       )}
                     </div>
                   ) : (

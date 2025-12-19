@@ -34,6 +34,7 @@ export default function ActiveWorkoutPage({
   const lastSavedMinute = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<string>("");
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
   // Timers
   const { elapsedTime, elapsedSeconds } = useWorkoutTimer(true);
@@ -429,11 +430,14 @@ export default function ActiveWorkoutPage({
               (e) => e.exerciseId === exerciseId
             );
 
+            const isMarkedDone = completedExercises.has(exerciseId);
+
             return (
               <ExerciseCard
                 key={exerciseId}
                 exerciseName={exercise.name}
                 muscleGroup={exercise.muscleGroup}
+                exerciseId={exerciseId}
                 sets={sets.map((s: any) => ({
                   id: s.id,
                   setNumber: s.setNumber,
@@ -453,6 +457,16 @@ export default function ActiveWorkoutPage({
                       }
                     : undefined
                 }
+                isMarkedDone={isMarkedDone}
+                onToggleDone={() => {
+                  const newCompleted = new Set(completedExercises);
+                  if (isMarkedDone) {
+                    newCompleted.delete(exerciseId);
+                  } else {
+                    newCompleted.add(exerciseId);
+                  }
+                  setCompletedExercises(newCompleted);
+                }}
                 onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
                 onCompleteSet={(setId) => {
                   handleCompleteSet(setId);
