@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExerciseCard } from "./_components/exercise-card";
 import { ExerciseFilters } from "./_components/exercise-filters";
 import { ExerciseDetailModal } from "./_components/exercise-detail-modal";
+import { AddToPlanDialog } from "./_components/add-to-plan-dialog";
 import { Dumbbell, Heart, Plus, TrendingUp, Library } from "lucide-react";
 
 export default function ExercisesPage() {
@@ -25,6 +26,7 @@ export default function ExercisesPage() {
   // Modal state
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAddToPlanDialogOpen, setIsAddToPlanDialogOpen] = useState(false);
 
   // Favorites
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -206,8 +208,8 @@ export default function ExercisesPage() {
                   onToggleFavorite={() => handleToggleFavorite(exercise.id)}
                   onViewDetails={() => handleViewDetails(exercise)}
                   onAddToPlan={() => {
-                    // TODO: Implement add to plan
-                    console.log("Add to plan:", exercise.id);
+                    setSelectedExercise(exercise);
+                    setIsAddToPlanDialogOpen(true);
                   }}
                 />
               ))}
@@ -247,7 +249,8 @@ export default function ExercisesPage() {
                   onToggleFavorite={() => handleToggleFavorite(exercise.id)}
                   onViewDetails={() => handleViewDetails(exercise)}
                   onAddToPlan={() => {
-                    console.log("Add to plan:", exercise.id);
+                    setSelectedExercise(exercise);
+                    setIsAddToPlanDialogOpen(true);
                   }}
                 />
               ))}
@@ -279,10 +282,19 @@ export default function ExercisesPage() {
           selectedExercise && handleToggleFavorite(selectedExercise.id)
         }
         onAddToPlan={() => {
-          // TODO: Implement add to plan
-          console.log("Add to plan:", selectedExercise?.id);
+          setIsAddToPlanDialogOpen(true);
         }}
       />
+
+      {/* Add to Plan Dialog */}
+      {selectedExercise && (
+        <AddToPlanDialog
+          open={isAddToPlanDialogOpen}
+          onOpenChange={setIsAddToPlanDialogOpen}
+          exerciseId={selectedExercise.id}
+          exerciseName={selectedExercise.name}
+        />
+      )}
     </div>
   );
 }

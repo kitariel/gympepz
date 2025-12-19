@@ -144,16 +144,11 @@ export default function StartWorkoutPage() {
               onClick={() => router.push("/portal/ai-planner")}
             >
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                      <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <CardTitle>AI Planner</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    Coming Soon
-                  </Badge>
+                  <CardTitle>AI Planner</CardTitle>
                 </div>
                 <CardDescription>
                   Let AI create a personalized workout plan for you
@@ -176,8 +171,6 @@ export default function StartWorkoutPage() {
                 </ul>
                 <Button 
                   className="w-full"
-                  variant="outline"
-                  disabled
                   onClick={() => router.push("/portal/ai-planner")}
                 >
                   Use AI Planner

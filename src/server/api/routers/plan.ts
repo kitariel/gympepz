@@ -234,6 +234,21 @@ export const planRouter = createTRPCRouter({
       });
       return { ok: true, id: day.id };
     }),
+  updateDay: publicProcedure
+    .input(z.object({ id: z.string().min(1), title: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.planDay.update({
+        where: { id: input.id },
+        data: { title: input.title },
+      });
+      return { ok: true };
+    }),
+  deleteDay: publicProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.planDay.delete({ where: { id: input.id } });
+      return { ok: true };
+    }),
   addExercise: publicProcedure
     .input(
       z.object({

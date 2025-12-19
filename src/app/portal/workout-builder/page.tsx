@@ -272,6 +272,15 @@ export default function WorkoutBuilderPage() {
   // Exercise selection dialog
   const [isExerciseDialogOpen, setIsExerciseDialogOpen] = useState(false);
   const [targetDayIdx, setTargetDayIdx] = useState<number | string | null>(null);
+  const [selectedExerciseForConfig, setSelectedExerciseForConfig] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [exerciseConfig, setExerciseConfig] = useState({
+    sets: 3,
+    reps: 10,
+    weight: undefined as number | undefined,
+  });
 
   // Exercise query with filters
   const exercisesQuery = api.exercise.list.useQuery({
@@ -397,13 +406,53 @@ export default function WorkoutBuilderPage() {
     setIsExerciseDialogOpen(true);
   };
 
-  const addExerciseQuick = (exerciseId: string) => {
-    if (targetDayIdx === null) return;
+  const handleExerciseSelect = (exerciseId: string, exerciseName: string) => {
+    // Set selected exercise and show config form
+    setSelectedExerciseForConfig({ id: exerciseId, name: exerciseName });
+    // Reset config to defaults
+    setExerciseConfig({ sets: 3, reps: 10, weight: undefined });
+  };
+
+  const handleAddExerciseWithConfig = () => {
+    if (!selectedExerciseForConfig || targetDayIdx === null) return;
+    
+    const exerciseId = selectedExerciseForConfig.id;
     
     // Check if it's month view (string key) or week view (number index)
     if (typeof targetDayIdx === "string") {
-      addExerciseMonth(exerciseId);
+      // Month view - use existing addExerciseMonth but with config
+      setMonthDays((prev) => {
+        const newMap = new Map(prev);
+        const day = newMap.get(targetDayIdx);
+        if (day) {
+          // Check if exercise already exists to prevent duplicates
+          if (day.items.some((item) => item.exerciseId === exerciseId)) {
+            return prev;
+          }
+          
+          newMap.set(targetDayIdx, {
+            ...day,
+            isRestDay: false,
+            items: [
+              ...day.items,
+              {
+                exerciseId,
+                sets: exerciseConfig.sets,
+                reps: exerciseConfig.reps,
+                weight: exerciseConfig.weight,
+              },
+            ],
+          });
+        }
+        return newMap;
+      });
+      setIsExerciseDialogOpen(false);
+      setSelectedExerciseForConfig(null);
+      setSearchQuery("");
+      setSelectedMuscle("All");
+      setSelectedEquipment("All");
     } else {
+      // Week view
       setWeekDays((prev) => {
         const next = [...prev];
         const day = next[targetDayIdx];
@@ -418,16 +467,25 @@ export default function WorkoutBuilderPage() {
         day.isRestDay = false;
         day.items.push({
           exerciseId,
-          sets: 3,
-          reps: 10,
-          weight: undefined,
+          sets: exerciseConfig.sets,
+          reps: exerciseConfig.reps,
+          weight: exerciseConfig.weight,
         });
         return next;
       });
       setIsExerciseDialogOpen(false);
+      setSelectedExerciseForConfig(null);
       setSearchQuery("");
       setSelectedMuscle("All");
       setSelectedEquipment("All");
+    }
+  };
+
+  const addExerciseQuick = (exerciseId: string) => {
+    // This is now just for backward compatibility - will open config
+    const exercise = exercises.find((e) => e.id === exerciseId);
+    if (exercise) {
+      handleExerciseSelect(exerciseId, exercise.name);
     }
   };
 
@@ -766,6 +824,7 @@ export default function WorkoutBuilderPage() {
                             if (!open) {
                               setIsExerciseDialogOpen(false);
                               setTargetDayIdx(null);
+                              setSelectedExerciseForConfig(null);
                               setSearchQuery("");
                               setSelectedMuscle("All");
                               setSelectedEquipment("All");
@@ -851,50 +910,159 @@ export default function WorkoutBuilderPage() {
                                 </div>
                               </div>
 
-                              {/* Exercise List */}
-                              <div className="max-h-[400px] overflow-y-auto space-y-1.5">
-                                {exercises.length === 0 ? (
-                                  <div className="text-center py-8 text-muted-foreground text-sm">
-                                    <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                    <p>No exercises found</p>
-                                  </div>
-                                ) : (
-                                  exercises.map((ex) => (
+                              {/* Exercise Configuration Form */}
+                              {selectedExerciseForConfig ? (
+                                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="font-semibold text-sm">
+                                        {selectedExerciseForConfig.name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Configure sets, reps, and weight
+                                      </p>
+                                    </div>
                                     <Button
-                                      key={ex.id}
                                       variant="ghost"
-                                      className="w-full justify-start h-auto p-3 hover:bg-accent"
-                                      onClick={() => addExerciseQuick(ex.id)}
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => setSelectedExerciseForConfig(null)}
                                     >
-                                      <div className="flex items-start gap-3 w-full text-left">
-                                        <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
-                                          <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="font-medium text-sm">{ex.name}</p>
-                                          <div className="flex items-center gap-2 mt-1">
-                                            <Badge
-                                              variant="secondary"
-                                              className="text-[9px] px-1.5 py-0 h-4"
-                                            >
-                                              {ex.muscleGroup}
-                                            </Badge>
-                                            {ex.equipment && (
-                                              <Badge
-                                                variant="outline"
-                                                className="text-[9px] px-1.5 py-0 h-4"
-                                              >
-                                                {ex.equipment}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                                      </div>
+                                      <X className="h-4 w-4" />
                                     </Button>
-                                  ))
-                                )}
-                              </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-3 gap-3">
+                                    <div className="space-y-2">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Sets
+                                      </label>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="20"
+                                        value={exerciseConfig.sets}
+                                        onChange={(e) =>
+                                          setExerciseConfig((prev) => ({
+                                            ...prev,
+                                            sets: parseInt(e.target.value) || 1,
+                                          }))
+                                        }
+                                        className="h-9 text-center"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Reps
+                                      </label>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="50"
+                                        value={exerciseConfig.reps}
+                                        onChange={(e) =>
+                                          setExerciseConfig((prev) => ({
+                                            ...prev,
+                                            reps: parseInt(e.target.value) || 1,
+                                          }))
+                                        }
+                                        className="h-9 text-center"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Weight (kg)
+                                      </label>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        placeholder="Optional"
+                                        value={exerciseConfig.weight ?? ""}
+                                        onChange={(e) =>
+                                          setExerciseConfig((prev) => ({
+                                            ...prev,
+                                            weight:
+                                              e.target.value === ""
+                                                ? undefined
+                                                : parseFloat(e.target.value) || undefined,
+                                          }))
+                                        }
+                                        className="h-9 text-center"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-2 pt-2">
+                                    <Button
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => setSelectedExerciseForConfig(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      className="flex-1"
+                                      onClick={handleAddExerciseWithConfig}
+                                      disabled={
+                                        exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                                      }
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add Exercise
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  {/* Exercise List */}
+                                  <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                                    {exercises.length === 0 ? (
+                                      <div className="text-center py-8 text-muted-foreground text-sm">
+                                        <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                        <p>No exercises found</p>
+                                      </div>
+                                    ) : (
+                                      exercises.map((ex) => (
+                                        <Button
+                                          key={ex.id}
+                                          variant="ghost"
+                                          className="w-full justify-start h-auto p-3 hover:bg-accent"
+                                          onClick={() =>
+                                            handleExerciseSelect(ex.id, ex.name)
+                                          }
+                                        >
+                                          <div className="flex items-start gap-3 w-full text-left">
+                                            <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
+                                              <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="font-medium text-sm">{ex.name}</p>
+                                              <div className="flex items-center gap-2 mt-1">
+                                                <Badge
+                                                  variant="secondary"
+                                                  className="text-[9px] px-1.5 py-0 h-4"
+                                                >
+                                                  {ex.muscleGroup}
+                                                </Badge>
+                                                {ex.equipment && (
+                                                  <Badge
+                                                    variant="outline"
+                                                    className="text-[9px] px-1.5 py-0 h-4"
+                                                  >
+                                                    {ex.equipment}
+                                                  </Badge>
+                                                )}
+                                              </div>
+                                            </div>
+                                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                          </div>
+                                        </Button>
+                                      ))
+                                    )}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </DialogContent>
                         </Dialog>
@@ -918,38 +1086,63 @@ export default function WorkoutBuilderPage() {
                                       {exercise?.name ?? "Unknown Exercise"}
                                     </p>
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      max="20"
-                                      value={item.sets}
-                                      onChange={(e) =>
-                                        updateItemQuick(
-                                          dayIdx,
-                                          itemIdx,
-                                          "sets",
-                                          parseInt(e.target.value) || 0
-                                        )
-                                      }
-                                      className="w-10 h-7 text-center text-xs"
-                                    />
-                                    <span className="text-[10px] text-muted-foreground">×</span>
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      max="50"
-                                      value={item.reps}
-                                      onChange={(e) =>
-                                        updateItemQuick(
-                                          dayIdx,
-                                          itemIdx,
-                                          "reps",
-                                          parseInt(e.target.value) || 0
-                                        )
-                                      }
-                                      className="w-10 h-7 text-center text-xs"
-                                    />
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                      <span className="text-[10px] text-muted-foreground">Sets:</span>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="20"
+                                        value={item.sets}
+                                        onChange={(e) =>
+                                          updateItemQuick(
+                                            dayIdx,
+                                            itemIdx,
+                                            "sets",
+                                            parseInt(e.target.value) || 0
+                                          )
+                                        }
+                                        className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                      <span className="text-[10px] text-muted-foreground">Reps:</span>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="50"
+                                        value={item.reps}
+                                        onChange={(e) =>
+                                          updateItemQuick(
+                                            dayIdx,
+                                            itemIdx,
+                                            "reps",
+                                            parseInt(e.target.value) || 0
+                                          )
+                                        }
+                                        className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                      />
+                                    </div>
+                                    {item.weight !== undefined && item.weight !== null && (
+                                      <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                        <span className="text-[10px] text-muted-foreground">kg:</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          step="0.5"
+                                          value={item.weight}
+                                          onChange={(e) =>
+                                            updateItemQuick(
+                                              dayIdx,
+                                              itemIdx,
+                                              "weight",
+                                              parseFloat(e.target.value) || 0
+                                            )
+                                          }
+                                          className="w-14 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                        />
+                                      </div>
+                                    )}
                                   </div>
                                   <Button
                                     variant="ghost"
@@ -1168,6 +1361,7 @@ export default function WorkoutBuilderPage() {
                                 if (!open) {
                                   setIsExerciseDialogOpen(false);
                                   setTargetDayIdx(null);
+                                  setSelectedExerciseForConfig(null);
                                   setSearchQuery("");
                                   setSelectedMuscle("All");
                                   setSelectedEquipment("All");
@@ -1253,50 +1447,159 @@ export default function WorkoutBuilderPage() {
                                     </div>
                                   </div>
 
-                                  {/* Exercise List */}
-                                  <div className="max-h-[400px] overflow-y-auto space-y-1.5">
-                                    {exercises.length === 0 ? (
-                                      <div className="text-center py-8 text-muted-foreground text-sm">
-                                        <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        <p>No exercises found</p>
-                                      </div>
-                                    ) : (
-                                      exercises.map((ex) => (
+                                  {/* Exercise Configuration Form */}
+                                  {selectedExerciseForConfig ? (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="font-semibold text-sm">
+                                            {selectedExerciseForConfig.name}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            Configure sets, reps, and weight
+                                          </p>
+                                        </div>
                                         <Button
-                                          key={ex.id}
                                           variant="ghost"
-                                          className="w-full justify-start h-auto p-3 hover:bg-accent"
-                                          onClick={() => addExerciseQuick(ex.id)}
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => setSelectedExerciseForConfig(null)}
                                         >
-                                          <div className="flex items-start gap-3 w-full text-left">
-                                            <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
-                                              <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="font-medium text-sm">{ex.name}</p>
-                                              <div className="flex items-center gap-2 mt-1">
-                                                <Badge
-                                                  variant="secondary"
-                                                  className="text-[9px] px-1.5 py-0 h-4"
-                                                >
-                                                  {ex.muscleGroup}
-                                                </Badge>
-                                                {ex.equipment && (
-                                                  <Badge
-                                                    variant="outline"
-                                                    className="text-[9px] px-1.5 py-0 h-4"
-                                                  >
-                                                    {ex.equipment}
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                            </div>
-                                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                                          </div>
+                                          <X className="h-4 w-4" />
                                         </Button>
-                                      ))
-                                    )}
-                                  </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Sets
+                                          </label>
+                                          <Input
+                                            type="number"
+                                            min="1"
+                                            max="20"
+                                            value={exerciseConfig.sets}
+                                            onChange={(e) =>
+                                              setExerciseConfig((prev) => ({
+                                                ...prev,
+                                                sets: parseInt(e.target.value) || 1,
+                                              }))
+                                            }
+                                            className="h-9 text-center"
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Reps
+                                          </label>
+                                          <Input
+                                            type="number"
+                                            min="1"
+                                            max="50"
+                                            value={exerciseConfig.reps}
+                                            onChange={(e) =>
+                                              setExerciseConfig((prev) => ({
+                                                ...prev,
+                                                reps: parseInt(e.target.value) || 1,
+                                              }))
+                                            }
+                                            className="h-9 text-center"
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Weight (kg)
+                                          </label>
+                                          <Input
+                                            type="number"
+                                            min="0"
+                                            step="0.5"
+                                            placeholder="Optional"
+                                            value={exerciseConfig.weight ?? ""}
+                                            onChange={(e) =>
+                                              setExerciseConfig((prev) => ({
+                                                ...prev,
+                                                weight:
+                                                  e.target.value === ""
+                                                    ? undefined
+                                                    : parseFloat(e.target.value) || undefined,
+                                              }))
+                                            }
+                                            className="h-9 text-center"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="flex gap-2 pt-2">
+                                        <Button
+                                          variant="outline"
+                                          className="flex-1"
+                                          onClick={() => setSelectedExerciseForConfig(null)}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          className="flex-1"
+                                          onClick={handleAddExerciseWithConfig}
+                                          disabled={
+                                            exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                                          }
+                                        >
+                                          <Plus className="h-4 w-4 mr-2" />
+                                          Add Exercise
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      {/* Exercise List */}
+                                      <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                                        {exercises.length === 0 ? (
+                                          <div className="text-center py-8 text-muted-foreground text-sm">
+                                            <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                            <p>No exercises found</p>
+                                          </div>
+                                        ) : (
+                                          exercises.map((ex) => (
+                                            <Button
+                                              key={ex.id}
+                                              variant="ghost"
+                                              className="w-full justify-start h-auto p-3 hover:bg-accent"
+                                              onClick={() =>
+                                                handleExerciseSelect(ex.id, ex.name)
+                                              }
+                                            >
+                                              <div className="flex items-start gap-3 w-full text-left">
+                                                <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
+                                                  <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="font-medium text-sm">{ex.name}</p>
+                                                  <div className="flex items-center gap-2 mt-1">
+                                                    <Badge
+                                                      variant="secondary"
+                                                      className="text-[9px] px-1.5 py-0 h-4"
+                                                    >
+                                                      {ex.muscleGroup}
+                                                    </Badge>
+                                                    {ex.equipment && (
+                                                      <Badge
+                                                        variant="outline"
+                                                        className="text-[9px] px-1.5 py-0 h-4"
+                                                      >
+                                                        {ex.equipment}
+                                                      </Badge>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                              </div>
+                                            </Button>
+                                          ))
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </DialogContent>
                             </Dialog>
@@ -1316,38 +1619,63 @@ export default function WorkoutBuilderPage() {
                                           {exercise?.name ?? "Unknown Exercise"}
                                         </p>
                                       </div>
-                                      <div className="flex items-center gap-1">
-                                        <Input
-                                          type="number"
-                                          min="1"
-                                          max="20"
-                                          value={item.sets}
-                                          onChange={(e) =>
-                                            updateItemMonth(
-                                              dateKey,
-                                              itemIdx,
-                                              "sets",
-                                              parseInt(e.target.value) || 0
-                                            )
-                                          }
-                                          className="w-10 h-7 text-center text-xs"
-                                        />
-                                        <span className="text-[10px] text-muted-foreground">×</span>
-                                        <Input
-                                          type="number"
-                                          min="1"
-                                          max="50"
-                                          value={item.reps}
-                                          onChange={(e) =>
-                                            updateItemMonth(
-                                              dateKey,
-                                              itemIdx,
-                                              "reps",
-                                              parseInt(e.target.value) || 0
-                                            )
-                                          }
-                                          className="w-10 h-7 text-center text-xs"
-                                        />
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                          <span className="text-[10px] text-muted-foreground">Sets:</span>
+                                          <Input
+                                            type="number"
+                                            min="1"
+                                            max="20"
+                                            value={item.sets}
+                                            onChange={(e) =>
+                                              updateItemMonth(
+                                                dateKey,
+                                                itemIdx,
+                                                "sets",
+                                                parseInt(e.target.value) || 0
+                                              )
+                                            }
+                                            className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                          <span className="text-[10px] text-muted-foreground">Reps:</span>
+                                          <Input
+                                            type="number"
+                                            min="1"
+                                            max="50"
+                                            value={item.reps}
+                                            onChange={(e) =>
+                                              updateItemMonth(
+                                                dateKey,
+                                                itemIdx,
+                                                "reps",
+                                                parseInt(e.target.value) || 0
+                                              )
+                                            }
+                                            className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                          />
+                                        </div>
+                                        {item.weight !== undefined && item.weight !== null && (
+                                          <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
+                                            <span className="text-[10px] text-muted-foreground">kg:</span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              step="0.5"
+                                              value={item.weight}
+                                              onChange={(e) =>
+                                                updateItemMonth(
+                                                  dateKey,
+                                                  itemIdx,
+                                                  "weight",
+                                                  parseFloat(e.target.value) || 0
+                                                )
+                                              }
+                                              className="w-14 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                            />
+                                          </div>
+                                        )}
                                       </div>
                                       <Button
                                         variant="ghost"

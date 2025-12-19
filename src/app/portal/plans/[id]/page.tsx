@@ -24,6 +24,7 @@ import {
   Save,
   Eye,
   Calendar,
+  Pencil,
 } from "lucide-react";
 
 export default function PlanDetailPage({
@@ -40,6 +41,8 @@ export default function PlanDetailPage({
   const [isAddExerciseDialogOpen, setIsAddExerciseDialogOpen] = useState(false);
   const [targetDayId, setTargetDayId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingDayId, setEditingDayId] = useState<string | null>(null);
+  const [editingDayTitle, setEditingDayTitle] = useState("");
 
   const plan = api.plan.get.useQuery({ id }, { enabled: !!id });
   const updateMeta = api.plan.updateMeta.useMutation();
@@ -48,6 +51,7 @@ export default function PlanDetailPage({
   const updItem = api.plan.updateItem.useMutation();
   const delItem = api.plan.deleteItem.useMutation();
   const deleteDay = api.plan.deleteDay.useMutation();
+  const updateDay = api.plan.updateDay.useMutation();
 
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
@@ -110,6 +114,24 @@ export default function PlanDetailPage({
   const handleDeleteItem = async (itemId: string) => {
     await delItem.mutateAsync({ id: itemId });
     await plan.refetch();
+  };
+
+  const handleStartEditDay = (dayId: string, currentTitle: string) => {
+    setEditingDayId(dayId);
+    setEditingDayTitle(currentTitle);
+  };
+
+  const handleSaveDayTitle = async (dayId: string) => {
+    if (!editingDayTitle.trim()) return;
+    await updateDay.mutateAsync({ id: dayId, title: editingDayTitle });
+    setEditingDayId(null);
+    setEditingDayTitle("");
+    await plan.refetch();
+  };
+
+  const handleCancelEditDay = () => {
+    setEditingDayId(null);
+    setEditingDayTitle("");
   };
 
   if (plan.isLoading) {
@@ -251,7 +273,52 @@ export default function PlanDetailPage({
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm">{day.title}</CardTitle>
+                      {editingDayId === day.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingDayTitle}
+                            onChange={(e) => setEditingDayTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleSaveDayTitle(day.id);
+                              } else if (e.key === "Escape") {
+                                handleCancelEditDay();
+                              }
+                            }}
+                            className="h-7 text-sm font-semibold flex-1"
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleSaveDayTitle(day.id)}
+                            disabled={updateDay.isPending || !editingDayTitle.trim()}
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={handleCancelEditDay}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 group">
+                          <CardTitle className="text-sm">{day.title}</CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleStartEditDay(day.id, day.title)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {day.items?.length ?? 0} exercises
                       </p>
