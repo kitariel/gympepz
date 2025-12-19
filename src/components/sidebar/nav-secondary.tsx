@@ -38,10 +38,13 @@ export function NavSecondary({
               // Exact match
               if (pathname === url) return true;
               
-              // Prefix match for nested routes
-              if (url !== "/" && 
-                  (pathname.startsWith(url + "/") || 
-                   pathname.startsWith(url + "?"))) {
+              // Special case: "/portal" or "/" should only match exactly
+              if (url === "/portal" || url === "/") {
+                return pathname === url;
+              }
+              
+              // Prefix match for nested routes (not root/base paths)
+              if (pathname.startsWith(url + "/") || pathname.startsWith(url + "?")) {
                 return true;
               }
               

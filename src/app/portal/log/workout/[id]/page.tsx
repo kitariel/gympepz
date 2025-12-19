@@ -303,47 +303,54 @@ export default function ActiveWorkoutPage({
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-40 flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="font-semibold text-lg">
-              {workout.planDay?.title ?? "Workout"}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              {format(new Date(workout.date), "EEEE, MMM d")}
-            </p>
+      {/* Header - Mobile, Tablet & Desktop Optimized */}
+      <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 md:p-5">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => router.back()}
+              className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-semibold text-base sm:text-lg md:text-xl truncate">
+                {workout.planDay?.title ?? "Workout"}
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground truncate">
+                {format(new Date(workout.date), "EEEE, MMM d")}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-mono font-medium tabular-nums">
-              {elapsedTime}
-            </span>
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 md:gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-2.5 px-2.5 sm:px-3 md:px-3 py-1.5 sm:py-1.5 md:py-2 bg-muted/50 rounded-md md:rounded-lg">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4 md:w-4 text-muted-foreground shrink-0" />
+              <span className="text-xs sm:text-sm md:text-base font-mono font-medium tabular-nums">
+                {elapsedTime}
+              </span>
+            </div>
+            <Button
+              onClick={handleFinish}
+              disabled={completeWorkout.isPending || !logId}
+              size="sm"
+              className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white disabled:opacity-50 h-9 sm:h-8 md:h-9 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-5 shrink-0"
+            >
+              {completeWorkout.isPending ? "Finishing..." : "Finish"}
+            </Button>
           </div>
-          <Button
-            onClick={handleFinish}
-            disabled={completeWorkout.isPending || !logId}
-            size="sm"
-            className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white disabled:opacity-50"
-          >
-            {completeWorkout.isPending ? "Finishing..." : "Finish Workout"}
-          </Button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-4 pb-24 space-y-4">
+      {/* Content - Mobile, Tablet & Desktop Optimized */}
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 pb-20 sm:pb-24 md:pb-24 space-y-3 sm:space-y-4 md:space-y-5">
         {/* Info about current mode */}
         {Object.keys(exerciseGroups).length > 0 && (
           <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-xs">
+            <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-blue-600 shrink-0" />
+            <AlertDescription className="text-xs md:text-sm">
               Using exercise-level tracking. You can edit reps, weight, and sets per exercise. Individual set tracking will be available after database migration.
             </AlertDescription>
           </Alert>
@@ -352,12 +359,12 @@ export default function ActiveWorkoutPage({
         {/* Error Alert */}
         {error && (
           <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-950/20">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-xs">{error}</AlertDescription>
+            <AlertCircle className="h-4 w-4 md:h-5 md:w-5 shrink-0" />
+            <AlertDescription className="text-xs md:text-sm">{error}</AlertDescription>
             <Button
               variant="ghost"
               size="sm"
-              className="mt-2 h-6 text-xs"
+              className="mt-2 h-7 md:h-8 text-xs md:text-sm"
               onClick={() => setError(null)}
             >
               Dismiss
@@ -365,40 +372,40 @@ export default function ActiveWorkoutPage({
           </Alert>
         )}
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Mobile, Tablet & Desktop Optimized */}
         <Card className="border-0 shadow-sm">
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground">Sets</p>
-                  <p className="text-lg font-bold">
-                    {completedSets}/{totalSets}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Volume</p>
-                  <p className="text-lg font-bold">{Math.round(totalVolume)} kg</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Exercises</p>
-                  <p className="text-lg font-bold">
-                    {Object.keys(exerciseGroups).length}
-                  </p>
-                </div>
+          <CardContent className="pt-3 sm:pt-4 md:pt-5 pb-3 sm:pb-4 px-3 sm:px-4 md:px-5">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:flex lg:items-center lg:justify-between">
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Sets</p>
+                <p className="text-base sm:text-lg md:text-xl font-bold">
+                  {completedSets}/{totalSets}
+                </p>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Volume</p>
+                <p className="text-base sm:text-lg md:text-xl font-bold">{Math.round(totalVolume)} kg</p>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Exercises</p>
+                <p className="text-base sm:text-lg md:text-xl font-bold">
+                  {Object.keys(exerciseGroups).length}
+                </p>
               </div>
               {workout.lastWorkout && (
-                <Badge variant="outline" className="text-xs">
-                  Last: {format(new Date(workout.lastWorkout.date), "MMM d")}
-                </Badge>
+                <div className="col-span-3 sm:col-span-1 lg:flex lg:justify-end flex justify-center sm:justify-end mt-2 sm:mt-0 lg:mt-0">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs md:text-sm">
+                    Last: {format(new Date(workout.lastWorkout.date), "MMM d")}
+                  </Badge>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Workout Notes */}
+        {/* Workout Notes - Mobile, Tablet & Desktop Optimized */}
         <Card className="border-0 shadow-sm">
-          <CardContent className="pt-4">
+          <CardContent className="pt-3 sm:pt-4 md:pt-5 px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
             <Textarea
               placeholder="Add workout notes..."
               value={notes || workout.notes ?? ""}
@@ -414,14 +421,14 @@ export default function ActiveWorkoutPage({
                   });
                 }
               }}
-              className="resize-none"
+              className="resize-none text-sm md:text-base"
               rows={2}
             />
           </CardContent>
         </Card>
 
-        {/* Exercises */}
-        <div className="space-y-4">
+        {/* Exercises - Mobile, Tablet & Desktop Optimized */}
+        <div className="space-y-3 sm:space-y-4 md:space-y-5">
           {Object.entries(exerciseGroups).map(([exerciseId, { exercise, sets, exerciseLogId }]) => {
             // Find last workout data for this exercise
             const lastWorkoutSet = workout.lastWorkout?.sets?.find(
@@ -481,37 +488,38 @@ export default function ActiveWorkoutPage({
           })}
         </div>
 
-        {/* Add Exercise Button */}
+        {/* Add Exercise Button - Mobile, Tablet & Desktop Optimized */}
         <Dialog open={isAddingExercise} onOpenChange={setIsAddingExercise}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full py-8 border-dashed">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button variant="outline" className="w-full py-6 sm:py-7 md:py-8 border-dashed text-sm sm:text-base md:text-lg touch-manipulation">
+              <Plus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Add Exercise
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] md:w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh]">
             <DialogHeader>
-              <DialogTitle>Add Exercise</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg md:text-xl">Add Exercise</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 md:space-y-5 pt-4 md:pt-5">
               <Input
                 placeholder="Search exercises..."
                 value={exerciseSearch}
                 onChange={(e) => setExerciseSearch(e.target.value)}
+                className="text-sm sm:text-base md:text-base h-10 sm:h-9 md:h-10"
               />
-              <div className="max-h-[300px] overflow-y-auto space-y-2">
+              <div className="max-h-[300px] sm:max-h-[400px] md:max-h-[500px] overflow-y-auto space-y-1.5 sm:space-y-2 md:space-y-2.5 -mx-1 px-1">
                 {exercises.data?.map((ex) => (
                   <Button
                     key={ex.id}
                     variant="ghost"
-                    className="w-full justify-start"
+                    className="w-full justify-start h-auto py-2.5 sm:py-2.5 md:py-3 text-left touch-manipulation"
                     onClick={() => handleAddExercise(ex.id)}
                   >
-                    <div className="flex items-center gap-2 text-left">
-                      <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{ex.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5 text-left w-full">
+                      <Dumbbell className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm sm:text-base md:text-lg truncate">{ex.name}</p>
+                        <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                           {ex.muscleGroup}
                         </p>
                       </div>

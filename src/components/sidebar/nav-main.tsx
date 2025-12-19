@@ -369,8 +369,15 @@ export function NavMain({
                   // Exact match
                   if (pathname === url) return true;
                   
-                  // Prefix match only if URL is a base path (not just a hash)
+                  // Special case: if URL is exactly "/portal", only match exactly "/portal"
+                  // Don't match "/portal/log", "/portal/plans", etc.
+                  if (url === "/portal" || url === "/") {
+                    return pathname === url;
+                  }
+                  
+                  // Prefix match for other routes (not root/base paths)
                   // e.g., "/portal/log" should match "/portal/log/workout/123"
+                  // But NOT "/portal" matching "/portal/log"
                   if (pathname.startsWith(url + "/") || pathname.startsWith(url + "?")) {
                     return true;
                   }

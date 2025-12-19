@@ -66,81 +66,83 @@ export function ExerciseCard({
       isDone && "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20",
       allCompleted && !isMarkedDone && "border-green-500 bg-green-50/50 dark:bg-green-950/20"
     )}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+      <CardHeader className="pb-3 sm:pb-4 md:pb-4 px-3 sm:px-4 md:px-5 pt-3 sm:pt-4 md:pt-5">
+        <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 md:gap-2.5 flex-wrap">
               {onToggleDone && (
                 <button
                   onClick={onToggleDone}
-                  className="shrink-0 mt-0.5"
+                  className="shrink-0 mt-0.5 touch-manipulation"
                   aria-label={isMarkedDone ? "Mark as incomplete" : "Mark exercise as done"}
                 >
                   {isMarkedDone ? (
-                    <CheckCircle2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                    <CheckCircle2 className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-teal-600 dark:text-teal-400" />
                   ) : (
-                    <Circle className="h-5 w-5 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
+                    <Circle className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
                   )}
                 </button>
               )}
               <CardTitle className={cn(
-                "text-base",
+                "text-sm sm:text-base md:text-lg min-w-0 break-words",
                 isMarkedDone && "line-through text-muted-foreground"
               )}>
                 {exerciseName}
               </CardTitle>
-              {allCompleted && !isMarkedDone && (
-                <Badge variant="success">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Complete
-                </Badge>
-              )}
-              {isMarkedDone && (
-                <Badge variant="secondary" className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-                  Done
-                </Badge>
-              )}
+              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                {allCompleted && !isMarkedDone && (
+                  <Badge variant="success" className="text-[10px] sm:text-xs md:text-sm">
+                    <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5 mr-1" />
+                    Complete
+                  </Badge>
+                )}
+                {isMarkedDone && (
+                  <Badge variant="secondary" className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-[10px] sm:text-xs md:text-sm">
+                    Done
+                  </Badge>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">{muscleGroup}</span>
-              <span className="text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 md:gap-3 mt-1.5 md:mt-2 flex-wrap">
+              <span className="text-[11px] sm:text-xs md:text-sm text-muted-foreground">{muscleGroup}</span>
+              <span className="text-[11px] sm:text-xs md:text-sm text-muted-foreground">
                 • {completedSets}/{totalSets} sets
               </span>
             </div>
             {lastWorkoutData && (
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-[11px] sm:text-xs md:text-sm text-muted-foreground mt-1 md:mt-1.5">
                 Last: {lastWorkoutData.weight}kg × {lastWorkoutData.reps} reps
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 touch-manipulation"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
+                <ChevronUp className="h-4 w-4 md:h-5 md:w-5" />
               ) : (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />
               )}
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive"
+              className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 text-destructive touch-manipulation"
               onClick={onDeleteExercise}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 md:space-y-3 px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
           {sets.map((set) => (
             <SetRow
               key={set.id}
@@ -163,10 +165,10 @@ export function ExerciseCard({
           <Button
             variant="outline"
             size="sm"
-            className="w-full mt-2"
+            className="w-full mt-2 md:mt-3 text-sm md:text-base touch-manipulation h-9 md:h-10"
             onClick={onAddSet}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
             Add Set
           </Button>
         </CardContent>

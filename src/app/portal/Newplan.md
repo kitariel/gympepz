@@ -57,3 +57,18 @@ Settings
 so lets design again with our start working out now menu
 since we already have a plan to workout out 
 it will display that plan name and todays exercise to workout start now button
+
+
+
+In the start workout
+
+we need to have like optional button like this exercise is done so that we can know where are we now 
+
+lets the user do like even though he workout first then rest abit then update his exercise to done 
+
+
+
+for the start workout page with workout/id
+we need to redesign and modify to be mobile friendly and easy to use 
+
+
