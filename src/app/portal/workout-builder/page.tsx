@@ -94,6 +94,7 @@ export default function WorkoutBuilderPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState("All");
   const [selectedEquipment, setSelectedEquipment] = useState("All");
+  const [selectedBodyPart, setSelectedBodyPart] = useState<"Push" | "Pull" | "Legs" | null>(null);
 
   // Plan state
   const [name, setName] = useState("");
@@ -290,7 +291,42 @@ export default function WorkoutBuilderPage() {
     take: 100,
   });
 
+  // Exercises for quick mode (week/month views) - already filtered by muscle/equipment in query
   const exercises = exercisesQuery.data ?? [];
+
+  // Filter exercises by body part if selected (for normal mode only)
+  const filteredExercisesNormal = useMemo(() => {
+    const baseExercises = exercisesQuery.data ?? [];
+    if (!selectedBodyPart) return baseExercises;
+    
+    return baseExercises.filter((ex) => {
+      const muscle = ex.muscleGroup.toLowerCase();
+      if (selectedBodyPart === "Push") {
+        return (
+          muscle.includes("chest") ||
+          muscle.includes("shoulder") ||
+          muscle.includes("triceps")
+        );
+      } else if (selectedBodyPart === "Pull") {
+        return (
+          muscle.includes("back") ||
+          muscle.includes("biceps") ||
+          muscle.includes("rear")
+        );
+      } else if (selectedBodyPart === "Legs") {
+        return (
+          muscle.includes("leg") ||
+          muscle.includes("quad") ||
+          muscle.includes("hamstring") ||
+          muscle.includes("glute") ||
+          muscle.includes("calf") ||
+          muscle.includes("thigh")
+        );
+      }
+      return true;
+    });
+  }, [exercisesQuery.data, selectedBodyPart]);
+
 
   const setActive = api.plan.setActive.useMutation();
   
@@ -418,8 +454,34 @@ export default function WorkoutBuilderPage() {
     
     const exerciseId = selectedExerciseForConfig.id;
     
-    // Check if it's month view (string key) or week view (number index)
-    if (typeof targetDayIdx === "string") {
+    // Check if it's normal mode (number index for days array) or quick mode
+    if (!isQuickMode && typeof targetDayIdx === "number") {
+      // Normal mode
+      setDays((d) => {
+        const next = [...d];
+        const day = next[targetDayIdx];
+        if (!day) return next;
+        
+        // Check if exercise already exists to prevent duplicates
+        if (day.items.some((item) => item.exerciseId === exerciseId)) {
+          return next;
+        }
+        
+        day.items.push({
+          exerciseId,
+          sets: exerciseConfig.sets,
+          reps: exerciseConfig.reps,
+          weight: exerciseConfig.weight,
+        });
+        return next;
+      });
+      setIsExerciseDialogOpen(false);
+      setSelectedExerciseForConfig(null);
+      setSearchQuery("");
+      setSelectedMuscle("All");
+      setSelectedEquipment("All");
+      setSelectedBodyPart(null);
+    } else if (isQuickMode && typeof targetDayIdx === "string") {
       // Month view - use existing addExerciseMonth but with config
       setMonthDays((prev) => {
         const newMap = new Map(prev);
@@ -451,15 +513,16 @@ export default function WorkoutBuilderPage() {
       setSearchQuery("");
       setSelectedMuscle("All");
       setSelectedEquipment("All");
-    } else {
+    } else if (isQuickMode && typeof targetDayIdx === "number") {
       // Week view
+      const dayIdx = targetDayIdx;
       setWeekDays((prev) => {
         const next = [...prev];
-        const day = next[targetDayIdx];
+        const day = next[dayIdx];
         if (!day) return next;
         
         // Check if exercise already exists to prevent duplicates
-        if (day.items.some((item) => item.exerciseId === exerciseId)) {
+        if (day.items.some((item: Item) => item.exerciseId === exerciseId)) {
           return next;
         }
         
@@ -526,21 +589,11 @@ export default function WorkoutBuilderPage() {
   };
 
   const addExercise = (exerciseId: string) => {
-    if (targetDayIdx === null) return;
-    setDays((d) => {
-      const next = [...d];
-      next[targetDayIdx]!.items.push({
-        exerciseId,
-        sets: 3,
-        reps: 10,
-        weight: undefined,
-      });
-      return next;
-    });
-    setIsExerciseDialogOpen(false);
-    setSearchQuery("");
-    setSelectedMuscle("All");
-    setSelectedEquipment("All");
+    // For normal mode, use the config form approach
+    const exercise = exercisesQuery.data?.find((e) => e.id === exerciseId);
+    if (exercise) {
+      handleExerciseSelect(exerciseId, exercise.name);
+    }
   };
 
   const updateItem = (
@@ -1840,9 +1893,11 @@ export default function WorkoutBuilderPage() {
                     setIsExerciseDialogOpen(open);
                     if (!open) {
                       setTargetDayIdx(null);
+                      setSelectedExerciseForConfig(null);
                       setSearchQuery("");
                       setSelectedMuscle("All");
                       setSelectedEquipment("All");
+                      setSelectedBodyPart(null);
                     }
                   }}
                 >
@@ -1883,10 +1938,43 @@ export default function WorkoutBuilderPage() {
                             </Button>
                           )}
                         </div>
+                        {/* Quick Body Part Filters */}
+                        <div className="flex gap-2">
+                          {(["Push", "Pull", "Legs"] as const).map((bodyPart) => (
+                            <Button
+                              key={bodyPart}
+                              variant={selectedBodyPart === bodyPart ? "default" : "outline"}
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                if (selectedBodyPart === bodyPart) {
+                                  setSelectedBodyPart(null);
+                                  setSelectedMuscle("All");
+                                } else {
+                                  setSelectedBodyPart(bodyPart);
+                                  // Auto-set muscle filter based on body part
+                                  if (bodyPart === "Push") {
+                                    setSelectedMuscle("Chest");
+                                  } else if (bodyPart === "Pull") {
+                                    setSelectedMuscle("Back");
+                                  } else if (bodyPart === "Legs") {
+                                    setSelectedMuscle("Legs");
+                                  }
+                                }
+                              }}
+                            >
+                              {bodyPart}
+                            </Button>
+                          ))}
+                        </div>
                         <div className="grid grid-cols-2 gap-2">
                           <Select
                             value={selectedMuscle}
-                            onValueChange={setSelectedMuscle}
+                            onValueChange={(value) => {
+                              setSelectedMuscle(value);
+                              // Clear body part if manually selecting muscle
+                              if (value !== "All") setSelectedBodyPart(null);
+                            }}
                           >
                             <SelectTrigger className="h-9">
                               <Target className="h-3.5 w-3.5 mr-2" />
@@ -1925,50 +2013,160 @@ export default function WorkoutBuilderPage() {
                         </div>
                       </div>
 
-                      {/* Exercise List */}
-                      <div className="max-h-[400px] overflow-y-auto space-y-1.5">
-                        {exercises.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground text-sm">
-                            <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>No exercises found</p>
-                          </div>
-                        ) : (
-                          exercises.map((ex) => (
+                      {/* Exercise Configuration Form (Normal Mode) */}
+                      {!isQuickMode && selectedExerciseForConfig && typeof targetDayIdx === "number" ? (
+                        <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {selectedExerciseForConfig.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Configure sets, reps, and weight
+                              </p>
+                            </div>
                             <Button
-                              key={ex.id}
                               variant="ghost"
-                              className="w-full justify-start h-auto p-3 hover:bg-accent"
-                              onClick={() => addExercise(ex.id)}
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setSelectedExerciseForConfig(null)}
                             >
-                              <div className="flex items-start gap-3 w-full text-left">
-                                <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
-                                  <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm">{ex.name}</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[9px] px-1.5 py-0 h-4"
-                                    >
-                                      {ex.muscleGroup}
-                                    </Badge>
-                                    {ex.equipment && (
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Sets
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="20"
+                                value={exerciseConfig.sets}
+                                onChange={(e) =>
+                                  setExerciseConfig((prev) => ({
+                                    ...prev,
+                                    sets: parseInt(e.target.value) || 1,
+                                  }))
+                                }
+                                className="h-9 text-center"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Reps
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="50"
+                                value={exerciseConfig.reps}
+                                onChange={(e) =>
+                                  setExerciseConfig((prev) => ({
+                                    ...prev,
+                                    reps: parseInt(e.target.value) || 1,
+                                  }))
+                                }
+                                className="h-9 text-center"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Weight (kg)
+                              </label>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                placeholder="Optional"
+                                value={exerciseConfig.weight ?? ""}
+                                onChange={(e) =>
+                                  setExerciseConfig((prev) => ({
+                                    ...prev,
+                                    weight:
+                                      e.target.value === ""
+                                        ? undefined
+                                        : parseFloat(e.target.value) || undefined,
+                                  }))
+                                }
+                                className="h-9 text-center"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => setSelectedExerciseForConfig(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              className="flex-1"
+                              onClick={handleAddExerciseWithConfig}
+                              disabled={
+                                exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                              }
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Exercise
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                          {filteredExercisesNormal.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground text-sm">
+                              <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p>No exercises found</p>
+                            </div>
+                          ) : (
+                            filteredExercisesNormal.map((ex) => (
+                              <Button
+                                key={ex.id}
+                                variant="ghost"
+                                className="w-full justify-start h-auto p-3 hover:bg-accent"
+                                onClick={() => {
+                                  if (!isQuickMode) {
+                                    handleExerciseSelect(ex.id, ex.name);
+                                  } else {
+                                    addExercise(ex.id);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-start gap-3 w-full text-left">
+                                  <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
+                                    <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm">{ex.name}</p>
+                                    <div className="flex items-center gap-2 mt-1">
                                       <Badge
-                                        variant="outline"
+                                        variant="secondary"
                                         className="text-[9px] px-1.5 py-0 h-4"
                                       >
-                                        {ex.equipment}
+                                        {ex.muscleGroup}
                                       </Badge>
-                                    )}
+                                      {ex.equipment && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[9px] px-1.5 py-0 h-4"
+                                        >
+                                          {ex.equipment}
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
+                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                                 </div>
-                                <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                              </div>
-                            </Button>
-                          ))
-                        )}
-                      </div>
+                              </Button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -1982,7 +2180,7 @@ export default function WorkoutBuilderPage() {
                 ) : (
                   <div className="space-y-2">
                     {day.items.map((item, itemIdx) => {
-                      const exercise = exercises.find((e) => e.id === item.exerciseId);
+                      const exercise = (exercisesQuery.data ?? []).find((e) => e.id === item.exerciseId);
                       return (
                         <div
                           key={itemIdx}

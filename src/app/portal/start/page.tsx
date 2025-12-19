@@ -17,12 +17,14 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { QuickPlanWizard } from "./_components/quick-plan-wizard";
 
 export default function StartWorkoutPage() {
   const { data: session } = useSession();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   const router = useRouter();
   const [showPlanChoices, setShowPlanChoices] = useState(false);
+  const [showQuickWizard, setShowQuickWizard] = useState(false);
 
   // Get today's workout
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
@@ -61,6 +63,28 @@ export default function StartWorkoutPage() {
 
   // No plan - show plan creation options
   if (!hasPlan || !plan) {
+    // Show quick wizard if user chose manual builder
+    if (showQuickWizard) {
+      return (
+        <div className="container max-w-4xl mx-auto p-6">
+          <div className="text-center space-y-2 mb-6">
+            <h1 className="text-2xl font-bold">Quick Plan Builder</h1>
+            <p className="text-muted-foreground text-sm">
+              Build your workout plan in minutes
+            </p>
+          </div>
+          <QuickPlanWizard
+            userId={userId}
+            onComplete={async () => {
+              setShowQuickWizard(false);
+              await todaysWorkout.refetch();
+            }}
+            onCancel={() => setShowQuickWizard(false)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="container max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center space-y-2 mb-8">
@@ -99,7 +123,7 @@ export default function StartWorkoutPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-teal-500"
-              onClick={() => router.push("/portal/workout-builder?mode=quick")}
+              onClick={() => setShowQuickWizard(true)}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -132,7 +156,7 @@ export default function StartWorkoutPage() {
                 <Button 
                   className="w-full"
                   variant="outline"
-                  onClick={() => router.push("/portal/workout-builder?mode=quick")}
+                  onClick={() => setShowQuickWizard(true)}
                 >
                   Start Building
                 </Button>
