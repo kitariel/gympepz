@@ -85,8 +85,86 @@ export const planRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.plan.findUnique({
         where: { id: input.id },
-        include: { days: { include: { items: true } } },
+        include: { days: { include: { items: { include: { exercise: true } } }, orderBy: { order: "asc" } } },
       });
+    }),
+
+  // Get today's workout from active plan
+  getTodaysWorkout: publicProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        include: {
+          activePlan: {
+            include: {
+              days: {
+                include: {
+                  items: {
+                    include: { exercise: true },
+                  },
+                },
+                orderBy: { order: "asc" },
+              },
+            },
+          },
+        },
+      });
+
+      if (!user?.activePlan) {
+        return { hasPlan: false, plan: null, todayWorkout: null };
+      }
+
+      // Get last completed workout with plan day
+      const lastLog = await ctx.db.workoutLog.findFirst({
+        where: {
+          userId: input.userId,
+          planDayId: { not: null },
+          completed: true,
+        },
+        orderBy: { date: "desc" },
+        include: { planDay: true },
+      });
+
+      // Determine today's workout day
+      let todayDay = user.activePlan.days[0]; // Default to first day
+      
+      if (lastLog?.planDay) {
+        const lastDayOrder = lastLog.planDay.order;
+        const nextDayIndex = user.activePlan.days.findIndex(
+          (d) => d.order > lastDayOrder
+        );
+        if (nextDayIndex >= 0) {
+          todayDay = user.activePlan.days[nextDayIndex]!;
+        } else {
+          // Cycle back to first day
+          todayDay = user.activePlan.days[0]!;
+        }
+      }
+
+      return {
+        hasPlan: true,
+        plan: {
+          id: user.activePlan.id,
+          name: user.activePlan.name,
+        },
+        todayWorkout: todayDay
+          ? {
+              id: todayDay.id,
+              title: todayDay.title,
+              order: todayDay.order,
+              exercises: todayDay.items.map((item) => ({
+                id: item.id,
+                exerciseId: item.exerciseId,
+                exerciseName: item.exercise.name,
+                muscleGroup: item.exercise.muscleGroup,
+                sets: item.sets,
+                reps: item.reps,
+                weight: item.weight,
+              })),
+            }
+          : null,
+      };
     }),
   delete: publicProcedure
     .input(z.object({ id: z.string().min(1) }))

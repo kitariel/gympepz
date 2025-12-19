@@ -97,6 +97,14 @@ export default function ActiveWorkoutPage({
     }
   }, [elapsedSeconds, logId, updateDuration]);
 
+  // Initialize notes from workout data when workout loads
+  useEffect(() => {
+    if (log.data?.notes && !notes) {
+      setNotes(log.data.notes);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [log.data?.notes]);
+
   if (log.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -120,14 +128,6 @@ export default function ActiveWorkoutPage({
   }
 
   const workout = log.data;
-  
-  // Initialize notes from workout data when workout loads
-  useEffect(() => {
-    if (workout?.notes && !notes) {
-      setNotes(workout.notes);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workout?.notes]);
 
   // Group sets by exercise - handle both sets and exercises
   const exerciseGroups = (() => {

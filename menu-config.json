@@ -1,7 +1,14 @@
 {
   "navMain": [
     {
-      "title": "Home",
+      "title": "Start Working Out",
+      "url": "/portal/start",
+      "iconName": "Play",
+      "iconPlatform": "lucide",
+      "enabled": true
+    },
+    {
+      "title": "Dashboard",
       "url": "/portal",
       "iconName": "Home",
       "iconPlatform": "lucide",
@@ -29,32 +36,27 @@
     },
     {
       "title": "Logs",
-      "url": "/portal/log",
+      "url": "#",
       "iconName": "NotebookPen",
       "iconPlatform": "lucide",
       "enabled": true,
-      "items": []
-    },
-    {
-      "title": "AI Coach",
-      "url": "#",
-      "iconName": "Sparkles",
-      "iconPlatform": "lucide",
-      "enabled": true,
       "items": [
-        { "title": "Weekly Adjustments", "url": "/ai-weekly", "enabled": true },
-        { "title": "Ask a Coach", "url": "/ai-coach", "enabled": true }
+        { "title": "Overview", "url": "/portal/log", "enabled": true },
+        { "title": "Workouts", "url": "/portal/log?tab=workouts", "enabled": true },
+        { "title": "Progress", "url": "/portal/log?tab=progress", "enabled": true },
+        { "title": "Analytics", "url": "/portal/log?tab=analytics", "enabled": true },
+        { "title": "Calendar", "url": "/portal/log?tab=calendar", "enabled": true }
       ]
     },
     {
-      "title": "Nutrition",
+      "title": "Settings",
       "url": "#",
-      "iconName": "Beef",
+      "iconName": "Settings",
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        { "title": "Meal Plans", "url": "/meal-plans", "enabled": true },
-        { "title": "Calorie Calculator", "url": "/calories", "enabled": true }
+        { "title": "Profile", "url": "/portal/account", "enabled": true },
+        { "title": "Account", "url": "/portal/account", "enabled": true }
       ]
     }
   ],

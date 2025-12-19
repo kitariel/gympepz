@@ -226,7 +226,7 @@ export const workoutLogRouter = createTRPCRouter({
         throw new Error("No workout day found");
       }
 
-      // Create workout log with exercises
+      // Create workout log
       const log = await ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
@@ -234,6 +234,19 @@ export const workoutLogRouter = createTRPCRouter({
           date: new Date(),
         },
       });
+
+      // Create workout log exercises from plan day items
+      if (nextDay.items && nextDay.items.length > 0) {
+        await ctx.db.workoutLogExercise.createMany({
+          data: nextDay.items.map((item) => ({
+            workoutLogId: log.id,
+            exerciseId: item.exerciseId,
+            sets: item.sets,
+            reps: item.reps,
+            weight: item.weight,
+          })),
+        });
+      }
 
       // Set tracking will be available after migration
       // WorkoutSet table doesn't exist yet

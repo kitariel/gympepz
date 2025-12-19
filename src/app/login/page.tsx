@@ -64,7 +64,7 @@ export default function LoginPage() {
     } | null;
     if (!u) return;
     if (u.hasPassword) {
-      router.replace("/portal");
+      router.replace("/portal/start");
       router.refresh();
     } else {
       setStep("password_set");
@@ -158,8 +158,8 @@ export default function LoginPage() {
       }
 
       if (res?.ok) {
-        // Navigate to portal on success
-        router.replace("/portal");
+        // Navigate to start workout page on success
+        router.replace("/portal/start");
         // Ensure server components read the new auth cookies
         router.refresh();
         return;
@@ -214,7 +214,7 @@ export default function LoginPage() {
         password,
       });
       if (res.status === "password_set") {
-        await signIn("credentials", { email: eLower, password, callbackUrl: "/portal", redirect: true });
+        await signIn("credentials", { email: eLower, password, callbackUrl: "/portal/start", redirect: true });
       } else {
         setError("User not found.");
       }
