@@ -249,6 +249,97 @@ export const planRouter = createTRPCRouter({
       await ctx.db.planDay.delete({ where: { id: input.id } });
       return { ok: true };
     }),
+  duplicateDay: publicProcedure
+    .input(z.object({ dayId: z.string().min(1), planId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const sourceDay = await ctx.db.planDay.findUnique({
+        where: { id: input.dayId },
+        include: { items: true },
+      });
+
+      if (!sourceDay) {
+        throw new Error("Day not found");
+      }
+
+      // Get the highest order to append at the end
+      const maxOrder = await ctx.db.planDay.findFirst({
+        where: { planId: input.planId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+
+      const newDay = await ctx.db.planDay.create({
+        data: {
+          planId: input.planId,
+          title: `${sourceDay.title} Copy`,
+          order: (maxOrder?.order ?? -1) + 1,
+          items: {
+            create: sourceDay.items.map((item) => ({
+              exerciseId: item.exerciseId,
+              sets: item.sets,
+              reps: item.reps,
+              weight: item.weight ?? null,
+            })),
+          },
+        },
+      });
+
+      return { ok: true, id: newDay.id };
+    }),
+  copyExercises: publicProcedure
+    .input(
+      z.object({
+        sourceDayId: z.string().min(1),
+        targetDayId: z.string().min(1),
+        exerciseIds: z.array(z.string().min(1)).optional(), // If provided, only copy these exercises
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const sourceDay = await ctx.db.planDay.findUnique({
+        where: { id: input.sourceDayId },
+        include: { items: true },
+      });
+
+      if (!sourceDay) {
+        throw new Error("Source day not found");
+      }
+
+      // Check if target day exists
+      const targetDay = await ctx.db.planDay.findUnique({
+        where: { id: input.targetDayId },
+        include: { items: true },
+      });
+
+      if (!targetDay) {
+        throw new Error("Target day not found");
+      }
+
+      // Filter exercises if specific IDs provided
+      const exercisesToCopy = input.exerciseIds
+        ? sourceDay.items.filter((item) => input.exerciseIds!.includes(item.exerciseId))
+        : sourceDay.items;
+
+      // Avoid duplicates - check which exercises already exist in target
+      const existingExerciseIds = new Set(targetDay.items.map((item) => item.exerciseId));
+
+      const newExercises = exercisesToCopy.filter(
+        (item) => !existingExerciseIds.has(item.exerciseId)
+      );
+
+      if (newExercises.length > 0) {
+        await ctx.db.planExercise.createMany({
+          data: newExercises.map((item) => ({
+            planDayId: input.targetDayId,
+            exerciseId: item.exerciseId,
+            sets: item.sets,
+            reps: item.reps,
+            weight: item.weight ?? null,
+          })),
+        });
+      }
+
+      return { ok: true, copied: newExercises.length };
+    }),
   addExercise: publicProcedure
     .input(
       z.object({

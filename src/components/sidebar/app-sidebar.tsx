@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Command, SquareTerminal } from "lucide-react";
+import { Command, SquareTerminal, Search, X, Keyboard } from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
 import type { MenuCreateType, IconPlatform } from "@/types/menu";
+import { useSession } from "next-auth/react";
+import { useMemo, useState } from "react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -17,11 +19,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarInput,
 } from "@/components/ui/sidebar";
 import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
 import { useMenuState } from "@/hooks/useMenuState";
 import { useHeaderState } from "@/hooks/useHeaderState";
 import { HeaderSettingsPopover } from "@/components/sidebar/HeaderSettingsPopover";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { api } from "@/trpc/react";
 import Link from "next/link";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
@@ -86,17 +95,85 @@ export function AppSidebar({
     return LucComp;
   };
 
-  const navMain = (menu?.navMain ?? []).map((item) => {
-    const IconComp = getIconForItem(item.title, SquareTerminal);
-    return {
-      title: item.title,
-      url: item.url,
-      icon: IconComp,
-      isActive: item.isActive,
-      items: item.items,
-      enabled: item.enabled,
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Get user session for active workout check
+  const { data: session } = useSession();
+  const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
+  
+  // Get today's workout for badge
+  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId },
+    { enabled: !!userId }
+  );
+
+  const hasActiveWorkout = todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout;
+
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K or Ctrl+K: Focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      // Cmd+W or Ctrl+W: Start workout (only if not in input/textarea)
+      if ((e.metaKey || e.ctrlKey) && e.key === "w" && 
+          !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        if (hasActiveWorkout) {
+          window.location.href = "/portal/start";
+        }
+      }
+      // Escape: Clear search
+      if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+        setSearchQuery("");
+        searchInputRef.current?.blur();
+      }
     };
-  });
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [hasActiveWorkout, searchQuery]);
+
+  // Filter menu items based on search
+  const navMain = useMemo(() => {
+    const items = (menu?.navMain ?? []).map((item) => {
+      const IconComp = getIconForItem(item.title, SquareTerminal);
+      return {
+        title: item.title,
+        url: item.url,
+        icon: IconComp,
+        isActive: item.isActive,
+        items: item.items,
+        enabled: item.enabled,
+      };
+    });
+
+    if (!searchQuery.trim()) return items;
+
+    const query = searchQuery.toLowerCase();
+    return items
+      .map((item) => {
+        const titleMatch = item.title.toLowerCase().includes(query);
+        const children = item.items?.filter(
+          (child) => child.title.toLowerCase().includes(query)
+        ) ?? [];
+        
+        // Include item if title matches or has matching children
+        if (titleMatch || children.length > 0) {
+          return {
+            ...item,
+            items: titleMatch ? item.items : children, // If title matches, show all children; otherwise filter
+          };
+        }
+        return null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [menu?.navMain, searchQuery, getIconForItem]);
 
   const navSecondary = (menu?.navSecondary ?? []).map((item) => {
     const IconComp = getIconForItem(item.title, SquareTerminal);
@@ -184,7 +261,64 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        {/* Search Bar */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <SidebarInput
+                ref={searchInputRef}
+                type="search"
+                placeholder="Search menu... (⌘K)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-8"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Quick Actions */}
+        {!enableEditing && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="Start today's workout (⌘W)"
+                    className={hasActiveWorkout ? "bg-primary/10 hover:bg-primary/20" : undefined}
+                  >
+                    <Link href="/portal/start">
+                      <Command className="size-4" />
+                      <span>Start Workout</span>
+                      {hasActiveWorkout && (
+                        <Badge variant="default" className="ml-auto text-xs bg-primary">
+                          Ready
+                        </Badge>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+
         <NavMain
+          searchQuery={searchQuery}
           items={navMain}
           onAddChild={(parentTitle, label) => addChild(parentTitle, label)}
           isAddingChild={isAddingChild}
@@ -214,7 +348,40 @@ export function AppSidebar({
           enableEditing={enableEditing}
           currentUserRoles={currentUserRoles}
         />
-        <NavSecondary items={navSecondary} className="mt-auto" />
+        <NavSecondary items={navSecondary} />
+
+        {/* Keyboard Shortcuts */}
+        {!enableEditing && (
+          <SidebarGroup className="mt-auto">
+            <SidebarGroupContent>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-xs text-muted-foreground"
+                onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
+              >
+                <Keyboard className="h-3 w-3 mr-2" />
+                Shortcuts
+              </Button>
+              {showKeyboardShortcuts && (
+                <div className="px-2 pb-2 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-muted-foreground">Toggle sidebar</span>
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">B</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-muted-foreground">Search</span>
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">⌘K</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-muted-foreground">Start workout</span>
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">⌘W</kbd>
+                  </div>
+                </div>
+              )}
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

@@ -165,6 +165,7 @@ export function NavMain({
   onUpdateParentUrl,
   onUpdateChildUrl,
   enableEditing = true,
+  searchQuery,
 }: {
   items: (Omit<MenuItem, "title"> & { title: string } & {
     icon: SidebarIcon;
@@ -202,6 +203,8 @@ export function NavMain({
   enableEditing?: boolean;
   // Future use: role-based filtering (not enforced yet)
   currentUserRoles?: string[];
+  // Search state
+  searchQuery?: string;
 }) {
   const pathname = usePathname();
   const sensors = useSensors(
@@ -336,22 +339,55 @@ export function NavMain({
               const visibleChildren = enableEditing
                 ? (item.items ?? [])
                 : (item.items ?? []).filter((c) => c.enabled ?? true);
+              
+              // Check if any child is active first (more specific match)
+              const hasActiveChild = visibleChildren.some((c) => {
+                const childUrl = (c.url ?? "").trim();
+                if (!childUrl || childUrl === "#") return false;
+                // Exact match or pathname starts with child URL (for nested routes)
+                return pathname === childUrl || 
+                       (childUrl !== "/" && pathname.startsWith(childUrl + "/")) ||
+                       (childUrl !== "/" && pathname.startsWith(childUrl + "?"));
+              });
+              
+              // Improved active state detection - parent only active if no child matches
               const isParentActive = (() => {
+                // If any child is active, parent should NOT be active (only one active at a time)
+                if (hasActiveChild) return false;
+                
                 const url = (item.url ?? "").trim();
-                const hasChildren = (item.items ?? []).length > 0;
-                if (hasChildren) {
-                  return (item.items ?? []).some((c) => {
-                    const cu = (c.url ?? "").trim();
-                    return Boolean(cu) && (pathname === cu || pathname.startsWith(cu));
-                  });
+                const hasChildren = visibleChildren.length > 0;
+                
+                // Skip items with "#" as URL (parent-only items with children)
+                // These should never be active, only their children can be active
+                if (url === "#" && hasChildren) {
+                  return false;
                 }
-                return Boolean(url) && (pathname === url || pathname.startsWith(url));
+                
+                // For items without children, check exact match or if it's the root of a section
+                if (!hasChildren && url && url !== "#") {
+                  // Exact match
+                  if (pathname === url) return true;
+                  
+                  // Prefix match only if URL is a base path (not just a hash)
+                  // e.g., "/portal/log" should match "/portal/log/workout/123"
+                  if (pathname.startsWith(url + "/") || pathname.startsWith(url + "?")) {
+                    return true;
+                  }
+                }
+                
+                return false;
               })();
+              // Determine if should be expanded (expand when searching, or when parent/child is active)
+              const shouldExpand = searchQuery 
+                ? true // Always expand when searching
+                : Boolean(isParentActive || hasActiveChild); // Expand if parent is active OR any child is active
+
               return (
                 <Collapsible
                   key={item.title + index}
                   asChild
-                  defaultOpen={Boolean(isParentActive)}
+                  defaultOpen={shouldExpand}
                 >
                   <SortableParent id={item.title}>
                     {visibleChildren.length > 0 ? (
@@ -476,12 +512,32 @@ export function NavMain({
                             >
                               <SidebarMenuSub>
                                 {visibleChildren.map((subItem, index) => {
+                                  // Determine if child item is active
+                                  const isChildActive = (() => {
+                                    const childUrl = (subItem.url ?? "").trim();
+                                    if (!childUrl || childUrl === "#") return false;
+                                    
+                                    // Exact match
+                                    if (pathname === childUrl) return true;
+                                    
+                                    // Prefix match for nested routes
+                                    // e.g., "/portal/log" should match "/portal/log/workout/123"
+                                    // but "/portal" should NOT match "/portal/log"
+                                    if (childUrl !== "/" && 
+                                        (pathname.startsWith(childUrl + "/") || 
+                                         pathname.startsWith(childUrl + "?"))) {
+                                      return true;
+                                    }
+                                    
+                                    return false;
+                                  })();
+                                  
                                   return (
                                     <SortableChild
                                       key={subItem.title + index}
                                       id={subItem.title}
                                     >
-                                      <SidebarMenuSubButton asChild isActive={Boolean((subItem.url ?? "") && (pathname === subItem.url || pathname.startsWith(subItem.url)))}>
+                                      <SidebarMenuSubButton asChild isActive={isChildActive}>
                                         <Link
                                           href={subItem.url}
                                           onPointerDownCapture={(e) =>

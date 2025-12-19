@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { api } from "@/trpc/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { PlanCard } from "./_components/plan-card";
 import { PlanTemplates } from "./_components/plan-templates";
 import { Plus, Dumbbell, Star, Folder, Sparkles } from "lucide-react";
+import { TEMPLATE_DEFINITIONS } from "./_components/template-exercises";
 
 export default function PlansPage() {
   const { data: session } = useSession();
@@ -59,6 +60,82 @@ export default function PlansPage() {
       days: [],
     });
     setNewPlanName("");
+    setIsCreateDialogOpen(false);
+    await list.refetch();
+  };
+
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const exercises = api.exercise.list.useQuery(
+    { take: 500 }, // Get all exercises to match template names
+    { enabled: !!selectedTemplate }
+  );
+
+  const handleCreateFromTemplate = async (templateId: string) => {
+    if (!userId || !newPlanName) return;
+
+    const template = TEMPLATE_DEFINITIONS[templateId];
+    if (!template) {
+      // Fallback to empty plan
+      await handleCreatePlan();
+      return;
+    }
+
+    // Resolve exercise names to IDs (handle equipment prefixes)
+    // Exercise names might be "Bench Press" or "Barbell Bench Press", so match flexibly
+    const findExerciseId = (name: string): string | null => {
+      const searchName = name.toLowerCase().trim();
+      // Try exact match first
+      let found = (exercises.data ?? []).find(
+        (ex) => ex.name.toLowerCase() === searchName
+      );
+      
+      if (found) return found.id;
+      
+      // Try partial match (in case of equipment prefix: "Barbell Bench Press" matches "Bench Press")
+      found = (exercises.data ?? []).find((ex) => {
+        const exName = ex.name.toLowerCase();
+        return exName.includes(searchName) || searchName.includes(exName);
+      });
+      
+      // If still not found, try reverse match (search name contains exercise name)
+      if (!found) {
+        found = (exercises.data ?? []).find((ex) => {
+          const exName = ex.name.toLowerCase();
+          // Check if search name is at the end (e.g., "Bench Press" matches "Barbell Bench Press")
+          return exName.endsWith(searchName) || exName.includes(` ${searchName}`);
+        });
+      }
+      
+      return found?.id ?? null;
+    };
+
+    const days = template.days.map((day, idx) => ({
+      title: day.title,
+      order: idx,
+      items: day.exerciseNames
+        .map((exDef) => {
+          const exerciseId = findExerciseId(exDef.name);
+          if (!exerciseId) {
+            console.warn(`Exercise not found: ${exDef.name}`);
+            return null; // Skip if exercise not found
+          }
+          return {
+            exerciseId,
+            sets: exDef.sets,
+            reps: exDef.reps,
+            weight: exDef.weight,
+          };
+        })
+        .filter((item): item is { exerciseId: string; sets: number; reps: number; weight?: number } => item !== null),
+    }));
+
+    await create.mutateAsync({
+      userId,
+      name: newPlanName,
+      days,
+    });
+    setNewPlanName("");
+    setSelectedTemplate(null);
     setIsCreateDialogOpen(false);
     await list.refetch();
   };
@@ -138,10 +215,40 @@ export default function PlansPage() {
                 <PlanTemplates
                   onSelectTemplate={(template) => {
                     setNewPlanName(template.name);
-                    // TODO: Auto-populate with template exercises
-                    console.log("Selected template:", template);
+                    setSelectedTemplate(template.id);
+                    // Pre-load exercises when template is selected
                   }}
                 />
+                {selectedTemplate && (
+                  <div className="pt-4 border-t space-y-3">
+                    <div className="text-sm text-muted-foreground">
+                      Template selected: {TEMPLATE_DEFINITIONS[selectedTemplate]?.name}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedTemplate(null);
+                          setNewPlanName("");
+                        }}
+                      >
+                        Clear Template
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        onClick={() => handleCreateFromTemplate(selectedTemplate)}
+                        disabled={!newPlanName || create.isPending || exercises.isLoading || !exercises.data}
+                      >
+                        {create.isPending
+                          ? "Creating..."
+                          : exercises.isLoading
+                            ? "Loading..."
+                            : `Create Plan with Template`}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>

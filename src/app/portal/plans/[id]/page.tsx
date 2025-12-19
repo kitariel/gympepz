@@ -16,6 +16,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowLeft,
   Plus,
   Trash2,
@@ -25,6 +32,8 @@ import {
   Eye,
   Calendar,
   Pencil,
+  Copy,
+  MoreVertical,
 } from "lucide-react";
 
 export default function PlanDetailPage({
@@ -52,6 +61,10 @@ export default function PlanDetailPage({
   const delItem = api.plan.deleteItem.useMutation();
   const deleteDay = api.plan.deleteDay.useMutation();
   const updateDay = api.plan.updateDay.useMutation();
+  const duplicateDay = api.plan.duplicateDay.useMutation();
+  const copyExercises = api.plan.copyExercises.useMutation();
+  const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
 
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
@@ -132,6 +145,28 @@ export default function PlanDetailPage({
   const handleCancelEditDay = () => {
     setEditingDayId(null);
     setEditingDayTitle("");
+  };
+
+  const handleDuplicateDay = async (dayId: string) => {
+    if (!id) return;
+    await duplicateDay.mutateAsync({ dayId, planId: id });
+    await plan.refetch();
+  };
+
+  const handleOpenCopyDialog = (dayId: string) => {
+    setCopyFromDayId(dayId);
+    setIsCopyDialogOpen(true);
+  };
+
+  const handleCopyExercises = async (targetDayId: string) => {
+    if (!copyFromDayId) return;
+    await copyExercises.mutateAsync({
+      sourceDayId: copyFromDayId,
+      targetDayId,
+    });
+    setIsCopyDialogOpen(false);
+    setCopyFromDayId(null);
+    await plan.refetch();
   };
 
   if (plan.isLoading) {
@@ -337,14 +372,36 @@ export default function PlanDetailPage({
                       <Plus className="h-3 w-3 mr-1.5" />
                       Add
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleDeleteDay(day.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicateDay(day.id)}
+                          disabled={duplicateDay.isPending}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate Day
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenCopyDialog(day.id)}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Exercises To...
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteDay(day.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Day
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>
@@ -479,6 +536,48 @@ export default function PlanDetailPage({
               {searchQuery && exercises.data?.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-4">
                   No exercises found.
+                </p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy Exercises Dialog */}
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy Exercises To...</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Select a day to copy exercises to:
+            </p>
+            <div className="max-h-[300px] overflow-y-auto space-y-2">
+              {(p?.days ?? [])
+                .filter((d: any) => d.id !== copyFromDayId)
+                .map((day: any) => (
+                  <Button
+                    key={day.id}
+                    variant="outline"
+                    className="w-full justify-start h-auto py-3"
+                    onClick={() => handleCopyExercises(day.id)}
+                    disabled={copyExercises.isPending}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="text-left">
+                        <p className="font-medium text-sm">{day.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {day.items?.length ?? 0} exercises
+                        </p>
+                      </div>
+                      <Copy className="h-4 w-4 ml-2 shrink-0" />
+                    </div>
+                  </Button>
+                ))}
+              {(p?.days ?? []).filter((d: any) => d.id !== copyFromDayId).length === 0 && (
+                <p className="text-center text-xs text-muted-foreground py-4">
+                  No other days available.
                 </p>
               )}
             </div>

@@ -1,13 +1,6 @@
 {
   "navMain": [
     {
-      "title": "Start Working Out",
-      "url": "/portal/start",
-      "iconName": "Play",
-      "iconPlatform": "lucide",
-      "enabled": true
-    },
-    {
       "title": "Dashboard",
       "url": "/portal",
       "iconName": "Home",
