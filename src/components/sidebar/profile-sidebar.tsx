@@ -98,7 +98,10 @@ export default function ProfileSidebar(props: Props) {
           memberSince={memberSince}
           stats={stats}
           weekProgress={thisWeekProgress}
+          currentStreak={streakQuery.data?.currentStreak ?? 0}
           longestStreak={streakQuery.data?.longestStreak ?? 0}
+          totalVolume={analyticsQuery.data?.totalVolume ?? 0}
+          averageDuration={analyticsQuery.data?.averageDuration ?? 0}
         />
       </SidebarHeader>
       <SidebarContent className="p-2 space-y-2 overflow-y-auto">
