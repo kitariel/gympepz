@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Plus, ArrowLeft, Clock, Dumbbell } from "lucide-react";
+import { Plus, ArrowLeft, Clock, Dumbbell, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExerciseCard } from "./_components/exercise-card";
 import { RestTimer } from "./_components/rest-timer";
 import { useWorkoutTimer, useRestTimer } from "@/hooks/useWorkoutTimer";
@@ -30,6 +31,9 @@ export default function ActiveWorkoutPage({
   const { id: logId } = use(params);
   const [exerciseSearch, setExerciseSearch] = useState("");
   const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const lastSavedMinute = useRef(0);
+  const [error, setError] = useState<string | null>(null);
+  const [notes, setNotes] = useState<string>("");
 
   // Timers
   const { elapsedTime, elapsedSeconds } = useWorkoutTimer(true);
@@ -46,32 +50,13 @@ export default function ActiveWorkoutPage({
     { enabled: isAddingExercise && exerciseSearch.length > 0 }
   );
 
-  // Workout Set mutations
-  const updateSet = api.workoutSet.update.useMutation({
-    onSuccess: () => utils.workoutLog.getWithHistory.invalidate({ id: logId }),
-  });
-
-  const completeSet = api.workoutSet.complete.useMutation({
-    onSuccess: () => {
-      utils.workoutLog.getWithHistory.invalidate({ id: logId });
-      // Start rest timer (3 minutes default)
-      restTimer.start(180);
-    },
-  });
-
-  const addSet = api.workoutSet.duplicate.useMutation({
-    onSuccess: () => utils.workoutLog.getWithHistory.invalidate({ id: logId }),
-  });
-
-  const deleteSet = api.workoutSet.delete.useMutation({
-    onSuccess: () => utils.workoutLog.getWithHistory.invalidate({ id: logId }),
-  });
-
+  // Note: workoutSet router is currently disabled, so we use workoutLogExercise mutations
+  // These mutations work with the current database schema
   const deleteExercise = api.workoutLog.deleteExercise.useMutation({
     onSuccess: () => utils.workoutLog.getWithHistory.invalidate({ id: logId }),
   });
 
-  const addExerciseToWorkout = api.workoutSet.create.useMutation({
+  const addExerciseMutation = api.workoutLog.addExercise.useMutation({
     onSuccess: () => {
       utils.workoutLog.getWithHistory.invalidate({ id: logId });
       setIsAddingExercise(false);
@@ -79,23 +64,37 @@ export default function ActiveWorkoutPage({
     },
   });
 
-  const completeWorkout = api.workoutLog.complete.useMutation({
-    onSuccess: () => router.push("/portal/log"),
+  const updateExerciseMutation = api.workoutLog.updateExercise.useMutation({
+    onSuccess: () => utils.workoutLog.getWithHistory.invalidate({ id: logId }),
   });
 
-  // Auto-save duration every minute
+  const completeWorkout = api.workoutLog.complete.useMutation({
+    onSuccess: () => {
+      // Invalidate queries before redirecting
+      utils.workoutLog.list.invalidate();
+      utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      router.push("/portal/log");
+    },
+    onError: (error) => {
+      console.error("Failed to complete workout:", error);
+      setError(
+        error.message || "Failed to complete workout. Please try again."
+      );
+    },
+  });
+
+  // Auto-save duration every minute (improved logic)
   const updateDuration = api.workoutLog.updateDuration.useMutation();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (elapsedSeconds > 0 && elapsedSeconds % 60 === 0) {
-        updateDuration.mutate({
-          id: logId,
-          duration: Math.floor(elapsedSeconds / 60),
-        });
-      }
-    }, 1000);
-    return () => clearInterval(interval);
+    const currentMinute = Math.floor(elapsedSeconds / 60);
+    if (currentMinute > lastSavedMinute.current && elapsedSeconds > 0) {
+      lastSavedMinute.current = currentMinute;
+      updateDuration.mutate({
+        id: logId,
+        duration: currentMinute,
+      });
+    }
   }, [elapsedSeconds, logId, updateDuration]);
 
   if (log.isLoading) {
@@ -121,6 +120,14 @@ export default function ActiveWorkoutPage({
   }
 
   const workout = log.data;
+  
+  // Initialize notes from workout data when workout loads
+  useEffect(() => {
+    if (workout?.notes && !notes) {
+      setNotes(workout.notes);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workout?.notes]);
 
   // Group sets by exercise - handle both sets and exercises
   const exerciseGroups = (() => {
@@ -133,12 +140,13 @@ export default function ActiveWorkoutPage({
             acc[exerciseId] = {
               exercise: set.exercise,
               sets: [],
+              exerciseLogId: null,
             };
           }
           acc[exerciseId].sets.push(set);
           return acc;
         },
-        {} as Record<string, { exercise: any; sets: any[] }>
+        {} as Record<string, { exercise: any; sets: any[]; exerciseLogId: string | null }>
       );
     }
     
@@ -151,26 +159,29 @@ export default function ActiveWorkoutPage({
             acc[exerciseId] = {
               exercise: exerciseLog.exercise,
               sets: [],
+              exerciseLogId: exerciseLog.id,
             };
             // Create mock sets from exercise data
             for (let i = 0; i < exerciseLog.sets; i++) {
               acc[exerciseId].sets.push({
-                id: `${exerciseId}-${i}`,
+                id: `mock-${exerciseLog.id}-${i}`,
                 exerciseId,
+                exerciseLogId: exerciseLog.id,
                 setNumber: i + 1,
                 targetReps: exerciseLog.reps,
-                actualReps: exerciseLog.reps,
+                actualReps: exerciseLog.reps ?? 0,
                 targetWeight: exerciseLog.weight,
                 actualWeight: exerciseLog.weight,
                 rpe: exerciseLog.rpe,
                 completed: false,
                 exercise: exerciseLog.exercise,
+                isMock: true,
               });
             }
           }
           return acc;
         },
-        {} as Record<string, { exercise: any; sets: any[] }>
+        {} as Record<string, { exercise: any; sets: any[]; exerciseLogId: string | null }>
       );
     }
     
@@ -187,10 +198,105 @@ export default function ActiveWorkoutPage({
   const totalSets = allSets.length;
 
   const handleFinish = () => {
+    // Ensure duration is at least 1 minute if workout was started
+    const duration = Math.max(1, Math.floor(elapsedSeconds / 60));
+    
     completeWorkout.mutate({
       id: logId,
       completed: true,
-      duration: Math.floor(elapsedSeconds / 60),
+      duration: duration,
+      notes: notes || workout.notes || undefined,
+    });
+  };
+
+  // Handle set updates (for mock sets, update via workoutLogExercise)
+  const handleUpdateSet = (setId: string, data: any) => {
+    const set = allSets.find((s) => s.id === setId);
+    if (!set) return;
+
+    if (set.isMock && set.exerciseLogId) {
+      // Update via workoutLogExercise
+      updateExerciseMutation.mutate({
+        id: set.exerciseLogId,
+        reps: data.actualReps ?? set.actualReps,
+        weight: data.actualWeight ?? set.actualWeight,
+        rpe: data.rpe ?? set.rpe,
+      });
+    } else {
+      // Real sets - workoutSet router is disabled, so show message
+      setError("Set-by-set editing requires database migration. Please edit at exercise level.");
+    }
+  };
+
+  // Handle set completion (for mock sets, just start rest timer)
+  const handleCompleteSet = (setId: string) => {
+    const set = allSets.find((s) => s.id === setId);
+    if (!set) return;
+
+    if (set.isMock) {
+      // For mock sets, just start rest timer
+      // The actual completion is tracked at exercise level
+      restTimer.start(180);
+    } else {
+      // Real sets - workoutSet router is disabled
+      setError("Set completion requires database migration.");
+    }
+  };
+
+  // Handle add set (increment sets count for exercise)
+  const handleAddSet = (exerciseId: string, exerciseLogId: string | null) => {
+    if (exerciseLogId) {
+      // Increment sets count
+      const exerciseLog = workout.exercises?.find((e) => e.id === exerciseLogId);
+      if (exerciseLog) {
+        updateExerciseMutation.mutate({
+          id: exerciseLogId,
+          sets: exerciseLog.sets + 1,
+        });
+      }
+    } else {
+      setError("Adding sets requires database migration.");
+    }
+  };
+
+  // Handle delete set (decrement sets count for exercise)
+  const handleDeleteSet = (setId: string, exerciseLogId: string | null) => {
+    const set = allSets.find((s) => s.id === setId);
+    if (!set) return;
+
+    if (set.isMock && exerciseLogId) {
+      // Decrement sets count
+      const exerciseLog = workout.exercises?.find((e) => e.id === exerciseLogId);
+      if (exerciseLog && exerciseLog.sets > 1) {
+        updateExerciseMutation.mutate({
+          id: exerciseLogId,
+          sets: exerciseLog.sets - 1,
+        });
+      }
+    } else {
+      setError("Deleting sets requires database migration.");
+    }
+  };
+
+  // Handle delete exercise
+  const handleDeleteExercise = (exerciseId: string, exerciseLogId: string | null) => {
+    if (exerciseLogId) {
+      // Delete via workoutLogExercise
+      deleteExercise.mutate({ id: exerciseLogId });
+    } else {
+      setError("Deleting exercises requires database migration.");
+    }
+  };
+
+  // Handle add exercise
+  const handleAddExercise = (exerciseId: string) => {
+    // Use workoutLogExercise (always available)
+    addExerciseMutation.mutate({
+      workoutLogId: logId,
+      exerciseId,
+      sets: 1,
+      reps: 10,
+      weight: undefined,
     });
   };
 
@@ -221,8 +327,9 @@ export default function ActiveWorkoutPage({
           </div>
           <Button
             onClick={handleFinish}
-            disabled={completeWorkout.isPending}
+            disabled={completeWorkout.isPending || !logId}
             size="sm"
+            className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white disabled:opacity-50"
           >
             {completeWorkout.isPending ? "Finishing..." : "Finish Workout"}
           </Button>
@@ -231,8 +338,34 @@ export default function ActiveWorkoutPage({
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 pb-24 space-y-4">
+        {/* Info about current mode */}
+        {Object.keys(exerciseGroups).length > 0 && (
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-xs">
+              Using exercise-level tracking. You can edit reps, weight, and sets per exercise. Individual set tracking will be available after database migration.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-950/20">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs">{error}</AlertDescription>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-6 text-xs"
+              onClick={() => setError(null)}
+            >
+              Dismiss
+            </Button>
+          </Alert>
+        )}
+
         {/* Quick Stats */}
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
@@ -254,7 +387,7 @@ export default function ActiveWorkoutPage({
                 </div>
               </div>
               {workout.lastWorkout && (
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   Last: {format(new Date(workout.lastWorkout.date), "MMM d")}
                 </Badge>
               )}
@@ -263,14 +396,23 @@ export default function ActiveWorkoutPage({
         </Card>
 
         {/* Workout Notes */}
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardContent className="pt-4">
             <Textarea
               placeholder="Add workout notes..."
-              defaultValue={workout.notes ?? ""}
-              onBlur={(e) =>
-                completeWorkout.mutate({ id: logId, notes: e.target.value })
-              }
+              value={notes || workout.notes ?? ""}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={(e) => {
+                setNotes(e.target.value);
+                // Optionally save notes immediately on blur
+                if (e.target.value !== workout.notes) {
+                  completeWorkout.mutate({ 
+                    id: logId, 
+                    notes: e.target.value,
+                    completed: workout.completed,
+                  });
+                }
+              }}
               className="resize-none"
               rows={2}
             />
@@ -279,7 +421,7 @@ export default function ActiveWorkoutPage({
 
         {/* Exercises */}
         <div className="space-y-4">
-          {Object.entries(exerciseGroups).map(([exerciseId, { exercise, sets }]) => {
+          {Object.entries(exerciseGroups).map(([exerciseId, { exercise, sets, exerciseLogId }]) => {
             // Find last workout data for this exercise
             const lastWorkoutSet = workout.lastWorkout?.sets?.find(
               (s) => s.exerciseId === exerciseId && s.completed
@@ -297,10 +439,10 @@ export default function ActiveWorkoutPage({
                   setNumber: s.setNumber,
                   targetReps: s.targetReps,
                   targetWeight: s.targetWeight,
-                  actualReps: s.actualReps,
+                  actualReps: s.actualReps ?? 0,
                   actualWeight: s.actualWeight,
                   rpe: s.rpe,
-                  completed: s.completed,
+                  completed: s.completed ?? false,
                 }))}
                 lastWorkoutData={
                   lastWorkoutSet
@@ -311,33 +453,14 @@ export default function ActiveWorkoutPage({
                       }
                     : undefined
                 }
-                onUpdateSet={(setId, data) =>
-                  updateSet.mutate({ id: setId, ...data })
-                }
+                onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
                 onCompleteSet={(setId) => {
-                  const set = sets.find((s) => s.id === setId);
-                  if (set) {
-                    completeSet.mutate({
-                      id: setId,
-                      actualReps: set.actualReps,
-                      actualWeight: set.actualWeight,
-                      rpe: set.rpe,
-                    });
-                  }
+                  handleCompleteSet(setId);
+                  restTimer.start(180);
                 }}
-                onAddSet={() => {
-                  const lastSet = sets[sets.length - 1];
-                  if (lastSet) {
-                    addSet.mutate({ id: lastSet.id });
-                  }
-                }}
-                onDeleteSet={(setId) => deleteSet.mutate({ id: setId })}
-                onDeleteExercise={() => {
-                  // Delete all sets for this exercise
-                  sets.forEach((set: any) => {
-                    deleteSet.mutate({ id: set.id });
-                  });
-                }}
+                onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
+                onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
+                onDeleteExercise={() => handleDeleteExercise(exerciseId, exerciseLogId)}
                 onStartRestTimer={() => restTimer.start(180)}
               />
             );
@@ -368,17 +491,7 @@ export default function ActiveWorkoutPage({
                     key={ex.id}
                     variant="ghost"
                     className="w-full justify-start"
-                    onClick={() => {
-                      // Add first set for this exercise
-                      addExerciseToWorkout.mutate({
-                        workoutLogId: logId,
-                        exerciseId: ex.id,
-                        setNumber: 1,
-                        targetReps: 10,
-                        actualReps: 0,
-                        restSeconds: 180,
-                      });
-                    }}
+                    onClick={() => handleAddExercise(ex.id)}
                   >
                     <div className="flex items-center gap-2 text-left">
                       <Dumbbell className="h-4 w-4 text-muted-foreground" />

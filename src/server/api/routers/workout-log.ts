@@ -164,7 +164,8 @@ export const workoutLogRouter = createTRPCRouter({
           completed: input.completed ?? true,
           duration: input.duration,
           notes: input.notes,
-          endTime: input.completed ? new Date() : undefined,
+          // endTime field exists in schema but not in current database migration
+          // Will be available after running migration
         },
         include: {
           exercises: true,
