@@ -145,43 +145,46 @@ export default function StartWorkoutPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-6">
             <Card 
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-teal-500"
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-blue-500/50 group"
               onClick={() => setShowQuickWizard(true)}
             >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                      <Dumbbell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <CardTitle>Manual Builder</CardTitle>
+              <CardHeader className="px-6 pt-6 pb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <Dumbbell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Manual Builder</CardTitle>
+                    <CardDescription className="mt-1">
+                      Build your workout plan step by step
+                    </CardDescription>
                   </div>
                 </div>
-                <CardDescription>
-                  Quickly build your workout plan step by step
-                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    Select day and body part (Push/Pull/Legs)
+              <CardContent className="px-6 pb-6">
+                <ul className="space-y-3 text-sm text-muted-foreground mb-6">
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span>Select day and body part (Push/Pull/Legs)</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    Choose exercises
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span>Choose exercises from the library</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    Set sets, reps, and weight
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span>Set sets, reps, and weight</span>
                   </li>
                 </ul>
                 <Button 
-                  className="w-full"
+                  className="w-full h-11 text-base font-semibold"
                   variant="outline"
-                  onClick={() => setShowQuickWizard(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowQuickWizard(true);
+                  }}
                 >
                   Start Building
                 </Button>
@@ -189,38 +192,43 @@ export default function StartWorkoutPage() {
             </Card>
 
             <Card 
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-purple-500"
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-purple-500/50 group"
               onClick={() => router.push("/portal/ai-planner")}
             >
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                    <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <CardHeader className="px-6 pt-6 pb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <CardTitle>AI Planner</CardTitle>
+                  <div>
+                    <CardTitle className="text-xl">AI Planner</CardTitle>
+                    <CardDescription className="mt-1">
+                      Let AI create a personalized workout plan for you
+                    </CardDescription>
+                  </div>
                 </div>
-                <CardDescription>
-                  Let AI create a personalized workout plan for you
-                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    Select your fitness goals
+              <CardContent className="px-6 pb-6">
+                <ul className="space-y-3 text-sm text-muted-foreground mb-6">
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <span>Select your fitness goals</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    Choose experience level
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <span>Choose experience level and equipment</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" />
-                    AI generates your plan
+                  <li className="flex items-start gap-3">
+                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <span>AI generates your personalized plan</span>
                   </li>
                 </ul>
                 <Button 
-                  className="w-full"
-                  onClick={() => router.push("/portal/ai-planner")}
+                  className="w-full h-11 text-base font-semibold bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push("/portal/ai-planner");
+                  }}
                 >
                   Use AI Planner
                 </Button>

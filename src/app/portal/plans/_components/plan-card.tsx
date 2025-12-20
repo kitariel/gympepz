@@ -19,9 +19,15 @@ import {
   Star,
   Trash2,
   TrendingUp,
+  HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PlanCardProps {
   id: string;
@@ -92,10 +98,17 @@ export function PlanCard({
                 Edit Plan
               </DropdownMenuItem>
               {!isActive && onSetActive && (
-                <DropdownMenuItem onClick={onSetActive}>
-                  <Star className="h-3.5 w-3.5 mr-2" />
-                  Set as Active
-                </DropdownMenuItem>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem onClick={onSetActive}>
+                      <Star className="h-3.5 w-3.5 mr-2" />
+                      Set as Active
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Set this plan as your default for quick workout starts</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
               {onDuplicate && (
                 <DropdownMenuItem onClick={onDuplicate}>
@@ -130,7 +143,7 @@ export function PlanCard({
             onClick={onStartWorkout}
           >
             <Play className="h-3 w-3 mr-1.5" />
-            Start
+            Start Workout
           </Button>
         )}
         <Button

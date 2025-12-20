@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   XCircle,
   PlayCircle,
+  Play,
+  Target,
 } from "lucide-react";
 import { useState } from "react";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
@@ -267,8 +269,8 @@ export function WorkoutLogList() {
                 {createLog.isPending
                   ? "Creating..."
                   : selectedPlanId && selectedPlanId !== "none"
-                    ? "Start Plan Workout"
-                    : "Start Empty Workout"}
+                    ? "Start Workout"
+                    : "Create Freeform Workout"}
               </Button>
             </div>
           </DialogContent>
@@ -365,10 +367,36 @@ export function WorkoutLogList() {
           );
         })}
         {logs.data?.items.length === 0 && (
-          <div className="text-muted-foreground py-12 text-center">
-            <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">No workouts logged yet. Start one today!</p>
-          </div>
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+              <div className="p-4 rounded-full bg-muted mb-4">
+                <Dumbbell className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-base font-semibold mb-2">No workouts logged yet</h3>
+              <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+                Start your first workout to begin tracking your fitness journey. You can start from a plan or create a freeform workout.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => router.push("/portal/start")}
+                  className="gap-2"
+                >
+                  <Play className="h-4 w-4" />
+                  Start Workout
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => router.push("/portal/plans")}
+                  className="gap-2"
+                >
+                  <Target className="h-4 w-4" />
+                  Create Plan
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
 

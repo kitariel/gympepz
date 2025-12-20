@@ -54,7 +54,7 @@ export default function PlansPage() {
 
   const handleCreatePlan = async () => {
     if (!userId || !newPlanName) return;
-    await create.mutateAsync({
+    const newPlan = await create.mutateAsync({
       userId,
       name: newPlanName,
       days: [],
@@ -62,6 +62,16 @@ export default function PlansPage() {
     setNewPlanName("");
     setIsCreateDialogOpen(false);
     await list.refetch();
+    
+    // Show success and guide user
+    if (newPlan && !newPlan.isActive) {
+      // Auto-set first plan as active if no active plan exists
+      const plansList = await list.refetch();
+      const hasActivePlan = plansList.data?.some(p => p.isActive);
+      if (!hasActivePlan) {
+        await setActive.mutateAsync({ userId, planId: newPlan.id });
+      }
+    }
   };
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -129,7 +139,7 @@ export default function PlansPage() {
         .filter((item): item is { exerciseId: string; sets: number; reps: number; weight?: number } => item !== null),
     }));
 
-    await create.mutateAsync({
+    const newPlan = await create.mutateAsync({
       userId,
       name: newPlanName,
       days,
@@ -138,6 +148,16 @@ export default function PlansPage() {
     setSelectedTemplate(null);
     setIsCreateDialogOpen(false);
     await list.refetch();
+    
+    // Auto-set first plan as active if no active plan exists
+    const plansList = await list.refetch();
+    const hasActivePlan = plansList.data?.some(p => p.isActive);
+    if (!hasActivePlan && newPlan) {
+      await setActive.mutateAsync({ userId, planId: newPlan.id });
+    }
+    
+    // Navigate to the new plan for editing
+    router.push(`/portal/plans/${newPlan.id}`);
   };
 
   const handleDuplicate = async (planId: string) => {

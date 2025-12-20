@@ -20,7 +20,13 @@ import {
   ArrowRight,
   Sparkles,
   BarChart3,
+  HelpCircle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { format, startOfWeek, subWeeks, eachWeekOfInterval } from "date-fns";
 import { useRouter } from "next/navigation";
 import {
@@ -31,7 +37,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Legend,
 } from "recharts";
@@ -200,7 +206,17 @@ export default function PortalPage() {
       <div className="grid gap-3 md:grid-cols-4">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">This Week</CardTitle>
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+              This Week
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Number of completed workouts this week</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
             <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -213,7 +229,17 @@ export default function PortalPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Streak</CardTitle>
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+              Streak
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Consecutive days with at least one completed workout</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
             <Flame className="h-3.5 w-3.5 text-orange-500" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -226,7 +252,17 @@ export default function PortalPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Volume</CardTitle>
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+              Volume
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Total weight lifted this week (sets × reps × weight)</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
             <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -239,7 +275,17 @@ export default function PortalPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Avg Time</CardTitle>
+            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+              Avg Time
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Average workout duration this week</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -271,15 +317,22 @@ export default function PortalPage() {
                       ? "Continue Plan"
                       : "Start Workout"}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCreateEmpty}
-                  disabled={createEmpty.isPending}
-                  className="h-11"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {createEmpty.isPending ? "Starting..." : "Empty Workout"}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={handleCreateEmpty}
+                      disabled={createEmpty.isPending}
+                      className="h-11"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {createEmpty.isPending ? "Starting..." : "Create Freeform Workout"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Start a workout without a plan - add exercises on the fly</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </CardContent>
           </Card>
@@ -370,7 +423,7 @@ export default function PortalPage() {
                         fontSize={11}
                         tick={{ fill: "hsl(var(--muted-foreground))" }}
                       />
-                      <Tooltip
+                      <RechartsTooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--background))",
                           border: "1px solid hsl(var(--border))",
