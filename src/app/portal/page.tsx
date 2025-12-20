@@ -77,41 +77,30 @@ export default function PortalPage() {
   const plans = api.plan.listByUser.useQuery({ userId }, { enabled: !!userId });
   const prs = api.progress.getPRs.useQuery({ userId }, { enabled: !!userId });
 
-  // Process workout data for chart (last 6 weeks)
   const chartData = useMemo(() => {
-    if (!allLogs.data?.items) return [];
+    if (!allLogs.data?.items?.length) return [];
 
     const now = new Date();
     const sixWeeksAgo = subWeeks(now, 6);
-    const weeks = eachWeekOfInterval(
-      { start: sixWeeksAgo, end: now },
-      { weekStartsOn: 1 }
-    );
+    const weeks = eachWeekOfInterval({ start: sixWeeksAgo, end: now }, { weekStartsOn: 1 });
 
-    // Group workouts by week
-    const weeklyData = weeks.map((weekStart) => {
+    return weeks.map((weekStart) => {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
 
-      const weekWorkouts = allLogs.data.items.filter((log) => {
+      const weekWorkouts = allLogs.data!.items.filter((log) => {
         const logDate = new Date(log.date);
         return logDate >= weekStart && logDate <= weekEnd && log.completed;
       });
 
-      const volume = weekWorkouts.reduce((sum, log) => {
-        // Calculate volume from exercises if totalVolume not available
-        const logVolume = (log as any).totalVolume ?? 0;
-        return sum + logVolume;
-      }, 0);
+      const volume = weekWorkouts.reduce((sum, log) => sum + ((log as any).totalVolume ?? 0), 0);
 
       return {
         week: format(weekStart, "MMM d"),
         workouts: weekWorkouts.length,
-        volume: Math.round(volume / 1000), // Convert to thousands of kg
+        volume: Math.round(volume / 1000),
       };
     });
-
-    return weeklyData;
   }, [allLogs.data]);
 
   // Mutations
@@ -481,41 +470,47 @@ export default function PortalPage() {
             </CardHeader>
             <CardContent className="px-4 pb-4">
               <div className="space-y-2">
-                {recentLogs.data?.items.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all group"
-                    onClick={() => router.push(`/portal/log/workout/${log.id}`)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {log.planDay?.title ?? "Untitled Workout"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {format(new Date(log.date), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                    <div className="text-right ml-3 shrink-0">
-                      <p className="text-xs font-medium">
-                        {log.duration ? `${log.duration}m` : "In Progress"}
-                      </p>
-                      {(log as any).totalVolume && (
-                        <p className="text-[10px] text-muted-foreground">
-                          {Math.round((log as any).totalVolume)} kg
+                {recentLogs.data?.items.map((log) => {
+                  const logVolume = (log as any).totalVolume;
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all"
+                      onClick={() => router.push(`/portal/log/workout/${log.id}`)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {log.planDay?.title ?? "Untitled Workout"}
                         </p>
-                      )}
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(new Date(log.date), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <div className="text-right ml-3 shrink-0">
+                        <p className="text-xs font-medium">
+                          {log.duration ? `${log.duration}m` : "In Progress"}
+                        </p>
+                        {logVolume && (
+                          <p className="text-[10px] text-muted-foreground">
+                            {Math.round(logVolume)} kg
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {recentLogs.data?.items.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">No workouts yet. Start your first one!</p>
+                  <div className="text-center py-10 text-muted-foreground">
+                    <div className="inline-flex p-3 rounded-full bg-muted mb-3">
+                      <Dumbbell className="h-8 w-8 opacity-50" />
+                    </div>
+                    <p className="text-sm font-medium mb-1">No workouts yet</p>
+                    <p className="text-xs mb-4">Start your first workout to begin tracking</p>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="mt-3 gap-2"
+                      className="gap-2"
                       onClick={handleCreateEmpty}
                     >
                       <Plus className="h-4 w-4" />

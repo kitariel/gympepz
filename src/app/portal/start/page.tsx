@@ -11,11 +11,8 @@ import {
   Sparkles,
   Dumbbell,
   ArrowRight,
-  Plus,
   Target,
   Calendar,
-  CheckCircle2,
-  Circle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -28,7 +25,6 @@ export default function StartWorkoutPage() {
   const router = useRouter();
   const [showPlanChoices, setShowPlanChoices] = useState(false);
   const [showQuickWizard, setShowQuickWizard] = useState(false);
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [showWarningDialog, setShowWarningDialog] = useState(false);
 
   // Get today's workout
@@ -43,33 +39,24 @@ export default function StartWorkoutPage() {
     { enabled: !!userId }
   );
 
-  // Quick start mutation
   const quickStart = api.workoutLog.quickStart.useMutation({
-    onSuccess: (log) => {
-      router.push(`/portal/log/workout/${log.id}`);
-    },
-    onError: (error) => {
-      console.error("Failed to start workout:", error);
-    },
+    onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
 
   const handleStartWorkout = () => {
     if (!userId) return;
     
-    // Check if there's a recent completed workout
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setShowWarningDialog(true);
       return;
     }
     
-    // No recent workout, start immediately
     quickStart.mutate({ userId });
   };
 
   const handleConfirmStart = () => {
     setShowWarningDialog(false);
-    if (!userId) return;
-    quickStart.mutate({ userId });
+    if (userId) quickStart.mutate({ userId });
   };
 
   // Loading state
@@ -121,23 +108,22 @@ export default function StartWorkoutPage() {
 
         {!showPlanChoices ? (
           <Card className="border-2 border-dashed">
-            <CardContent className="pt-12 pb-12 text-center space-y-6">
-              <div className="mx-auto w-16 h-16 rounded-full bg-teal-100 dark:bg-teal-900/20 flex items-center justify-center">
-                <Target className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+            <CardContent className="pt-16 pb-16 text-center space-y-6 px-6">
+              <div className="mx-auto w-20 h-20 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                <Target className="h-10 w-10 text-teal-600 dark:text-teal-400" />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-2">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold">
                   No Workout Plan Found
                 </h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  You need to create a workout plan before you can start working out.
-                  Choose how you'd like to create your plan.
+                <p className="text-muted-foreground max-w-md mx-auto text-sm">
+                  Create a workout plan to get started. Choose how you'd like to build your plan.
                 </p>
               </div>
               <Button
                 size="lg"
                 onClick={() => setShowPlanChoices(true)}
-                className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800"
+                className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 h-12 text-base"
               >
                 Create Workout Plan
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -284,67 +270,34 @@ export default function StartWorkoutPage() {
                 <div className="bg-white/50 dark:bg-background/50 rounded-lg p-4 space-y-3">
                   {todayWorkout.exercises.length > 0 ? (
                     <div className="space-y-2">
-                      {todayWorkout.exercises.map((exercise, idx) => {
-                        const isCompleted = completedExercises.has(exercise.id);
-                        return (
-                          <div
-                            key={exercise.id}
-                            className={`flex items-center justify-between text-sm py-2 px-2 rounded-lg border-b last:border-0 transition-colors ${
-                              isCompleted 
-                                ? "bg-teal-50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-800" 
-                                : "hover:bg-white/70 dark:hover:bg-background/70"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <button
-                                onClick={() => {
-                                  const newCompleted = new Set(completedExercises);
-                                  if (isCompleted) {
-                                    newCompleted.delete(exercise.id);
-                                  } else {
-                                    newCompleted.add(exercise.id);
-                                  }
-                                  setCompletedExercises(newCompleted);
-                                }}
-                                className="shrink-0"
-                                aria-label={isCompleted ? "Mark as incomplete" : "Mark as done"}
-                              >
-                                {isCompleted ? (
-                                  <CheckCircle2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                                ) : (
-                                  <Circle className="h-5 w-5 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
-                                )}
-                              </button>
-                              <span className="text-muted-foreground text-xs w-6 shrink-0">
-                                {idx + 1}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className={`font-medium ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
-                                  {exercise.exerciseName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {exercise.muscleGroup}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right text-xs text-muted-foreground shrink-0 ml-2">
-                              <p>
-                                {exercise.sets} sets × {exercise.reps} reps
+                      {todayWorkout.exercises.map((exercise, idx) => (
+                        <div
+                          key={exercise.id}
+                          className="flex items-center justify-between text-sm py-2.5 px-3 rounded-lg hover:bg-white/70 dark:hover:bg-background/70 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="text-muted-foreground text-xs w-6 shrink-0 font-medium">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium">
+                                {exercise.exerciseName}
                               </p>
-                              {exercise.weight && (
-                                <p>{exercise.weight} kg</p>
-                              )}
+                              <p className="text-xs text-muted-foreground">
+                                {exercise.muscleGroup}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })}
-                      {completedExercises.size > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-center text-muted-foreground">
-                            {completedExercises.size} of {todayWorkout.exercises.length} exercises completed
-                          </p>
+                          <div className="text-right text-xs text-muted-foreground shrink-0 ml-3">
+                            <p className="font-medium">
+                              {exercise.sets} sets × {exercise.reps} reps
+                            </p>
+                            {exercise.weight && (
+                              <p>{exercise.weight} kg</p>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">
