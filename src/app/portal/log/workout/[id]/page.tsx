@@ -77,7 +77,7 @@ export default function ActiveWorkoutPage({
       router.push("/portal/log");
     },
     onError: (error) => {
-      console.error("Failed to complete workout:", error);
+      // Error is handled by the Alert component showing error state
       setError(
         error.message || "Failed to complete workout. Please try again."
       );

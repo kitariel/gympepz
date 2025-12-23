@@ -44,6 +44,266 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+// Sortable Day Card Component
+function SortableDayCard({
+  dayData,
+  dayName,
+  slotIndex,
+  onEditDay,
+  onSaveDayTitle,
+  onCancelEdit,
+  onDeleteDay,
+  onDuplicateDay,
+  onOpenCopyDialog,
+  onOpenDrawer,
+  editingDayId,
+  editingDayTitle,
+  onEditingDayTitleChange,
+  updateDay,
+  p,
+}: {
+  dayData: any;
+  dayName: string;
+  slotIndex: number;
+  onEditDay: (dayId: string) => void;
+  onSaveDayTitle: (dayId: string) => void;
+  onCancelEdit: () => void;
+  onDeleteDay: (dayId: string) => void;
+  onDuplicateDay: (dayId: string) => void;
+  onOpenCopyDialog: (dayId: string) => void;
+  onOpenDrawer: (dayId: string) => void;
+  editingDayId: string | null;
+  editingDayTitle: string;
+  onEditingDayTitleChange: (title: string) => void;
+  updateDay: any;
+  p: any;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: dayData.id,
+    disabled: false,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "border-0 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group border-2 border-transparent min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] flex flex-col",
+        isDragging && "opacity-50"
+      )}
+      onClick={(e) => {
+        // Only open drawer if click was not on interactive elements
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest('[data-drag-handle]') &&
+          !target.closest('button') &&
+          !target.closest('[role="menuitem"]') &&
+          !isDragging
+        ) {
+          onOpenDrawer(dayData.id);
+        }
+      }}
+    >
+      <CardHeader className="px-3 sm:px-3 md:px-4 pt-3 sm:pt-3 md:pt-4 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-xs sm:text-xs md:text-sm font-medium text-muted-foreground truncate flex-1">
+            {dayName}
+          </CardTitle>
+          <div
+            {...attributes}
+            {...listeners}
+            data-drag-handle
+            className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col px-3 sm:px-3 md:px-4 pb-3 sm:pb-3 md:pb-4 space-y-2 min-h-0">
+        {editingDayId === dayData.id ? (
+          <div className="flex flex-col gap-2">
+            <Input
+              value={editingDayTitle}
+              onChange={(e) => onEditingDayTitleChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onSaveDayTitle(dayData.id);
+                } else if (e.key === "Escape") {
+                  onCancelEdit();
+                }
+              }}
+              className="h-7 sm:h-8 text-xs sm:text-sm font-semibold"
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 sm:h-7 sm:w-7"
+                onClick={() => onSaveDayTitle(dayData.id)}
+                disabled={updateDay.isPending || !editingDayTitle.trim()}
+              >
+                <Save className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 sm:h-7 sm:w-7"
+                onClick={onCancelEdit}
+              >
+                ×
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0 flex flex-col">
+              <h4 className="font-semibold text-xs sm:text-sm md:text-base mb-1.5 sm:mb-2 line-clamp-2 leading-tight">
+                {dayData.title}
+              </h4>
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <Badge variant="secondary" className="text-[10px] sm:text-xs w-fit">
+                  {dayData.items?.length ?? 0} {dayData.items?.length === 1 ? 'ex' : 'ex'}
+                </Badge>
+                {(dayData.items ?? []).length > 0 && (
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">
+                    {dayData.items.reduce((sum: number, item: any) => sum + (item.sets || 0), 0)} sets
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 pt-2 mt-auto border-t">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 sm:h-7 sm:w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditDay(dayData.id);
+                }}
+              >
+                <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              </Button>
+              <div className="flex-1" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 sm:h-7 sm:w-7 opacity-70 hover:opacity-100 shrink-0"
+                  >
+                    <MoreVertical className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuItem
+                    onClick={() => onDuplicateDay(dayData.id)}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onOpenCopyDialog(dayData.id)}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy To...
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDeleteDay(dayData.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Empty Slot Component (Droppable)
+function EmptyDaySlot({
+  dayName,
+  slotIndex,
+  onAddDay,
+}: {
+  dayName: string;
+  slotIndex: number;
+  onAddDay: (slot: number) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: slotIndex.toString(),
+  });
+
+  return (
+    <Card
+      ref={setNodeRef}
+      className={cn(
+        "border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 transition-all min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] flex flex-col",
+        isOver && "border-primary bg-primary/5"
+      )}
+    >
+      <CardHeader className="px-3 sm:px-3 md:px-4 pt-3 sm:pt-3 md:pt-4 pb-2">
+        <CardTitle className="text-xs sm:text-xs md:text-sm font-medium text-muted-foreground text-center">
+          {dayName}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col items-center justify-center px-3 sm:px-3 md:px-4 pb-3 sm:pb-3 md:pb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full h-auto py-2 sm:py-3 md:py-4 gap-1.5 sm:gap-2 flex-col"
+          onClick={() => onAddDay(slotIndex)}
+        >
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+          <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground text-center leading-tight">
+            {isOver ? "Drop here" : "Add Workout Day"}
+          </span>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  useDroppable,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { cn } from "@/lib/utils";
+
 export default function PlanDetailPage({
   params,
 }: {
@@ -69,18 +329,78 @@ export default function PlanDetailPage({
   const delItem = api.plan.deleteItem.useMutation();
   const deleteDay = api.plan.deleteDay.useMutation();
   const updateDay = api.plan.updateDay.useMutation();
+  const updateDayOrder = api.plan.updateDayOrder.useMutation();
+  const updateDaysOrder = api.plan.updateDaysOrder.useMutation();
   const duplicateDay = api.plan.duplicateDay.useMutation();
   const copyExercises = api.plan.copyExercises.useMutation();
+  const reorderDays = api.plan.reorderDays.useMutation();
   const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
+  const [localDays, setLocalDays] = useState<any[]>([]);
+
+  const p = plan.data as any;
+
+  // Initialize local days from plan data
+  useEffect(() => {
+    if (plan.data?.days && plan.data.days.length > 0) {
+      // Sort days by order
+      const sortedDays = [...plan.data.days].sort((a, b) => a.order - b.order);
+      
+      // Create array with 7 slots (Sunday = 0, Monday = 1, etc.)
+      const weekSlots = Array(7).fill(null);
+      
+      // Map days to slots: order should directly map to slot (0-6)
+      // This ensures drag-and-drop positions persist correctly
+      sortedDays.forEach((day: any) => {
+        // For weekly view, order values 0-6 map directly to slots 0-6
+        if (day.order >= 0 && day.order < 7) {
+          const slotIndex = day.order;
+          // If slot is empty, assign day; otherwise skip (shouldn't happen if orders are unique)
+          if (!weekSlots[slotIndex]) {
+            weekSlots[slotIndex] = day;
+          } else {
+            // Conflict: day with same order already exists
+            // This shouldn't happen, but if it does, find next available slot
+            console.warn(`Order conflict: day ${day.id} has order ${day.order} but slot is taken`);
+            for (let i = 0; i < 7; i++) {
+              const checkSlot = (slotIndex + 1 + i) % 7;
+              if (!weekSlots[checkSlot]) {
+                weekSlots[checkSlot] = day;
+                break;
+              }
+            }
+          }
+        } else if (day.order >= 7) {
+          // Orders >= 7 are outside weekly view range, place in first available slot
+          for (let i = 0; i < 7; i++) {
+            if (!weekSlots[i]) {
+              weekSlots[i] = day;
+              break;
+            }
+          }
+        }
+      });
+      setLocalDays(weekSlots);
+    } else {
+      setLocalDays(Array(7).fill(null));
+    }
+  }, [plan.data?.days]);
+
+  // Drag and drop sensors with activation distance to prevent accidental drags
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
 
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
     { enabled: isAddExerciseDialogOpen }
   );
-
-  const p = plan.data as any;
 
   useEffect(() => {
     if (p?.name && !planName) {
@@ -94,16 +414,89 @@ export default function PlanDetailPage({
     await plan.refetch();
   };
 
-  const handleAddDay = async () => {
-    if (!newDayTitle) return;
+  const handleAddDay = async (targetSlot?: number) => {
+    if (!newDayTitle && !targetSlot) {
+      setIsAddDayDialogOpen(true);
+      return;
+    }
+    
+    const order = targetSlot !== undefined ? targetSlot : (p?.days?.length ?? 0);
     await addDay.mutateAsync({
       planId: id,
-      title: newDayTitle,
-      order: (p?.days?.length ?? 0),
+      title: newDayTitle || `Day ${order + 1}`,
+      order,
     });
     setNewDayTitle("");
     setIsAddDayDialogOpen(false);
     await plan.refetch();
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeDayId = active.id as string;
+    const overSlotIndex = parseInt(over.id as string);
+    
+    // If dropping on a slot (slot index 0-6)
+    if (!isNaN(overSlotIndex) && overSlotIndex >= 0 && overSlotIndex < 7) {
+      const newDays = [...localDays];
+      const activeDay = p?.days?.find((d: any) => d.id === activeDayId);
+      
+      if (!activeDay) return;
+      
+      // Find current position of dragged day
+      const currentSlotIndex = newDays.findIndex((day) => day?.id === activeDayId);
+      
+      // Check if target slot already has a day (need to swap)
+      const existingDayAtSlot = newDays[overSlotIndex];
+      
+      if (currentSlotIndex >= 0) {
+        // Clear current slot
+        newDays[currentSlotIndex] = null;
+        
+        // If target slot has a day, move it to the source slot (swap)
+        if (existingDayAtSlot && existingDayAtSlot.id !== activeDayId) {
+          // Update the swapped day's order to match its new slot position
+          newDays[currentSlotIndex] = { ...existingDayAtSlot, order: currentSlotIndex };
+        }
+      }
+      
+      // Place active day in target slot with updated order
+      newDays[overSlotIndex] = { ...activeDay, order: overSlotIndex };
+      
+      // Update local state immediately for responsive UI
+      setLocalDays(newDays);
+
+      // Build array of order updates for all days in their new positions
+      // Day at slot N should have order = N
+      const orderUpdates: Array<{ id: string; order: number }> = [];
+      newDays.forEach((day, slotIndex) => {
+        if (day) {
+          orderUpdates.push({
+            id: day.id,
+            order: slotIndex,
+          });
+        }
+      });
+      
+      // Update all days' orders atomically in a single transaction
+      if (orderUpdates.length > 0) {
+        try {
+          await updateDaysOrder.mutateAsync({
+            planId: id,
+            orders: orderUpdates,
+          });
+          
+          // Refetch to sync with database after updates complete
+          await plan.refetch();
+        } catch (error) {
+          console.error("Failed to update day orders:", error);
+          // Revert by refetching original data
+          await plan.refetch();
+        }
+      }
+    }
   };
 
   const handleDeleteDay = async (dayId: string) => {
@@ -264,203 +657,109 @@ export default function PlanDetailPage({
         </CardContent>
       </Card>
 
-      {/* Workout Days */}
-      <div className="space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+      {/* Weekly Workout Days */}
+      <div className="space-y-3 sm:space-y-3 md:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 md:gap-0">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base sm:text-lg font-semibold">Workout Days</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-              Each day represents a workout session (e.g., "Monday - Push Day", "Leg Day")
+            <h3 className="text-base sm:text-base md:text-lg font-semibold">Weekly Schedule</h3>
+            <p className="text-xs sm:text-xs md:text-sm text-muted-foreground mt-0.5 hidden sm:block">
+              Drag and drop workout days to rearrange. Click empty days to add workouts.
             </p>
           </div>
-          <Dialog
-            open={isAddDayDialogOpen}
-            onOpenChange={setIsAddDayDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 w-full sm:w-auto h-10 sm:h-8">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add Workout Day</span>
-                <span className="sm:hidden">Add Day</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-lg sm:text-xl">Add New Workout Day</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-2">
-                  A workout day is a collection of exercises you'll do together in one session.
-                </p>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Day Name</label>
-                  <Input
-                    placeholder="e.g., Monday - Push Day, Leg Day, Upper Body"
-                    value={newDayTitle}
-                    onChange={(e) => setNewDayTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleAddDay();
-                      }
-                    }}
-                    className="h-10 sm:h-9"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Tip: Use descriptive names like "Push Day", "Pull Day", or day of the week.
-                  </p>
-                </div>
-                <Button
-                  className="w-full h-10 sm:h-9"
-                  onClick={handleAddDay}
-                  disabled={!newDayTitle || addDay.isPending}
-                >
-                  {addDay.isPending ? "Adding..." : "Create Workout Day"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
 
-        {(p?.days ?? []).length === 0 ? (
-          <Card className="border-0 shadow-sm border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <div className="p-3 rounded-full bg-muted mb-4">
-                <Dumbbell className="h-8 w-8 text-muted-foreground" />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={localDays.filter((day) => day !== null).map((day) => day!.id)}
+            strategy={horizontalListSortingStrategy}
+            disabled={false}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3 sm:gap-3 md:gap-4">
+              {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(
+                (dayName, slotIndex) => {
+                  const dayData = localDays[slotIndex];
+                  
+                  if (!dayData) {
+                    return (
+                      <EmptyDaySlot
+                        key={slotIndex}
+                        dayName={dayName}
+                        slotIndex={slotIndex}
+                        onAddDay={(slot) => {
+                          setNewDayTitle(`${dayName} Workout`);
+                          handleAddDay(slot);
+                        }}
+                      />
+                    );
+                  }
+                  
+                  return (
+                    <SortableDayCard
+                      key={dayData.id}
+                      dayData={dayData}
+                      dayName={dayName}
+                      slotIndex={slotIndex}
+                      onEditDay={(dayId) => handleStartEditDay(dayId, dayData.title)}
+                      onSaveDayTitle={(dayId) => handleSaveDayTitle(dayId)}
+                      onCancelEdit={handleCancelEditDay}
+                      onDeleteDay={handleDeleteDay}
+                      onDuplicateDay={handleDuplicateDay}
+                      onOpenCopyDialog={handleOpenCopyDialog}
+                      onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
+                      editingDayId={editingDayId}
+                      editingDayTitle={editingDayTitle}
+                      onEditingDayTitleChange={setEditingDayTitle}
+                      updateDay={updateDay}
+                      p={p}
+                    />
+                  );
+                }
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        {/* Add Day Dialog */}
+        <Dialog open={isAddDayDialogOpen} onOpenChange={setIsAddDayDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl">Add New Workout Day</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                A workout day is a collection of exercises you'll do together in one session.
+              </p>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Day Name</label>
+                <Input
+                  placeholder="e.g., Monday - Push Day, Leg Day, Upper Body"
+                  value={newDayTitle}
+                  onChange={(e) => setNewDayTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddDay();
+                    }
+                  }}
+                  className="h-10 sm:h-9"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tip: Use descriptive names like "Push Day", "Pull Day", or day of the week.
+                </p>
               </div>
-              <h3 className="text-base font-semibold mb-2">Create Your First Workout Day</h3>
-              <p className="text-sm text-muted-foreground mb-1 text-center max-w-md">
-                A <strong>workout day</strong> is a set of exercises you do together (like "Push Day" or "Leg Day").
-              </p>
-              <p className="text-xs text-muted-foreground mb-6 text-center max-w-md">
-                Once created, you can add exercises to it (like Bench Press, Squats, etc.).
-              </p>
-              <Button size="sm" onClick={() => setIsAddDayDialogOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Workout Day
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {(p?.days ?? []).map((day: any, dayIndex: number) => (
-              <Card 
-                key={day.id} 
-                className="border-0 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group border-2 border-transparent"
-                onClick={() => setSelectedDayId(day.id)}
+              <Button
+                className="w-full h-10 sm:h-9"
+                onClick={() => handleAddDay()}
+                disabled={!newDayTitle || addDay.isPending}
               >
-                <CardHeader className="px-4 sm:px-4 pt-4 pb-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
-                      {editingDayId === day.id ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <Input
-                            value={editingDayTitle}
-                            onChange={(e) => setEditingDayTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleSaveDayTitle(day.id);
-                              } else if (e.key === "Escape") {
-                                handleCancelEditDay();
-                              }
-                            }}
-                            className="h-9 sm:h-8 text-sm font-semibold flex-1"
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
-                            onClick={() => handleSaveDayTitle(day.id)}
-                            disabled={updateDay.isPending || !editingDayTitle.trim()}
-                          >
-                            <Save className="h-4 w-4 sm:h-3 sm:w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
-                            onClick={handleCancelEditDay}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <CardTitle className="text-base sm:text-lg font-semibold truncate">
-                                {day.title}
-                              </CardTitle>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleStartEditDay(day.id, day.title);
-                                }}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="text-xs font-normal">
-                                {day.items?.length ?? 0} {day.items?.length === 1 ? 'exercise' : 'exercises'}
-                              </Badge>
-                              {(day.items ?? []).length > 0 && (
-                                <span className="text-xs text-muted-foreground">
-                                  {day.items.reduce((sum: number, item: any) => sum + (item.sets || 0), 0)} total sets
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-9 w-9 sm:h-8 sm:w-8 opacity-70 hover:opacity-100"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-[180px]">
-                          <DropdownMenuItem
-                            onClick={() => handleDuplicateDay(day.id)}
-                            disabled={duplicateDay.isPending}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Duplicate Day
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleOpenCopyDialog(day.id)}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy Exercises To...
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteDay(day.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Day
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
+                {addDay.isPending ? "Adding..." : "Create Workout Day"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
             {/* Exercise Drawer/Sheet */}
             {selectedDayId && (() => {
@@ -662,8 +961,7 @@ export default function PlanDetailPage({
                 </Sheet>
               );
             })()}
-          </>
-        )}
+
       </div>
 
       {/* Add Exercise Dialog - Responsive */}

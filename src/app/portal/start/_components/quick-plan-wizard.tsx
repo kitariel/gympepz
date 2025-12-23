@@ -242,7 +242,11 @@ export function QuickPlanWizard({
         router.refresh();
       }, 100);
     } catch (error) {
-      console.error("Failed to create plan:", error);
+      // Error is already handled by the mutation's onError callback
+      // This catch block is here to prevent unhandled promise rejection
+      if (error instanceof Error) {
+        // Could show toast notification here in the future
+      }
     }
   };
 

@@ -23,15 +23,43 @@ export default function LogPage() {
   const userId = session?.user?.id ?? "";
   const searchParams = useSearchParams();
   const router = useRouter();
-  const hasProcessedQuickStart = useRef(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [pendingQuickStart, setPendingQuickStart] = useState<{ planId: string; dayId: string } | null>(null);
 
   // Handle quickStart URL parameter - start workout from specific plan
   const quickStartPlanId = searchParams?.get("quickStart");
+  
+  // Check if this quickStart has already been processed using sessionStorage
+  const getProcessedQuickStart = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      return sessionStorage.getItem("processedQuickStart");
+    } catch {
+      return null;
+    }
+  };
+
+  const setProcessedQuickStart = (planId: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem("processedQuickStart", planId);
+    } catch {
+      // Ignore sessionStorage errors
+    }
+  };
+
+  const hasProcessedThisQuickStart = quickStartPlanId === getProcessedQuickStart();
+  
+  // Remove query param if already processed (e.g., from browser back button)
+  useEffect(() => {
+    if (quickStartPlanId && hasProcessedThisQuickStart) {
+      router.replace("/portal/log", { scroll: false });
+    }
+  }, [quickStartPlanId, hasProcessedThisQuickStart, router]);
+
   const planQuery = api.plan.get.useQuery(
     { id: quickStartPlanId ?? "" },
-    { enabled: !!quickStartPlanId && !!userId }
+    { enabled: !!quickStartPlanId && !!userId && !hasProcessedThisQuickStart }
   );
 
   // Check for recent completed workout
@@ -42,7 +70,8 @@ export default function LogPage() {
 
   const createLogFromPlan = api.workoutLog.create.useMutation({
     onSuccess: (log) => {
-      router.replace("/portal/log"); // Remove query param
+      // Query param should already be removed, but ensure it's gone
+      router.replace("/portal/log"); 
       router.push(`/portal/log/workout/${log.id}`);
       setPendingQuickStart(null);
     },
@@ -76,8 +105,20 @@ export default function LogPage() {
   };
 
   useEffect(() => {
-    if (quickStartPlanId && userId && planQuery.data && !hasProcessedQuickStart.current && recentWorkoutCheck.data !== undefined) {
-      hasProcessedQuickStart.current = true;
+    // Only process if we haven't processed this specific planId before
+    if (
+      quickStartPlanId && 
+      userId && 
+      planQuery.data && 
+      !hasProcessedThisQuickStart &&
+      recentWorkoutCheck.data !== undefined
+    ) {
+      // Mark this planId as processed BEFORE creating workout
+      setProcessedQuickStart(quickStartPlanId);
+      
+      // Remove query parameter immediately to prevent re-processing on back navigation
+      router.replace("/portal/log", { scroll: false });
+      
       const plan = planQuery.data;
       if (plan.days && plan.days.length > 0) {
         // Get the first day (or could implement logic to get next day)
@@ -88,7 +129,7 @@ export default function LogPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quickStartPlanId, userId, planQuery.data, recentWorkoutCheck.data]);
+  }, [quickStartPlanId, userId, planQuery.data, recentWorkoutCheck.data, hasProcessedThisQuickStart, router]);
 
   if (!userId) {
     return (

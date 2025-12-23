@@ -11,6 +11,7 @@ import { ExerciseFilters } from "./_components/exercise-filters";
 import { ExerciseDetailModal } from "./_components/exercise-detail-modal";
 import { AddToPlanDialog } from "./_components/add-to-plan-dialog";
 import { Dumbbell, Heart, Plus, TrendingUp, Library } from "lucide-react";
+import type { Exercise } from "@/types/exercise";
 
 export default function ExercisesPage() {
   const { data: session } = useSession();
@@ -24,7 +25,7 @@ export default function ExercisesPage() {
   const [selectedTab, setSelectedTab] = useState("all");
 
   // Modal state
-  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddToPlanDialogOpen, setIsAddToPlanDialogOpen] = useState(false);
 
@@ -90,7 +91,7 @@ export default function ExercisesPage() {
     });
   };
 
-  const handleViewDetails = (exercise: any) => {
+  const handleViewDetails = (exercise: Exercise) => {
     setSelectedExercise(exercise);
     setIsDetailModalOpen(true);
   };

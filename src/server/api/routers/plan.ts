@@ -235,12 +235,49 @@ export const planRouter = createTRPCRouter({
       return { ok: true, id: day.id };
     }),
   updateDay: publicProcedure
-    .input(z.object({ id: z.string().min(1), title: z.string().min(1) }))
+    .input(z.object({ id: z.string().min(1), title: z.string().min(1), order: z.number().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const updateData: { title: string; order?: number } = { title: input.title };
+      if (input.order !== undefined) {
+        updateData.order = input.order;
+      }
+      await ctx.db.planDay.update({
+        where: { id: input.id },
+        data: updateData,
+      });
+      return { ok: true };
+    }),
+  updateDayOrder: publicProcedure
+    .input(z.object({ id: z.string().min(1), order: z.number().min(0) }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.planDay.update({
         where: { id: input.id },
-        data: { title: input.title },
+        data: { order: input.order },
       });
+      return { ok: true };
+    }),
+  updateDaysOrder: publicProcedure
+    .input(
+      z.object({
+        planId: z.string().min(1),
+        orders: z.array(
+          z.object({
+            id: z.string().min(1),
+            order: z.number().min(0),
+          })
+        ).min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Update all day orders in a transaction
+      await ctx.db.$transaction(
+        input.orders.map(({ id, order }) =>
+          ctx.db.planDay.update({
+            where: { id, planId: input.planId },
+            data: { order },
+          })
+        )
+      );
       return { ok: true };
     }),
   deleteDay: publicProcedure
@@ -403,7 +440,29 @@ export const planRouter = createTRPCRouter({
         orderedIds: z.array(z.string().min(1)).min(1),
       }),
     )
-    .mutation(async ({ ctx }) => {
+    .mutation(async ({ ctx, input }) => {
+      // Verify all day IDs belong to this plan
+      const days = await ctx.db.planDay.findMany({
+        where: {
+          planId: input.planId,
+          id: { in: input.orderedIds },
+        },
+      });
+
+      if (days.length !== input.orderedIds.length) {
+        throw new Error("Some day IDs not found or don't belong to this plan");
+      }
+
+      // Update order for each day based on its position in the array
+      // Array index becomes the new order value (0, 1, 2, ...)
+      await Promise.all(
+        input.orderedIds.map((dayId, index) =>
+          ctx.db.planDay.update({
+            where: { id: dayId, planId: input.planId },
+            data: { order: index },
+          })
+        )
+      );
       return { ok: true };
     }),
 

@@ -126,8 +126,8 @@ export default function PlansPage() {
         .map((exDef) => {
           const exerciseId = findExerciseId(exDef.name);
           if (!exerciseId) {
-            console.warn(`Exercise not found: ${exDef.name}`);
-            return null; // Skip if exercise not found
+            // Skip if exercise not found (user can add manually later)
+            return null;
           }
           return {
             exerciseId,

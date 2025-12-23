@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import WorkoutChat from "./components/workout-chat";
 import { OnboardingWizard } from "./_components/onboarding-wizard";
 import { Sparkles } from "lucide-react";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 export default function AIPlannerPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
+  const router = useRouter();
 
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
@@ -95,8 +97,8 @@ export default function AIPlannerPage() {
           experience={initialData?.experience ?? "Beginner"}
           equipment={initialData?.equipment ?? "Full Gym"}
           onPlanCreated={(id) => {
-            // Navigate to the plan or show success
-            console.log("Plan created:", id);
+            // Navigate to the plan detail page
+            router.push(`/portal/plans/${id}`);
           }}
         />
       </div>
