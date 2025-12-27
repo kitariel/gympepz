@@ -44,6 +44,35 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+interface Exercise {
+  id: string;
+  name: string;
+  muscleGroup: string;
+  equipment: string | null;
+}
+
+interface PlanExercise {
+  id: string;
+  sets: number;
+  reps: number;
+  weight: number | null;
+  exerciseId: string;
+  exercise: Exercise | null;
+}
+
+interface PlanDay {
+  id: string;
+  title: string;
+  order: number;
+  items: PlanExercise[];
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  days: PlanDay[];
+}
+
 // Sortable Day Card Component
 function SortableDayCard({
   dayData,
@@ -62,7 +91,7 @@ function SortableDayCard({
   updateDay,
   p,
 }: {
-  dayData: any;
+  dayData: PlanDay;
   dayName: string;
   slotIndex: number;
   onEditDay: (dayId: string) => void;
@@ -75,8 +104,8 @@ function SortableDayCard({
   editingDayId: string | null;
   editingDayTitle: string;
   onEditingDayTitleChange: (title: string) => void;
-  updateDay: any;
-  p: any;
+  updateDay: { isPending: boolean };
+  p: Plan | null | undefined;
 }) {
   const {
     attributes,
@@ -96,7 +125,7 @@ function SortableDayCard({
   };
 
   const totalSets = (dayData.items ?? []).reduce(
-    (sum: number, item: unknown) => sum + (item.sets || 0),
+    (sum: number, item) => sum + (item.sets ?? 0),
     0,
   );
 
@@ -158,7 +187,7 @@ function SortableDayCard({
                 size="sm"
                 className="h-7 px-2 text-xs"
                 onClick={() => onSaveDayTitle(dayData.id)}
-                disabled={updateDay.isPending || !editingDayTitle.trim()}
+                disabled={updateDay.isPending ?? !editingDayTitle.trim()}
               >
                 Save
               </Button>
@@ -197,7 +226,7 @@ function SortableDayCard({
         <div className="min-h-[3rem] flex-1 space-y-1.5">
           {(dayData.items ?? []).length > 0 ? (
             <>
-              {(dayData.items ?? []).slice(0, 3).map((item: any) => (
+              {(dayData.items ?? []).slice(0, 3).map((item) => (
                 <div
                   key={item.id}
                   className="text-muted-foreground flex items-center gap-2 text-sm"
@@ -372,22 +401,25 @@ export default function PlanDetailPage({
   const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
-  const [localDays, setLocalDays] = useState<any[]>([]);
+  const [localDays, setLocalDays] = useState<(PlanDay | null)[]>([]);
 
-  const p = plan.data as unknown;
+  const p = plan.data as Plan | null | undefined;
 
   // Initialize local days from plan data
   useEffect(() => {
-    if (plan.data?.days && plan.data.days.length > 0) {
+    if (p?.days && p.days.length > 0) {
       // Sort days by order
-      const sortedDays = [...plan.data.days].sort((a, b) => a.order - b.order);
+      const sortedDays = [...p.days].sort((a, b) => a.order - b.order);
 
       // Create array with 7 slots (Sunday = 0, Monday = 1, etc.)
-      const weekSlots = Array(7).fill(null);
+      const weekSlots: (PlanDay | null)[] = Array.from(
+        { length: 7 },
+        () => null,
+      );
 
       // Map days to slots: order should directly map to slot (0-6)
       // This ensures drag-and-drop positions persist correctly
-      sortedDays.forEach((day: any) => {
+      sortedDays.forEach((day) => {
         // For weekly view, order values 0-6 map directly to slots 0-6
         if (day.order >= 0 && day.order < 7) {
           const slotIndex = day.order;
@@ -457,8 +489,7 @@ export default function PlanDetailPage({
       return;
     }
 
-    const order =
-      targetSlot !== undefined ? targetSlot : (p?.days?.length ?? 0);
+    const order = targetSlot ?? p?.days?.length ?? 0;
     await addDay.mutateAsync({
       planId: id,
       title: newDayTitle || `Day ${order + 1}`,
@@ -487,7 +518,7 @@ export default function PlanDetailPage({
     // If dropping on a slot (slot index 0-6)
     if (overSlotIndex >= 0 && overSlotIndex < 7) {
       const newDays = [...localDays];
-      const activeDay = p?.days?.find((d: any) => d.id === activeDayId);
+      const activeDay = p?.days?.find((d) => d.id === activeDayId);
 
       if (!activeDay) return;
 
@@ -634,8 +665,7 @@ export default function PlanDetailPage({
   }
 
   const totalExercises =
-    p?.days?.reduce((sum: number, d: any) => sum + (d.items?.length ?? 0), 0) ??
-    0;
+    p?.days?.reduce((sum: number, d) => sum + (d.items?.length ?? 0), 0) ?? 0;
 
   return (
     <div className="flex-1 space-y-3 p-4 pt-4 sm:space-y-4 sm:p-6">
@@ -683,7 +713,7 @@ export default function PlanDetailPage({
               onChange={(e) => setPlanName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleSaveName();
+                  void handleSaveName();
                 }
               }}
               className="h-10 flex-1 sm:h-9"
@@ -733,7 +763,7 @@ export default function PlanDetailPage({
           <SortableContext
             items={localDays
               .filter((day) => day !== null)
-              .map((day) => day!.id)}
+              .map((day) => day?.id)}
             strategy={horizontalListSortingStrategy}
             disabled={false}
           >
@@ -757,7 +787,7 @@ export default function PlanDetailPage({
                       slotIndex={slotIndex}
                       onAddDay={(slot) => {
                         setNewDayTitle(`${dayName} Workout`);
-                        handleAddDay(slot);
+                        void handleAddDay(slot);
                       }}
                     />
                   );
@@ -798,8 +828,8 @@ export default function PlanDetailPage({
                 Add New Workout Day
               </DialogTitle>
               <p className="text-muted-foreground mt-2 text-sm">
-                A workout day is a collection of exercises you'll do together in
-                one session.
+                A workout day is a collection of exercises you&apos;ll do
+                together in one session.
               </p>
             </DialogHeader>
             <div className="space-y-4 pt-4">
@@ -811,14 +841,14 @@ export default function PlanDetailPage({
                   onChange={(e) => setNewDayTitle(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleAddDay();
+                      void handleAddDay();
                     }
                   }}
                   className="h-10 sm:h-9"
                 />
                 <p className="text-muted-foreground text-xs">
-                  Tip: Use descriptive names like "Push Day", "Pull Day", or day
-                  of the week.
+                  Tip: Use descriptive names like &quot;Push Day&quot;,
+                  &quot;Pull Day&quot;, or day of the week.
                 </p>
               </div>
               <Button
@@ -836,7 +866,7 @@ export default function PlanDetailPage({
         {selectedDayId &&
           (() => {
             const selectedDay = (p?.days ?? []).find(
-              (d: any) => d.id === selectedDayId,
+              (d: PlanDay) => d.id === selectedDayId,
             );
             if (!selectedDay) return null;
 
@@ -861,7 +891,7 @@ export default function PlanDetailPage({
                               }
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                  handleSaveDayTitle(selectedDay.id);
+                                  void handleSaveDayTitle(selectedDay.id);
                                 } else if (e.key === "Escape") {
                                   handleCancelEditDay();
                                 }
@@ -903,8 +933,8 @@ export default function PlanDetailPage({
                                 <span className="ml-2">
                                   •{" "}
                                   {selectedDay.items.reduce(
-                                    (sum: number, item: any) =>
-                                      sum + (item.sets ?? 0),
+                                    (sum: number, item: { sets?: number }) =>
+                                      sum + (item.sets! ?? 0),
                                     0,
                                   )}{" "}
                                   total sets
@@ -949,8 +979,8 @@ export default function PlanDetailPage({
                     {(selectedDay.items ?? []).length > 0 ? (
                       <div className="space-y-4">
                         {(selectedDay.items ?? []).map(
-                          (item: any, itemIndex: number) => (
-                            <Card key={item.id} className="border shadow-sm">
+                          (item, itemIndex: number) => (
+                            <Card key={itemIndex} className="border shadow-sm">
                               <CardContent className="space-y-4 p-5 sm:p-4">
                                 {/* Exercise Header */}
                                 <div className="flex items-start justify-between gap-3">
@@ -1158,8 +1188,8 @@ export default function PlanDetailPage({
             </p>
             <div className="max-h-[50vh] space-y-2 overflow-y-auto sm:max-h-[300px]">
               {(p?.days ?? [])
-                .filter((d: any) => d.id !== copyFromDayId)
-                .map((day: any) => (
+                .filter((d) => d.id !== copyFromDayId)
+                .map((day) => (
                   <Button
                     key={day.id}
                     variant="outline"
@@ -1181,7 +1211,7 @@ export default function PlanDetailPage({
                     </div>
                   </Button>
                 ))}
-              {(p?.days ?? []).filter((d: unknown) => d.id !== copyFromDayId)
+              {(p?.days ?? []).filter((d: PlanDay) => d.id !== copyFromDayId)
                 .length === 0 && (
                 <p className="text-muted-foreground py-6 text-center text-xs sm:py-4 sm:text-sm">
                   No other days available.
