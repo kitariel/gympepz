@@ -9,6 +9,7 @@ export const exerciseRouter = createTRPCRouter({
           q: z.string().optional(),
           muscleGroup: z.string().optional(),
           equipment: z.string().optional(),
+          difficulty: z.string().optional(),
           take: z.number().min(1).max(100).optional(),
         })
         .optional(),
@@ -17,6 +18,7 @@ export const exerciseRouter = createTRPCRouter({
       const q = input?.q?.trim();
       const mg = input?.muscleGroup?.trim();
       const eq = input?.equipment?.trim();
+      const diff = input?.difficulty?.trim();
       const take = input?.take ?? 50;
       const where: Record<string, unknown> = {};
       if (q) {
@@ -30,6 +32,7 @@ export const exerciseRouter = createTRPCRouter({
       }
       if (mg) Object.assign(where, { muscleGroup: { contains: mg, mode: "insensitive" } });
       if (eq) Object.assign(where, { equipment: { contains: eq, mode: "insensitive" } });
+      if (diff) Object.assign(where, { difficulty: { equals: diff } });
       return ctx.db.exercise.findMany({ where, orderBy: { name: "asc" }, take });
     }),
   create: publicProcedure

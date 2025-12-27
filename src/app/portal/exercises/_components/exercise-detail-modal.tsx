@@ -12,20 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dumbbell, Target, Wrench, BarChart3, Plus, Heart } from "lucide-react";
 
+import type { Exercise } from "@/types/exercise";
+
 interface ExerciseDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  exercise: {
-    id: string;
-    name: string;
-    muscleGroup: string;
-    equipment?: string;
-    difficulty?: string;
-    category?: string;
-    description?: string;
-    howTo?: string;
-    imageUrl?: string;
-  } | null;
+  exercise: Exercise | null;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   onAddToPlan?: () => void;
@@ -43,7 +35,7 @@ export function ExerciseDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
@@ -60,7 +52,7 @@ export function ExerciseDetailModal({
             </Avatar>
             <div className="flex-1">
               <DialogTitle className="text-2xl">{exercise.name}</DialogTitle>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {exercise.difficulty && (
                   <Badge variant="secondary">{exercise.difficulty}</Badge>
                 )}
@@ -75,30 +67,30 @@ export function ExerciseDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        <div className="mt-4 space-y-6">
           {/* Quick Info */}
           <div className="grid grid-cols-3 gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <Target className="text-muted-foreground h-4 w-4" />
               <div>
-                <p className="text-xs text-muted-foreground">Target</p>
+                <p className="text-muted-foreground text-xs">Target</p>
                 <p className="font-medium">{exercise.muscleGroup}</p>
               </div>
             </div>
             {exercise.equipment && (
               <div className="flex items-center gap-2 text-sm">
-                <Wrench className="h-4 w-4 text-muted-foreground" />
+                <Wrench className="text-muted-foreground h-4 w-4" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Equipment</p>
+                  <p className="text-muted-foreground text-xs">Equipment</p>
                   <p className="font-medium">{exercise.equipment}</p>
                 </div>
               </div>
             )}
             {exercise.difficulty && (
               <div className="flex items-center gap-2 text-sm">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <BarChart3 className="text-muted-foreground h-4 w-4" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Level</p>
+                  <p className="text-muted-foreground text-xs">Level</p>
                   <p className="font-medium">{exercise.difficulty}</p>
                 </div>
               </div>
@@ -110,11 +102,11 @@ export function ExerciseDetailModal({
           {/* Description */}
           {exercise.description && (
             <div>
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <h3 className="mb-2 flex items-center gap-2 font-semibold">
                 <Dumbbell className="h-4 w-4" />
                 Description
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 {exercise.description}
               </p>
             </div>
@@ -123,18 +115,21 @@ export function ExerciseDetailModal({
           {/* How To */}
           {exercise.howTo && (
             <div>
-              <h3 className="font-semibold mb-2">How To Perform</h3>
+              <h3 className="mb-2 font-semibold">How To Perform</h3>
               <div className="space-y-2">
-                {exercise.howTo.split('\n').filter(Boolean).map((step, index) => (
-                  <div key={index} className="flex gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-                      {index + 1}
+                {exercise.howTo
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((step, index) => (
+                    <div key={index} className="flex gap-3">
+                      <div className="bg-primary text-primary-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                        {index + 1}
+                      </div>
+                      <p className="text-muted-foreground pt-0.5 text-sm">
+                        {step}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground pt-0.5">
-                      {step}
-                    </p>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -147,12 +142,12 @@ export function ExerciseDetailModal({
               onClick={onToggleFavorite}
             >
               <Heart
-                className={`h-4 w-4 mr-2 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
+                className={`mr-2 h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
               />
               {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
             </Button>
             <Button className="flex-1" onClick={onAddToPlan}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Add to Plan
             </Button>
           </div>
