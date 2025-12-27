@@ -3,7 +3,14 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { Sidebar, SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarSeparator } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import {
   ProfileHeader,
@@ -23,23 +30,41 @@ export default function ProfileSidebar(props: Props) {
   const email = session?.user?.email ?? "";
 
   // API Queries
-  const userQuery = api.user.getByEmail.useQuery({ email }, { enabled: !!email });
-  const plansQuery = api.plan.listByUser.useQuery({ userId }, { enabled: !!userId });
-  const streakQuery = api.workoutLog.getStreak.useQuery({ userId }, { enabled: !!userId });
+  const userQuery = api.user.getByEmail.useQuery(
+    { email },
+    { enabled: !!email },
+  );
+  const plansQuery = api.plan.listByUser.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
+  const streakQuery = api.workoutLog.getStreak.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
   const analyticsQuery = api.workoutLog.getAnalytics.useQuery(
     { userId, startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
-  const recentWorkouts = api.workoutLog.list.useQuery({ userId, limit: 3 }, { enabled: !!userId });
-  const prsQuery = api.progress.getPRs.useQuery({ userId, limit: 3 }, { enabled: !!userId });
-  const latestProgress = api.progress.latest.useQuery({ userId }, { enabled: !!userId });
+  const recentWorkouts = api.workoutLog.list.useQuery(
+    { userId, limit: 3 },
+    { enabled: !!userId },
+  );
+  const prsQuery = api.progress.getPRs.useQuery(
+    { userId, limit: 3 },
+    { enabled: !!userId },
+  );
+  const latestProgress = api.progress.latest.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
   const calendarQuery = api.workoutLog.calendar.useQuery(
     {
       userId,
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1,
     },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
 
   // Computed values
@@ -62,11 +87,13 @@ export default function ProfileSidebar(props: Props) {
   const thisWeekProgress = useMemo(() => {
     const today = new Date();
     const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    const workoutDates = calendarQuery.data?.map((w: any) => new Date(w.date)) ?? [];
+    const workoutDates = calendarQuery.data?.map((w) => new Date(w.date)) ?? [];
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      const hasWorkout = workoutDates.some((workoutDate) => isSameDay(workoutDate, date));
+      const hasWorkout = workoutDates.some((workoutDate) =>
+        isSameDay(workoutDate, date),
+      );
       const isPast = date < today && !isSameDay(date, today);
       const isToday = isSameDay(date, today);
 
@@ -81,17 +108,18 @@ export default function ProfileSidebar(props: Props) {
     });
   }, [calendarQuery.data]);
 
-  const hasWorkouts = recentWorkouts.data?.items && recentWorkouts.data.items.length > 0;
+  const hasWorkouts =
+    recentWorkouts.data?.items && recentWorkouts.data.items.length > 0;
 
   return (
     <Sidebar
-      className="p-0 border-l"
+      className="border-l p-0"
       side="right"
       variant="inset"
       collapsible="offcanvas"
       {...props}
     >
-      <SidebarHeader className="p-0 border-b-0">
+      <SidebarHeader className="border-b-0 p-0">
         <ProfileHeader
           name={name}
           image={image}
@@ -101,25 +129,25 @@ export default function ProfileSidebar(props: Props) {
           currentStreak={streakQuery.data?.currentStreak ?? 0}
           longestStreak={streakQuery.data?.longestStreak ?? 0}
           totalVolume={analyticsQuery.data?.totalVolume ?? 0}
-          averageDuration={analyticsQuery.data?.averageDuration ?? 0}
+          averageDuration={analyticsQuery.data?.avgDuration ?? 0}
         />
       </SidebarHeader>
-      
+
       <SidebarContent className="space-y-4 py-4">
         {/* Actions */}
         <QuickActions activePlanId={activePlan?.id} />
-        
+
         <SidebarSeparator className="mx-4 opacity-50" />
 
         {/* Stats Overview */}
         <SidebarGroup className="p-0">
-          <SidebarGroupContent className="px-4 space-y-4">
+          <SidebarGroupContent className="space-y-4 px-4">
             <MonthlyStats
               workouts={stats.workouts}
               volume={analyticsQuery.data?.totalVolume ?? 0}
-              averageDuration={analyticsQuery.data?.averageDuration}
+              averageDuration={analyticsQuery.data?.avgDuration}
             />
-            
+
             <BodyStats
               weight={latestProgress.data?.weight ?? undefined}
               bodyFat={latestProgress.data?.bodyFat ?? undefined}
@@ -131,18 +159,15 @@ export default function ProfileSidebar(props: Props) {
 
         {/* Recent Activity */}
         <SidebarGroup className="p-0">
-           <SidebarGroupContent className="px-4">
-             <RecentActivity
-               workouts={
-                 (recentWorkouts.data?.items ?? [])
-                   .map(w => ({
-                     ...w,
-                     duration: w.duration ?? undefined,
-                     planDay: w.planDay ? { title: w.planDay.title } : undefined,
-                   }))
-               }
-             />
-           </SidebarGroupContent>
+          <SidebarGroupContent className="px-4">
+            <RecentActivity
+              workouts={(recentWorkouts.data?.items ?? []).map((w) => ({
+                ...w,
+                duration: w.duration ?? undefined,
+                planDay: w.planDay ? { title: w.planDay.title } : undefined,
+              }))}
+            />
+          </SidebarGroupContent>
         </SidebarGroup>
 
         {/* PRs */}
