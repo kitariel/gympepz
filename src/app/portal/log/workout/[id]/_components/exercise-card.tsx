@@ -63,8 +63,8 @@ export function ExerciseCard({
 
   return (
     <Card className={cn(
-      isDone && "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20",
-      allCompleted && !isMarkedDone && "border-green-500 bg-green-50/50 dark:bg-green-950/20"
+      isDone && "border-primary bg-primary/5",
+      allCompleted && !isMarkedDone && "border-primary bg-primary/5"
     )}>
       <CardHeader className="pb-3 sm:pb-4 md:pb-4 px-3 sm:px-4 md:px-5 pt-3 sm:pt-4 md:pt-5">
         <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
@@ -77,9 +77,9 @@ export function ExerciseCard({
                   aria-label={isMarkedDone ? "Mark as incomplete" : "Mark exercise as done"}
                 >
                   {isMarkedDone ? (
-                    <CheckCircle2 className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-teal-600 dark:text-teal-400" />
+                    <CheckCircle2 className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
                   ) : (
-                    <Circle className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
+                    <Circle className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-muted-foreground hover:text-primary transition-colors" />
                   )}
                 </button>
               )}
@@ -91,13 +91,13 @@ export function ExerciseCard({
               </CardTitle>
               <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
                 {allCompleted && !isMarkedDone && (
-                  <Badge variant="success" className="text-[10px] sm:text-xs md:text-sm">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs md:text-sm bg-primary/10 text-primary border-primary/20">
                     <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5 mr-1" />
                     Complete
                   </Badge>
                 )}
                 {isMarkedDone && (
-                  <Badge variant="secondary" className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 text-[10px] sm:text-xs md:text-sm">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs md:text-sm">
                     Done
                   </Badge>
                 )}

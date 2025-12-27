@@ -61,7 +61,9 @@ export function QuickPlanWizard({
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [planName, setPlanName] = useState("My Workout Plan");
-  const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPart | null>(null);
+  const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPart | null>(
+    null,
+  );
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [exerciseConfig, setExerciseConfig] = useState({
     sets: 3,
@@ -87,37 +89,38 @@ export function QuickPlanWizard({
   });
 
   // Filter exercises by body part
-  const filteredExercises = exercisesQuery.data?.filter((ex) => {
-    if (!selectedBodyPart) return true;
-    const muscle = ex.muscleGroup.toLowerCase();
-    if (selectedBodyPart === "Push") {
-      // Push: Chest, Shoulders, Triceps
-      return (
-        muscle.includes("chest") ||
-        muscle.includes("shoulder") ||
-        muscle.includes("triceps")
-      );
-    } else if (selectedBodyPart === "Pull") {
-      // Pull: Back, Biceps, Rear Delts
-      return (
-        muscle.includes("back") ||
-        muscle.includes("biceps") ||
-        muscle.includes("rear") ||
-        muscle === "arms" // Arms category might contain biceps
-      );
-    } else if (selectedBodyPart === "Legs") {
-      // Legs: Quads, Hamstrings, Glutes, Calves
-      return (
-        muscle.includes("leg") ||
-        muscle.includes("quad") ||
-        muscle.includes("hamstring") ||
-        muscle.includes("glute") ||
-        muscle.includes("calf") ||
-        muscle.includes("thigh")
-      );
-    }
-    return true;
-  }) ?? [];
+  const filteredExercises =
+    exercisesQuery.data?.filter((ex) => {
+      if (!selectedBodyPart) return true;
+      const muscle = ex.muscleGroup.toLowerCase();
+      if (selectedBodyPart === "Push") {
+        // Push: Chest, Shoulders, Triceps
+        return (
+          muscle.includes("chest") ||
+          muscle.includes("shoulder") ||
+          muscle.includes("triceps")
+        );
+      } else if (selectedBodyPart === "Pull") {
+        // Pull: Back, Biceps, Rear Delts
+        return (
+          muscle.includes("back") ||
+          muscle.includes("biceps") ||
+          muscle.includes("rear") ||
+          muscle === "arms" // Arms category might contain biceps
+        );
+      } else if (selectedBodyPart === "Legs") {
+        // Legs: Quads, Hamstrings, Glutes, Calves
+        return (
+          muscle.includes("leg") ||
+          muscle.includes("quad") ||
+          muscle.includes("hamstring") ||
+          muscle.includes("glute") ||
+          muscle.includes("calf") ||
+          muscle.includes("thigh")
+        );
+      }
+      return true;
+    }) ?? [];
 
   const createPlan = api.plan.create.useMutation();
   const setActive = api.plan.setActive.useMutation();
@@ -191,11 +194,14 @@ export function QuickPlanWizard({
     // If user already has a day with exercises, use that pattern
     const rotation: BodyPart[] = ["Push", "Pull", "Legs", "Push", "Pull"];
     const existingDay = days[0];
-    
+
     // Create 5 days with the rotation
     const newDays: DayPlan[] = rotation.map((bodyPart, idx) => {
       // If we have an existing day with exercises and it matches the body part, use those exercises
-      if (existingDay && existingDay.bodyPart === bodyPart && existingDay.exercises.length > 0) {
+      if (
+        existingDay?.bodyPart === bodyPart &&
+        existingDay.exercises.length > 0
+      ) {
         return {
           title: `Day ${idx + 1} - ${bodyPart}`,
           bodyPart,
@@ -257,22 +263,17 @@ export function QuickPlanWizard({
         {[1, 2, 3, 4].map((s) => (
           <div key={s} className="flex items-center gap-2">
             <div
-              className={`
-                w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                ${
-                  step >= s
-                    ? "bg-teal-600 text-white"
-                    : "bg-muted text-muted-foreground"
-                }
-              `}
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                step >= s
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              } `}
             >
               {step > s ? <CheckCircle2 className="h-4 w-4" /> : s}
             </div>
             {s < 4 && (
               <div
-                className={`w-12 h-0.5 ${
-                  step > s ? "bg-teal-600" : "bg-muted"
-                }`}
+                className={`h-0.5 w-12 ${step > s ? "bg-primary" : "bg-muted"}`}
               />
             )}
           </div>
@@ -286,25 +287,25 @@ export function QuickPlanWizard({
             <CardTitle>Select Body Part Focus</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Choose which muscle groups you want to train today
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {BODY_PARTS.map((bodyPart) => (
                 <Card
                   key={bodyPart}
-                  className="cursor-pointer hover:shadow-md transition-all border-2 hover:border-teal-500"
+                  className="hover:border-primary cursor-pointer border-2 transition-all hover:shadow-md"
                   onClick={() => handleSelectBodyPart(bodyPart)}
                 >
-                  <CardContent className="p-6 text-center space-y-2">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-teal-100 dark:bg-teal-900/20 flex items-center justify-center">
-                      <Target className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+                  <CardContent className="space-y-2 p-6 text-center">
+                    <div className="bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+                      <Target className="text-primary h-8 w-8" />
                     </div>
-                    <h3 className="font-semibold text-lg">{bodyPart}</h3>
-                    <p className="text-xs text-muted-foreground">
+                    <h3 className="text-lg font-semibold">{bodyPart}</h3>
+                    <p className="text-muted-foreground text-xs">
                       {BODY_PART_DESCRIPTIONS[bodyPart]}
                     </p>
-                    <ArrowRight className="h-4 w-4 mx-auto mt-2 text-teal-600" />
+                    <ArrowRight className="text-primary mx-auto mt-2 h-4 w-4" />
                   </CardContent>
                 </Card>
               ))}
@@ -325,7 +326,7 @@ export function QuickPlanWizard({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>{selectedBodyPart} Day Exercises</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-sm">
                   {BODY_PART_DESCRIPTIONS[selectedBodyPart]}
                 </p>
               </div>
@@ -334,26 +335,28 @@ export function QuickPlanWizard({
                 size="sm"
                 onClick={() => setIsExerciseDialogOpen(true)}
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Exercise
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {days[currentDayIndex]?.exercises.length > 0 ? (
+            {days?.[currentDayIndex]?.exercises?.length ? (
               <div className="space-y-2">
-                {days[currentDayIndex].exercises.map((ex, idx) => {
+                {days?.[currentDayIndex]?.exercises.map((ex, idx) => {
                   const exercise = exercisesQuery.data?.find(
-                    (e) => e.id === ex.exerciseId
+                    (e) => e.id === ex.exerciseId,
                   );
                   return (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      className="flex items-center justify-between rounded-lg border p-3"
                     >
                       <div>
-                        <p className="font-medium">{exercise?.name ?? "Exercise"}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-medium">
+                          {exercise?.name ?? "Exercise"}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
                           {ex.sets} sets × {ex.reps} reps
                           {ex.weight && ` @ ${ex.weight}kg`}
                         </p>
@@ -363,10 +366,13 @@ export function QuickPlanWizard({
                         size="icon"
                         onClick={() => {
                           const updatedDays = [...days];
-                          updatedDays[currentDayIndex].exercises =
-                            updatedDays[currentDayIndex].exercises.filter(
-                              (_, i) => i !== idx
-                            );
+                          updatedDays[currentDayIndex]!.exercises =
+                            updatedDays?.[currentDayIndex]?.exercises?.filter(
+                              (_, i) => i !== idx,
+                            ) ?? [];
+                          // updatedDays?.[currentDayIndex]?.exercises.filter(
+                          //   (_, i) => i !== idx,
+                          // );
                           setDays(updatedDays);
                         }}
                       >
@@ -377,18 +383,18 @@ export function QuickPlanWizard({
                 })}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Dumbbell className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <div className="text-muted-foreground py-8 text-center">
+                <Dumbbell className="mx-auto mb-3 h-12 w-12 opacity-50" />
                 <p>No exercises added yet</p>
-                <p className="text-xs mt-1">
-                  Click "Add Exercise" to get started
+                <p className="mt-1 text-xs">
+                  Click &quot;Add Exercise&quot; to get started
                 </p>
               </div>
             )}
 
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(1)}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
               <div className="flex gap-2">
@@ -397,7 +403,7 @@ export function QuickPlanWizard({
                   onClick={() => setIsExerciseDialogOpen(true)}
                   disabled={!selectedBodyPart}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Add More Exercises
                 </Button>
                 <Button
@@ -408,7 +414,7 @@ export function QuickPlanWizard({
                   }
                 >
                   Continue
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -423,33 +429,34 @@ export function QuickPlanWizard({
             <CardTitle>Add More Days?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              You've created {days.length} workout day{days.length !== 1 ? "s" : ""}.
-              Would you like to add more days or auto-generate a full week?
+            <p className="text-muted-foreground text-sm">
+              You&apos;ve created {days.length} workout day
+              {days.length !== 1 ? "s" : ""}. Would you like to add more days or
+              auto-generate a full week?
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card
-                className="cursor-pointer hover:shadow-md transition-all border-2"
+                className="cursor-pointer border-2 transition-all hover:shadow-md"
                 onClick={handleAddAnotherDay}
               >
-                <CardContent className="p-6 text-center space-y-2">
-                  <Plus className="h-8 w-8 mx-auto text-teal-600" />
+                <CardContent className="space-y-2 p-6 text-center">
+                  <Plus className="mx-auto h-8 w-8 text-teal-600" />
                   <h3 className="font-semibold">Add Another Day</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Manually add more workout days
                   </p>
                 </CardContent>
               </Card>
 
               <Card
-                className="cursor-pointer hover:shadow-md transition-all border-2"
+                className="cursor-pointer border-2 transition-all hover:shadow-md"
                 onClick={handleAutoGenerate5Days}
               >
-                <CardContent className="p-6 text-center space-y-2">
-                  <Zap className="h-8 w-8 mx-auto text-purple-600" />
+                <CardContent className="space-y-2 p-6 text-center">
+                  <Zap className="mx-auto h-8 w-8 text-purple-600" />
                   <h3 className="font-semibold">Auto-Generate 5 Days</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Create Push/Pull/Legs rotation
                   </p>
                 </CardContent>
@@ -458,12 +465,12 @@ export function QuickPlanWizard({
 
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(2)}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
               <Button onClick={() => setStep(4)}>
                 Finish Setup
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </CardContent>
@@ -487,7 +494,7 @@ export function QuickPlanWizard({
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-sm">
+              <h4 className="text-sm font-semibold">
                 Workout Days ({days.length}):
               </h4>
               {days.map((day, idx) => (
@@ -496,7 +503,8 @@ export function QuickPlanWizard({
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm">{day.title}</CardTitle>
                       <Badge variant="secondary" className="text-xs">
-                        {day.exercises.length} exercise{day.exercises.length !== 1 ? "s" : ""}
+                        {day.exercises.length} exercise
+                        {day.exercises.length !== 1 ? "s" : ""}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -505,19 +513,22 @@ export function QuickPlanWizard({
                       {day.exercises.length > 0 ? (
                         day.exercises.map((ex, exIdx) => {
                           const exercise = exercisesQuery.data?.find(
-                            (e) => e.id === ex.exerciseId
+                            (e) => e.id === ex.exerciseId,
                           );
                           return (
                             <div
                               key={exIdx}
-                              className="flex items-center justify-between text-sm py-1.5 border-b last:border-0"
+                              className="flex items-center justify-between border-b py-1.5 text-sm last:border-0"
                             >
                               <div>
                                 <span className="font-medium">
                                   {exercise?.name ?? "Exercise"}
                                 </span>
                                 {exercise?.muscleGroup && (
-                                  <Badge variant="outline" className="text-[9px] ml-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="ml-2 text-[9px]"
+                                  >
                                     {exercise.muscleGroup}
                                   </Badge>
                                 )}
@@ -530,7 +541,7 @@ export function QuickPlanWizard({
                           );
                         })
                       ) : (
-                        <p className="text-xs text-muted-foreground italic">
+                        <p className="text-muted-foreground text-xs italic">
                           No exercises yet - you can add them later
                         </p>
                       )}
@@ -542,7 +553,7 @@ export function QuickPlanWizard({
 
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(3)}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
               <Button
@@ -558,14 +569,17 @@ export function QuickPlanWizard({
       )}
 
       {/* Exercise Selection Dialog */}
-      <Dialog open={isExerciseDialogOpen} onOpenChange={setIsExerciseDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <Dialog
+        open={isExerciseDialogOpen}
+        onOpenChange={setIsExerciseDialogOpen}
+      >
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Select Exercise</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search exercises..."
                 value={searchQuery}
@@ -575,16 +589,17 @@ export function QuickPlanWizard({
             </div>
 
             {selectedExercise ? (
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">
                       {
-                        exercisesQuery.data?.find((e) => e.id === selectedExercise)
-                          ?.name
+                        exercisesQuery.data?.find(
+                          (e) => e.id === selectedExercise,
+                        )?.name
                       }
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       Configure sets, reps, and weight
                     </p>
                   </div>
@@ -671,29 +686,32 @@ export function QuickPlanWizard({
             ) : (
               <>
                 {filteredExercises.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Dumbbell className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <div className="text-muted-foreground py-8 text-center">
+                    <Dumbbell className="mx-auto mb-3 h-12 w-12 opacity-50" />
                     <p>No exercises found</p>
-                    <p className="text-xs mt-1">
+                    <p className="mt-1 text-xs">
                       Try adjusting your search or select a different body part
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
+                  <div className="grid max-h-[400px] grid-cols-2 gap-3 overflow-y-auto md:grid-cols-3">
                     {filteredExercises.map((ex) => (
                       <Card
                         key={ex.id}
-                        className="cursor-pointer hover:shadow-md transition-all"
+                        className="cursor-pointer transition-all hover:shadow-md"
                         onClick={() => setSelectedExercise(ex.id)}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-2">
-                            <Dumbbell className="h-4 w-4 text-teal-600 mt-0.5 shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
+                            <Dumbbell className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">
                                 {ex.name}
                               </p>
-                              <Badge variant="outline" className="text-[9px] mt-1">
+                              <Badge
+                                variant="outline"
+                                className="mt-1 text-[9px]"
+                              >
                                 {ex.muscleGroup}
                               </Badge>
                             </div>

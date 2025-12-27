@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarSeparator } from "@/components/ui/sidebar";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import {
   ProfileHeader,
@@ -11,6 +11,7 @@ import {
   RecentPRs,
   RecentActivity,
   BodyStats,
+  MonthlyStats,
   EmptyState,
 } from "./profile_parts";
 
@@ -84,14 +85,13 @@ export default function ProfileSidebar(props: Props) {
 
   return (
     <Sidebar
-      className="p-0"
+      className="p-0 border-l"
       side="right"
       variant="inset"
       collapsible="offcanvas"
       {...props}
     >
-      <SidebarHeader>
-        {/* Integrated Profile Header with Weekly Streak */}
+      <SidebarHeader className="p-0 border-b-0">
         <ProfileHeader
           name={name}
           image={image}
@@ -104,43 +104,62 @@ export default function ProfileSidebar(props: Props) {
           averageDuration={analyticsQuery.data?.averageDuration ?? 0}
         />
       </SidebarHeader>
-      <SidebarContent className="p-2 space-y-2 overflow-y-auto">
+      
+      <SidebarContent className="space-y-4 py-4">
+        {/* Actions */}
+        <QuickActions activePlanId={activePlan?.id} />
+        
+        <SidebarSeparator className="mx-4 opacity-50" />
 
+        {/* Stats Overview */}
+        <SidebarGroup className="p-0">
+          <SidebarGroupContent className="px-4 space-y-4">
+            <MonthlyStats
+              workouts={stats.workouts}
+              volume={analyticsQuery.data?.totalVolume ?? 0}
+              averageDuration={analyticsQuery.data?.averageDuration}
+            />
+            
+            <BodyStats
+              weight={latestProgress.data?.weight ?? undefined}
+              bodyFat={latestProgress.data?.bodyFat ?? undefined}
+            />
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-
-        {/* Quick Actions with Monthly Stats */}
-        <QuickActions
-          activePlanId={activePlan?.id}
-          workouts={stats.workouts}
-          volume={analyticsQuery.data?.totalVolume ?? 0}
-          averageDuration={analyticsQuery.data?.averageDuration}
-        />
-
-        {/* Recent PRs */}
-        <RecentPRs prs={prsQuery.data ?? []} />
+        <SidebarSeparator className="mx-4 opacity-50" />
 
         {/* Recent Activity */}
-        <RecentActivity
-          workouts={
-            (recentWorkouts.data?.items ?? [])
-              .map(w => ({
-                ...w,
-                duration: w.duration ?? undefined, // ensure `duration: number | undefined`
-                planDay: w.planDay ? { title: w.planDay.title } : undefined,
-              }))
-          }
-        />
-          
-        
+        <SidebarGroup className="p-0">
+           <SidebarGroupContent className="px-4">
+             <RecentActivity
+               workouts={
+                 (recentWorkouts.data?.items ?? [])
+                   .map(w => ({
+                     ...w,
+                     duration: w.duration ?? undefined,
+                     planDay: w.planDay ? { title: w.planDay.title } : undefined,
+                   }))
+               }
+             />
+           </SidebarGroupContent>
+        </SidebarGroup>
 
-        {/* Body Stats */}
-        <BodyStats
-          weight={latestProgress.data?.weight ?? undefined}
-          bodyFat={latestProgress.data?.bodyFat ?? undefined}
-        />
+        {/* PRs */}
+        {stats.prs > 0 && (
+          <SidebarGroup className="p-0">
+            <SidebarGroupContent className="px-4">
+              <RecentPRs prs={prsQuery.data ?? []} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        {/* Empty State for New Users */}
-        {!hasWorkouts && <EmptyState />}
+        {/* Empty State */}
+        {!hasWorkouts && (
+          <div className="px-4">
+            <EmptyState />
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );

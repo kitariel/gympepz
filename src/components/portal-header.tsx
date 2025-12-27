@@ -59,11 +59,15 @@ export function PortalHeader() {
   const email = session?.user?.email ?? "";
   const userQuery = api.user.getByEmail.useQuery(
     { email },
-    { enabled: !!email }
+    { enabled: !!email },
   );
-  const user = userQuery.data as { name?: string | null; image?: string | null } | null;
+  const user = userQuery.data as {
+    name?: string | null;
+    image?: string | null;
+  } | null;
 
-  const name = user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
+  const name =
+    user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
   const avatarSrc = user?.image ?? session?.user?.image ?? undefined;
 
   const initials = useMemo(() => {
@@ -78,12 +82,12 @@ export function PortalHeader() {
     const paths = pathname.split("/").filter(Boolean);
     return paths.map((path, index) => {
       const href = "/" + paths.slice(0, index + 1).join("/");
-      
+
       // Check route labels first
       if (routeLabels[href]) {
-        return { label: routeLabels[href]!, href };
+        return { label: routeLabels[href], href };
       }
-      
+
       // Handle dynamic routes (UUIDs)
       const isDynamicRoute = /^[a-z0-9-]{20,}$/.test(path);
       if (isDynamicRoute) {
@@ -92,9 +96,10 @@ export function PortalHeader() {
         if (href.includes("/log/")) return { label: "Log Details", href };
         return { label: "Details", href };
       }
-      
+
       // Format path as label
-      const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+      const label =
+        path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       return { label, href };
     });
   }, [pathname]);
@@ -102,17 +107,17 @@ export function PortalHeader() {
   const userId = session?.user?.id ?? "";
   const activePlan = api.plan.listByUser.useQuery(
     { userId },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
   const activePlanData = activePlan.data?.find((p) => p.isActive);
-  
+
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
-  
+
   const [showWarningDialog, setShowWarningDialog] = useState(false);
-  
+
   const quickStart = api.workoutLog.quickStart.useMutation({
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
@@ -122,12 +127,12 @@ export function PortalHeader() {
       router.push("/portal/log");
       return;
     }
-    
+
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setShowWarningDialog(true);
       return;
     }
-    
+
     quickStart.mutate({ userId });
   };
 
@@ -141,12 +146,12 @@ export function PortalHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 rounded-t-xl">
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 rounded-t-xl border-b px-4 backdrop-blur">
       {/* Sidebar Trigger */}
       <SidebarTrigger className="h-8 w-8" />
 
       {/* Breadcrumbs - Desktop */}
-      <Breadcrumb className="hidden md:flex flex-1">
+      <Breadcrumb className="hidden flex-1 md:flex">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
@@ -181,8 +186,8 @@ export function PortalHeader() {
       </Breadcrumb>
 
       {/* Page Title - Mobile */}
-      <div className="md:hidden flex-1">
-        <h1 className="text-sm font-semibold truncate">
+      <div className="flex-1 md:hidden">
+        <h1 className="truncate text-sm font-semibold">
           {breadcrumbs.length > 0
             ? breadcrumbs[breadcrumbs.length - 1]?.label
             : "Dashboard"}
@@ -190,14 +195,14 @@ export function PortalHeader() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         {/* Quick Start Workout Button */}
         {activePlanData && (
           <Button
             size="sm"
             onClick={handleQuickStart}
             disabled={quickStart.isPending}
-            className="h-8 gap-1.5 bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-xs"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
           >
             <Play className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
@@ -231,15 +236,10 @@ export function PortalHeader() {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-8 p-0 rounded-full"
-            >
+            <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={avatarSrc} alt={name || "User avatar"} />
-                <AvatarFallback className="text-xs">
-                  {initials}
-                </AvatarFallback>
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
@@ -253,9 +253,9 @@ export function PortalHeader() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span className="text-sm font-medium truncate">{name}</span>
+                  <span className="truncate text-sm font-medium">{name}</span>
                   {email && (
-                    <span className="text-xs text-muted-foreground truncate">
+                    <span className="text-muted-foreground truncate text-xs">
                       {email}
                     </span>
                   )}
@@ -265,22 +265,22 @@ export function PortalHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/portal/account" className="cursor-pointer">
-                <User className="h-4 w-4 mr-2" />
+                <User className="mr-2 h-4 w-4" />
                 Account
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/portal/account" className="cursor-pointer">
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => void signOut()}
-              className="cursor-pointer text-destructive focus:text-destructive"
+              className="text-destructive focus:text-destructive cursor-pointer"
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

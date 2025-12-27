@@ -31,7 +31,12 @@ export default function AIPlannerPage() {
     }
   }, []);
 
-  const handleOnboardingComplete = (data: any) => {
+  const handleOnboardingComplete = (data: {
+    goal: string;
+    experience: "Beginner" | "Intermediate" | "Advanced";
+    equipment: "Full Gym" | "Dumbbells" | "Home Setup" | "Hybrid";
+    days: number;
+  }) => {
     setInitialData(data);
     setShowOnboarding(false);
     setHasSeenOnboarding(true);
@@ -56,16 +61,18 @@ export default function AIPlannerPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 pt-4">
+    <div className="flex flex-1 flex-col p-4 pt-4 sm:p-6">
       {/* Header */}
       <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/30">
-            <Sparkles className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+        <div className="mb-2 flex items-center gap-3">
+          <div className="bg-primary/10 rounded-lg p-2">
+            <Sparkles className="text-primary h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">AI Workout Planner</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              AI Workout Planner
+            </h2>
+            <p className="text-muted-foreground mt-0.5 text-sm">
               Chat with AI to create personalized workout plans
             </p>
           </div>
@@ -89,7 +96,7 @@ export default function AIPlannerPage() {
       </div>
 
       {/* Chat Interface */}
-      <div className="flex-1 min-h-0 border rounded-lg bg-card">
+      <div className="bg-card min-h-0 flex-1 rounded-lg border">
         <WorkoutChat
           userId={userId}
           goal={initialData?.goal ?? ""}

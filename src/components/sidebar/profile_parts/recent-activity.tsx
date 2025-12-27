@@ -34,48 +34,49 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
     <Card className="border-0 shadow-sm">
       <CardContent className="p-3">
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between mb-1.5">
-            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Dumbbell className="h-3.5 w-3.5 text-teal-600" />
+          <div className="mb-1.5 flex items-center justify-between">
+            <h4 className="text-foreground flex items-center gap-1.5 text-xs font-semibold">
+              <Dumbbell className="text-primary h-3.5 w-3.5" />
               Recent Activity
             </h4>
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-0 text-[10px] text-primary hover:text-primary/80"
+              className="text-primary hover:text-primary/80 h-auto p-0 text-[10px]"
               onClick={() => router.push("/portal/log?tab=workouts")}
             >
               View All
-              <ChevronRight className="h-3 w-3 ml-0.5" />
+              <ChevronRight className="ml-0.5 h-3 w-3" />
             </Button>
           </div>
-          
+
           <div className="space-y-1">
             {workouts.map((workout) => (
               <div
                 key={workout.id}
-                className="flex items-center gap-1.5 p-1.5 rounded-lg bg-gradient-to-r from-teal-50/50 to-emerald-50/50 dark:from-teal-950/20 dark:to-emerald-950/20 hover:from-teal-100/70 hover:to-emerald-100/70 dark:hover:from-teal-950/30 dark:hover:to-emerald-950/30 transition-all cursor-pointer group"
+                className="bg-primary/5 hover:bg-primary/10 group flex cursor-pointer items-center gap-1.5 rounded-lg p-1.5 transition-all"
                 onClick={() => router.push(`/portal/log/workout/${workout.id}`)}
               >
-                <div className="p-1 rounded-full bg-teal-100 dark:bg-teal-900/30 shrink-0 group-hover:scale-110 transition-transform">
-                  <Dumbbell className="h-2.5 w-2.5 text-teal-600 dark:text-teal-400" />
+                <div className="bg-primary/10 shrink-0 rounded-full p-1 transition-transform group-hover:scale-110">
+                  <Dumbbell className="text-primary h-2.5 w-2.5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-foreground truncate">
+                <div className="min-w-0 flex-1">
+                  <div className="text-foreground truncate text-xs font-semibold">
                     {workout.planDay?.title ?? "Workout"}
                   </div>
-                  <div className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[9px]">
                     <span>
                       {formatDistanceToNow(new Date(workout.date), {
                         addSuffix: true,
                       })}
                     </span>
-                    {workout._count?.exercises && workout._count.exercises > 0 && (
-                      <>
-                        <span>•</span>
-                        <span>{workout._count.exercises} ex</span>
-                      </>
-                    )}
+                    {workout._count?.exercises &&
+                      workout._count.exercises > 0 && (
+                        <>
+                          <span>•</span>
+                          <span>{workout._count.exercises} ex</span>
+                        </>
+                      )}
                     {workout.duration && (
                       <>
                         <span>•</span>
@@ -85,7 +86,7 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
                   </div>
                 </div>
                 {workout.completed && (
-                  <CheckCircle2 className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <CheckCircle2 className="text-primary h-3 w-3 shrink-0 transition-transform group-hover:scale-110" />
                 )}
               </div>
             ))}

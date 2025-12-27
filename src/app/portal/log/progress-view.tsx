@@ -30,7 +30,7 @@ export function ProgressView() {
       setWeight("");
       setBodyFat("");
       setNotes("");
-      utils.progress.list.invalidate();
+      void utils.progress.list.invalidate();
     },
   });
 
@@ -115,7 +115,7 @@ export function ProgressView() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Scale className="h-4 w-4 text-teal-600" />
+              <Scale className="h-4 w-4 text-primary" />
               Weight History
             </CardTitle>
           </CardHeader>
@@ -126,8 +126,14 @@ export function ProgressView() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                   <YAxis domain={["auto", "auto"]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -141,7 +147,7 @@ export function ProgressView() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Percent className="h-4 w-4 text-purple-600" />
+              <Percent className="h-4 w-4 text-secondary-foreground" />
               Body Fat %
             </CardTitle>
           </CardHeader>
@@ -152,8 +158,14 @@ export function ProgressView() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                   <YAxis domain={["auto", "auto"]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="bodyFat" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <Line type="monotone" dataKey="bodyFat" stroke="hsl(var(--secondary-foreground))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

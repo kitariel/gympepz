@@ -19,16 +19,16 @@ export function BodyStats({ weight, bodyFat }: BodyStatsProps) {
 
   return (
     <Card className="border-0 shadow-sm">
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-center justify-between mb-1.5">
-          <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+      <CardContent className="space-y-2 p-3">
+        <div className="mb-1.5 flex items-center justify-between">
+          <h4 className="text-foreground flex items-center gap-1.5 text-xs font-semibold">
             <TrendingUp className="h-3.5 w-3.5 text-teal-600" />
             Body Stats
           </h4>
           <Button
             variant="ghost"
             size="sm"
-            className="h-auto p-0 text-[10px] text-primary hover:text-primary/80"
+            className="text-primary hover:text-primary/80 h-auto p-0 text-[10px]"
             onClick={() => router.push("/portal/log?tab=progress")}
           >
             Update
@@ -36,27 +36,25 @@ export function BodyStats({ weight, bodyFat }: BodyStatsProps) {
         </div>
 
         {/* Stats - Compact Inline */}
-        <div className="flex items-center justify-between bg-gradient-to-r from-teal-50/50 to-emerald-50/50 dark:from-teal-950/20 dark:to-emerald-950/20 rounded-lg px-2 py-1.5 gap-2">
-          <div className="flex items-center gap-1.5 flex-1">
-            <Scale className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
+        <div className="bg-primary/5 flex items-center justify-between gap-2 rounded-lg px-2 py-1.5">
+          <div className="flex flex-1 items-center gap-1.5">
+            <Scale className="text-primary h-3 w-3 shrink-0" />
             <div className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-teal-700 dark:text-teal-400">
-                {weight}
-              </span>
-              <span className="text-[8px] text-muted-foreground">kg</span>
+              <span className="text-primary text-sm font-bold">{weight}</span>
+              <span className="text-muted-foreground text-[8px]">kg</span>
             </div>
           </div>
-          
+
           {bodyFat && (
             <>
-              <div className="h-3 w-px bg-teal-200 dark:bg-teal-800" />
-              <div className="flex items-center gap-1.5 flex-1">
-                <Percent className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
+              <div className="bg-primary/20 h-3 w-px" />
+              <div className="flex flex-1 items-center gap-1.5">
+                <Percent className="text-primary h-3 w-3 shrink-0" />
                 <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-teal-700 dark:text-teal-400">
+                  <span className="text-primary text-sm font-bold">
                     {bodyFat}
                   </span>
-                  <span className="text-[8px] text-muted-foreground">%</span>
+                  <span className="text-muted-foreground text-[8px]">%</span>
                 </div>
               </div>
             </>

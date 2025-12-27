@@ -20,7 +20,7 @@ import {
   Play,
   Target,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import {
   Dialog,
@@ -74,19 +74,50 @@ export function WorkoutLogList() {
     { enabled: !!userId },
   );
 
-  const handlePlanChange = (val: string) => {
-    setSelectedPlanId(val);
-    setSelectedPlanDayId("");
-  };
-
   const logs = api.workoutLog.list.useQuery(
     { userId, limit: 20 },
     { enabled: !!userId },
   );
-  const plans = api.plan.listByUser.useQuery(
-    { userId },
-    { enabled: !!userId && isOpen },
-  );
+
+  // Always fetch plans to determine active plan for "Next Up"
+  const plans = api.plan.listByUser.useQuery({ userId }, { enabled: !!userId });
+
+  const activePlan = plans.data?.find((p) => p.isActive);
+
+  // Logic to find next workout
+  const nextDay = useMemo(() => {
+    if (!activePlan || !logs.data) return null;
+
+    // Get all day IDs for the active plan
+    const activePlanDayIds = new Set(activePlan.days.map((d) => d.id));
+
+    // Find last COMPLETED log for this plan
+    const lastLogForPlan = logs.data.items.find(
+      (log) =>
+        log.planDayId && activePlanDayIds.has(log.planDayId) && log.completed,
+    );
+
+    const sortedDays = [...activePlan.days].sort((a, b) => a.order - b.order);
+
+    if (!lastLogForPlan) {
+      return sortedDays[0];
+    }
+
+    // Find the day object for the last log to get its order
+    const lastDay = activePlan.days.find(
+      (d) => d.id === lastLogForPlan.planDayId,
+    );
+    const lastOrder = lastDay?.order ?? -1;
+
+    const next = sortedDays.find((d) => d.order > lastOrder);
+
+    return next ?? sortedDays[0];
+  }, [activePlan, logs.data]);
+
+  const handlePlanChange = (val: string) => {
+    setSelectedPlanId(val);
+    setSelectedPlanDayId("");
+  };
   const createLog = api.workoutLog.create.useMutation({
     onSuccess: (log) => {
       setIsOpen(false);
@@ -188,8 +219,7 @@ export function WorkoutLogList() {
         type: "done" as const,
         label: "Done",
         icon: CheckCircle2,
-        color:
-          "bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400",
+        color: "bg-primary/10 text-primary border-primary/20",
       };
     }
 
@@ -199,8 +229,7 @@ export function WorkoutLogList() {
         type: "in_progress" as const,
         label: "In Workout",
         icon: PlayCircle,
-        color:
-          "bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400",
+        color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
       };
     }
 
@@ -210,8 +239,7 @@ export function WorkoutLogList() {
         type: "skipped" as const,
         label: "Skipped",
         icon: XCircle,
-        color:
-          "bg-orange-100 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400",
+        color: "bg-muted text-muted-foreground border-transparent",
       };
     }
 
@@ -220,8 +248,61 @@ export function WorkoutLogList() {
 
   const selectedPlan = plans.data?.find((p) => p.id === selectedPlanId);
 
+  // Set default selection when dialog opens
+  if (isOpen && !selectedPlanId && activePlan) {
+    setSelectedPlanId(activePlan.id);
+    if (nextDay) {
+      setSelectedPlanDayId(nextDay.id);
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* Next Workout Card */}
+      {activePlan && nextDay && (
+        <Card className="bg-primary/5 border-primary/20 shadow-sm">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="bg-background text-primary border-primary/30"
+                >
+                  Next Up
+                </Badge>
+                <span className="text-muted-foreground text-xs">
+                  From: {activePlan.name}
+                </span>
+              </div>
+            </div>
+            <CardTitle className="mt-2 flex items-center gap-2 text-lg">
+              {nextDay.title}
+              <Target className="text-primary h-4 w-4" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <Button
+              onClick={async () => {
+                if (recentWorkoutCheck.data?.hasRecentWorkout) {
+                  setShowWarningDialog(true);
+                  return;
+                }
+                await createLog.mutateAsync({
+                  userId,
+                  planDayId: nextDay.id,
+                  date: new Date(),
+                });
+              }}
+              className="w-full gap-2 sm:w-auto"
+              disabled={createLog.isPending}
+            >
+              <Play className="h-4 w-4" />
+              {createLog.isPending ? "Starting..." : "Start This Workout"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight">Workouts</h2>
@@ -315,7 +396,8 @@ export function WorkoutLogList() {
           return (
             <Card
               key={log.id}
-              className="hover:bg-accent/50 border-0 shadow-sm transition-all"
+              className="hover:bg-accent/50 cursor-pointer border-0 shadow-sm transition-all"
+              onClick={() => router.push(`/portal/log/workout/${log.id}`)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2">

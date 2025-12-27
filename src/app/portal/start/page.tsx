@@ -3,7 +3,13 @@
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,13 +36,13 @@ export default function StartWorkoutPage() {
   // Get today's workout
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
 
   // Check for recent completed workout
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
 
   const quickStart = api.workoutLog.quickStart.useMutation({
@@ -45,12 +51,12 @@ export default function StartWorkoutPage() {
 
   const handleStartWorkout = () => {
     if (!userId) return;
-    
+
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setShowWarningDialog(true);
       return;
     }
-    
+
     quickStart.mutate({ userId });
   };
 
@@ -62,9 +68,9 @@ export default function StartWorkoutPage() {
   // Loading state
   if (todaysWorkout.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Dumbbell className="h-12 w-12 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <Dumbbell className="text-muted-foreground mx-auto mb-4 h-12 w-12 animate-spin" />
           <p className="text-muted-foreground">Loading your workout...</p>
         </div>
       </div>
@@ -78,8 +84,8 @@ export default function StartWorkoutPage() {
     // Show quick wizard if user chose manual builder
     if (showQuickWizard) {
       return (
-        <div className="container max-w-4xl mx-auto p-6">
-          <div className="text-center space-y-2 mb-6">
+        <div className="container mx-auto max-w-4xl p-6">
+          <div className="mb-6 space-y-2 text-center">
             <h1 className="text-2xl font-bold">Quick Plan Builder</h1>
             <p className="text-muted-foreground text-sm">
               Build your workout plan in minutes
@@ -98,8 +104,8 @@ export default function StartWorkoutPage() {
     }
 
     return (
-      <div className="container max-w-4xl mx-auto p-6 space-y-6">
-        <div className="text-center space-y-2 mb-8">
+      <div className="container mx-auto max-w-4xl space-y-6 p-6">
+        <div className="mb-8 space-y-2 text-center">
           <h1 className="text-3xl font-bold">Start Working Out</h1>
           <p className="text-muted-foreground">
             Create a workout plan to get started
@@ -108,22 +114,23 @@ export default function StartWorkoutPage() {
 
         {!showPlanChoices ? (
           <Card className="border-2 border-dashed">
-            <CardContent className="pt-16 pb-16 text-center space-y-6 px-6">
-              <div className="mx-auto w-20 h-20 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                <Target className="h-10 w-10 text-teal-600 dark:text-teal-400" />
+            <CardContent className="space-y-6 px-6 pt-16 pb-16 text-center">
+              <div className="bg-primary/10 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
+                <Target className="text-primary h-10 w-10" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold">
                   No Workout Plan Found
                 </h2>
-                <p className="text-muted-foreground max-w-md mx-auto text-sm">
-                  Create a workout plan to get started. Choose how you'd like to build your plan.
+                <p className="text-muted-foreground mx-auto max-w-md text-sm">
+                  Create a workout plan to get started. Choose how you'd like to
+                  build your plan.
                 </p>
               </div>
               <Button
                 size="lg"
                 onClick={() => setShowPlanChoices(true)}
-                className="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 h-12 text-base"
+                className="bg-primary hover:bg-primary/90 h-12 text-base"
               >
                 Create Workout Plan
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -131,15 +138,15 @@ export default function StartWorkoutPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card 
-              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-blue-500/50 group"
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card
+              className="hover:border-primary/50 group cursor-pointer border-2 border-transparent transition-all duration-200 hover:shadow-lg"
               onClick={() => setShowQuickWizard(true)}
             >
               <CardHeader className="px-6 pt-6 pb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl group-hover:scale-110 transition-transform duration-200">
-                    <Dumbbell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="mb-2 flex items-center gap-3">
+                  <div className="bg-primary/10 rounded-xl p-3 transition-transform duration-200 group-hover:scale-110">
+                    <Dumbbell className="text-primary h-6 w-6" />
                   </div>
                   <div>
                     <CardTitle className="text-xl">Manual Builder</CardTitle>
@@ -150,22 +157,22 @@ export default function StartWorkoutPage() {
                 </div>
               </CardHeader>
               <CardContent className="px-6 pb-6">
-                <ul className="space-y-3 text-sm text-muted-foreground mb-6">
+                <ul className="text-muted-foreground mb-6 space-y-3 text-sm">
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>Select day and body part (Push/Pull/Legs)</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>Choose exercises from the library</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>Set sets, reps, and weight</span>
                   </li>
                 </ul>
-                <Button 
-                  className="w-full h-11 text-base font-semibold"
+                <Button
+                  className="h-11 w-full text-base font-semibold"
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -177,14 +184,14 @@ export default function StartWorkoutPage() {
               </CardContent>
             </Card>
 
-            <Card 
-              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-purple-500/50 group"
+            <Card
+              className="hover:border-primary/50 group cursor-pointer border-2 border-transparent transition-all duration-200 hover:shadow-lg"
               onClick={() => router.push("/portal/ai-planner")}
             >
               <CardHeader className="px-6 pt-6 pb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl group-hover:scale-110 transition-transform duration-200">
-                    <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="mb-2 flex items-center gap-3">
+                  <div className="bg-primary/10 rounded-xl p-3 transition-transform duration-200 group-hover:scale-110">
+                    <Sparkles className="text-primary h-6 w-6" />
                   </div>
                   <div>
                     <CardTitle className="text-xl">AI Planner</CardTitle>
@@ -195,22 +202,22 @@ export default function StartWorkoutPage() {
                 </div>
               </CardHeader>
               <CardContent className="px-6 pb-6">
-                <ul className="space-y-3 text-sm text-muted-foreground mb-6">
+                <ul className="text-muted-foreground mb-6 space-y-3 text-sm">
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>Select your fitness goals</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>Choose experience level and equipment</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 mt-0.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <ArrowRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <span>AI generates your personalized plan</span>
                   </li>
                 </ul>
-                <Button 
-                  className="w-full h-11 text-base font-semibold bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full text-base font-semibold"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push("/portal/ai-planner");
@@ -228,25 +235,23 @@ export default function StartWorkoutPage() {
 
   // Has plan - show today's workout
   return (
-    <div className="container max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-2 mb-8">
+    <div className="container mx-auto max-w-4xl space-y-6 p-6">
+      <div className="mb-8 space-y-2 text-center">
         <h1 className="text-3xl font-bold">Start Working Out</h1>
-        <p className="text-muted-foreground">
-          Ready to crush today's workout?
-        </p>
+        <p className="text-muted-foreground">Ready to crush today's workout?</p>
       </div>
 
       {/* Active Plan Card */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20">
+      <Card className="bg-muted/50 border-0 shadow-lg">
         <CardHeader className="px-6 pt-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-teal-600 rounded-lg">
-                <Target className="h-5 w-5 text-white" />
+              <div className="bg-primary rounded-lg p-2">
+                <Target className="text-primary-foreground h-5 w-5" />
               </div>
               <div>
                 <CardTitle className="text-lg">{plan.name}</CardTitle>
-                <CardDescription className="text-xs mt-0.5">
+                <CardDescription className="mt-0.5 text-xs">
                   Active Plan
                 </CardDescription>
               </div>
@@ -257,50 +262,48 @@ export default function StartWorkoutPage() {
           </div>
         </CardHeader>
         <Separator />
-        <CardContent className="px-6 pt-6 pb-6 space-y-6">
+        <CardContent className="space-y-6 px-6 pt-6 pb-6">
           {todayWorkout ? (
             <>
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-4 w-4 text-teal-600" />
-                  <h3 className="font-semibold text-base">
+                <div className="mb-3 flex items-center gap-2">
+                  <Calendar className="text-primary h-4 w-4" />
+                  <h3 className="text-base font-semibold">
                     Today's Workout: {todayWorkout.title}
                   </h3>
                 </div>
-                <div className="bg-white/50 dark:bg-background/50 rounded-lg p-4 space-y-3">
+                <div className="dark:bg-background/50 space-y-3 rounded-lg bg-white/50 p-4">
                   {todayWorkout.exercises.length > 0 ? (
                     <div className="space-y-2">
                       {todayWorkout.exercises.map((exercise, idx) => (
                         <div
                           key={exercise.id}
-                          className="flex items-center justify-between text-sm py-2.5 px-3 rounded-lg hover:bg-white/70 dark:hover:bg-background/70 transition-colors"
+                          className="dark:hover:bg-background/70 flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-white/70"
                         >
-                          <div className="flex items-center gap-3 flex-1">
-                            <span className="text-muted-foreground text-xs w-6 shrink-0 font-medium">
+                          <div className="flex flex-1 items-center gap-3">
+                            <span className="text-muted-foreground w-6 shrink-0 text-xs font-medium">
                               {idx + 1}
                             </span>
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="font-medium">
                                 {exercise.exerciseName}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 {exercise.muscleGroup}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right text-xs text-muted-foreground shrink-0 ml-3">
+                          <div className="text-muted-foreground ml-3 shrink-0 text-right text-xs">
                             <p className="font-medium">
                               {exercise.sets} sets × {exercise.reps} reps
                             </p>
-                            {exercise.weight && (
-                              <p>{exercise.weight} kg</p>
-                            )}
+                            {exercise.weight && <p>{exercise.weight} kg</p>}
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                    <p className="text-muted-foreground py-4 text-center text-sm">
                       No exercises scheduled for this day
                     </p>
                   )}
@@ -310,7 +313,7 @@ export default function StartWorkoutPage() {
                 size="lg"
                 onClick={handleStartWorkout}
                 disabled={quickStart.isPending}
-                className="w-full bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white h-12 text-base font-semibold"
+                className="h-12 w-full bg-gradient-to-br from-teal-600 to-teal-700 text-base font-semibold text-white hover:from-teal-700 hover:to-teal-800"
               >
                 {quickStart.isPending ? (
                   <>
@@ -326,7 +329,7 @@ export default function StartWorkoutPage() {
               </Button>
             </>
           ) : (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p className="text-muted-foreground mb-4">
                 No workout scheduled for today
               </p>
@@ -339,7 +342,7 @@ export default function StartWorkoutPage() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 justify-center pt-2">
+          <div className="flex items-center justify-center gap-2 pt-2">
             <Button
               variant="ghost"
               size="sm"

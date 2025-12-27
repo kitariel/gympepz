@@ -47,15 +47,20 @@ export default function PortalPage() {
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   const router = useRouter();
   const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"quickStart" | "empty" | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "quickStart" | "empty" | null
+  >(null);
 
   // Data queries
-  const streak = api.workoutLog.getStreak.useQuery({ userId }, { enabled: !!userId });
-  
+  const streak = api.workoutLog.getStreak.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
+
   // Check for recent completed workout
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
   const weekAgo = useMemo(() => {
     const date = new Date();
@@ -64,15 +69,15 @@ export default function PortalPage() {
   }, []);
   const analytics = api.workoutLog.getAnalytics.useQuery(
     { userId, startDate: weekAgo },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
   const recentLogs = api.workoutLog.list.useQuery(
     { userId, limit: 5 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
   const allLogs = api.workoutLog.list.useQuery(
     { userId, limit: 100 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
   const plans = api.plan.listByUser.useQuery({ userId }, { enabled: !!userId });
   const prs = api.progress.getPRs.useQuery({ userId }, { enabled: !!userId });
@@ -82,7 +87,10 @@ export default function PortalPage() {
 
     const now = new Date();
     const sixWeeksAgo = subWeeks(now, 6);
-    const weeks = eachWeekOfInterval({ start: sixWeeksAgo, end: now }, { weekStartsOn: 1 });
+    const weeks = eachWeekOfInterval(
+      { start: sixWeeksAgo, end: now },
+      { weekStartsOn: 1 },
+    );
 
     return weeks.map((weekStart) => {
       const weekEnd = new Date(weekStart);
@@ -93,7 +101,10 @@ export default function PortalPage() {
         return logDate >= weekStart && logDate <= weekEnd && log.completed;
       });
 
-      const volume = weekWorkouts.reduce((sum, log) => sum + ((log as any).totalVolume ?? 0), 0);
+      const volume = weekWorkouts.reduce(
+        (sum, log) => sum + ((log as any).totalVolume ?? 0),
+        0,
+      );
 
       return {
         week: format(weekStart, "MMM d"),
@@ -114,14 +125,14 @@ export default function PortalPage() {
 
   const handleQuickStart = () => {
     if (!userId) return;
-    
+
     // Check if there's a recent completed workout
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setPendingAction("quickStart");
       setShowWarningDialog(true);
       return;
     }
-    
+
     if (activePlan) {
       quickStart.mutate({ userId });
     } else {
@@ -131,21 +142,21 @@ export default function PortalPage() {
 
   const handleCreateEmpty = () => {
     if (!userId) return;
-    
+
     // Check if there's a recent completed workout
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setPendingAction("empty");
       setShowWarningDialog(true);
       return;
     }
-    
+
     createEmpty.mutate({ userId });
   };
 
   const handleConfirmStart = () => {
     setShowWarningDialog(false);
     if (!userId) return;
-    
+
     if (pendingAction === "quickStart") {
       if (activePlan) {
         quickStart.mutate({ userId });
@@ -162,8 +173,10 @@ export default function PortalPage() {
 
   if (!userId) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Please log in to view your dashboard.</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          Please log in to view your dashboard.
+        </p>
       </div>
     );
   }
@@ -174,7 +187,7 @@ export default function PortalPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-muted-foreground mt-0.5 text-sm">
             Welcome back! Here's your fitness overview
           </p>
         </div>
@@ -194,35 +207,35 @@ export default function PortalPage() {
       {/* Quick Stats Grid */}
       <div className="grid gap-3 md:grid-cols-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-medium">
               This Week
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  <HelpCircle className="text-muted-foreground h-3 w-3 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Number of completed workouts this week</p>
                 </TooltipContent>
               </Tooltip>
             </CardTitle>
-            <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
+            <Dumbbell className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">
               {analytics.data?.totalWorkouts ?? 0}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">workouts</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">workouts</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-medium">
               Streak
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  <HelpCircle className="text-muted-foreground h-3 w-3 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Consecutive days with at least one completed workout</p>
@@ -235,53 +248,53 @@ export default function PortalPage() {
             <div className="text-xl font-bold">
               {streak.data?.currentStreak ?? 0}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">days</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">days</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-medium">
               Volume
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  <HelpCircle className="text-muted-foreground h-3 w-3 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Total weight lifted this week (sets × reps × weight)</p>
                 </TooltipContent>
               </Tooltip>
             </CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">
               {Math.round((analytics.data?.totalVolume ?? 0) / 1000)}k
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">kg</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">kg</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium flex items-center gap-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-medium">
               Avg Time
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  <HelpCircle className="text-muted-foreground h-3 w-3 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Average workout duration this week</p>
                 </TooltipContent>
               </Tooltip>
             </CardTitle>
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Clock className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">
               {analytics.data?.averageDuration ?? 0}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">mins</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">mins</p>
           </CardContent>
         </Card>
       </div>
@@ -297,7 +310,7 @@ export default function PortalPage() {
                 <Button
                   onClick={handleQuickStart}
                   disabled={quickStart.isPending}
-                  className="h-11 bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-11"
                 >
                   <Play className="mr-2 h-4 w-4" />
                   {quickStart.isPending
@@ -315,11 +328,15 @@ export default function PortalPage() {
                       className="h-11"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      {createEmpty.isPending ? "Starting..." : "Create Freeform Workout"}
+                      {createEmpty.isPending
+                        ? "Starting..."
+                        : "Create Freeform Workout"}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Start a workout without a plan - add exercises on the fly</p>
+                    <p>
+                      Start a workout without a plan - add exercises on the fly
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -328,11 +345,11 @@ export default function PortalPage() {
 
           {/* Active Plan */}
           {activePlan && (
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20">
+            <Card className="bg-primary/5 border-primary/20 border-0 shadow-sm">
               <CardHeader className="px-4 pt-4 pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Target className="h-4 w-4 text-teal-600" />
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Target className="text-primary h-4 w-4" />
                     Active Plan
                   </CardTitle>
                   <Badge variant="secondary" className="text-[9px]">
@@ -340,17 +357,19 @@ export default function PortalPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-3">
+              <CardContent className="space-y-3 px-4 pb-4">
                 <div>
-                  <h3 className="font-semibold text-base">{activePlan.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-base font-semibold">{activePlan.name}</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     {activePlan.daysCount} workout days
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    onClick={() => router.push(`/portal/plans/${activePlan.id}`)}
+                    onClick={() =>
+                      router.push(`/portal/plans/${activePlan.id}`)
+                    }
                     className="h-8 text-xs"
                   >
                     View Plan
@@ -358,7 +377,9 @@ export default function PortalPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => router.push(`/portal/log?quickStart=${activePlan.id}`)}
+                    onClick={() =>
+                      router.push(`/portal/log?quickStart=${activePlan.id}`)
+                    }
                     className="h-8 text-xs"
                   >
                     Start Workout
@@ -372,8 +393,8 @@ export default function PortalPage() {
           <Card className="border-0 shadow-sm">
             <CardHeader className="px-4 pt-4 pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-teal-600" />
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <TrendingUp className="text-primary h-4 w-4" />
                   Workout Trends
                 </CardTitle>
                 <Button
@@ -383,7 +404,7 @@ export default function PortalPage() {
                   onClick={() => router.push("/portal/log?tab=analytics")}
                 >
                   View Details
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </div>
             </CardHeader>
@@ -392,7 +413,10 @@ export default function PortalPage() {
                 <div className="h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="hsl(var(--muted))"
+                      />
                       <XAxis
                         dataKey="week"
                         stroke="hsl(var(--muted-foreground))"
@@ -425,7 +449,7 @@ export default function PortalPage() {
                       <Bar
                         yAxisId="left"
                         dataKey="workouts"
-                        fill="#10b981"
+                        fill="hsl(var(--primary))"
                         name="Workouts"
                         radius={[4, 4, 0, 0]}
                       />
@@ -433,7 +457,7 @@ export default function PortalPage() {
                         yAxisId="right"
                         type="monotone"
                         dataKey="volume"
-                        stroke="#3b82f6"
+                        stroke="hsl(var(--foreground))"
                         strokeWidth={2}
                         name="Volume (k kg)"
                         dot={{ r: 4 }}
@@ -443,10 +467,12 @@ export default function PortalPage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart3 className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <div className="text-muted-foreground py-12 text-center">
+                  <BarChart3 className="mx-auto mb-3 h-10 w-10 opacity-50" />
                   <p className="text-sm">No workout data yet</p>
-                  <p className="text-xs mt-1">Complete workouts to see trends!</p>
+                  <p className="mt-1 text-xs">
+                    Complete workouts to see trends!
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -464,7 +490,7 @@ export default function PortalPage() {
                   onClick={() => router.push("/portal/log")}
                 >
                   View All
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </div>
             </CardHeader>
@@ -475,23 +501,25 @@ export default function PortalPage() {
                   return (
                     <div
                       key={log.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all"
-                      onClick={() => router.push(`/portal/log/workout/${log.id}`)}
+                      className="border-border/50 hover:bg-accent/50 hover:border-accent flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all"
+                      onClick={() =>
+                        router.push(`/portal/log/workout/${log.id}`)
+                      }
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
                           {log.planDay?.title ?? "Untitled Workout"}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                           {format(new Date(log.date), "MMM d, yyyy")}
                         </p>
                       </div>
-                      <div className="text-right ml-3 shrink-0">
+                      <div className="ml-3 shrink-0 text-right">
                         <p className="text-xs font-medium">
                           {log.duration ? `${log.duration}m` : "In Progress"}
                         </p>
                         {logVolume && (
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-muted-foreground text-[10px]">
                             {Math.round(logVolume)} kg
                           </p>
                         )}
@@ -501,12 +529,14 @@ export default function PortalPage() {
                 })}
 
                 {recentLogs.data?.items.length === 0 && (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <div className="inline-flex p-3 rounded-full bg-muted mb-3">
+                  <div className="text-muted-foreground py-10 text-center">
+                    <div className="bg-muted mb-3 inline-flex rounded-full p-3">
                       <Dumbbell className="h-8 w-8 opacity-50" />
                     </div>
-                    <p className="text-sm font-medium mb-1">No workouts yet</p>
-                    <p className="text-xs mb-4">Start your first workout to begin tracking</p>
+                    <p className="mb-1 text-sm font-medium">No workouts yet</p>
+                    <p className="mb-4 text-xs">
+                      Start your first workout to begin tracking
+                    </p>
                     <Button
                       size="sm"
                       variant="outline"
@@ -527,18 +557,19 @@ export default function PortalPage() {
         <div className="space-y-4">
           {/* Streak Card */}
           {(streak.data?.currentStreak ?? 0) > 0 && (
-            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 border-0 shadow-sm">
+            <Card className="border-0 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 shadow-sm dark:from-orange-950/20 dark:to-yellow-950/20">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                  <div className="rounded-full bg-orange-100 p-2 dark:bg-orange-900/30">
                     <Flame className="h-5 w-5 text-orange-500" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold">
                       {streak.data?.currentStreak} Day Streak! 🔥
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Longest: {streak.data?.longestStreak} days • Keep going! 💪
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      Longest: {streak.data?.longestStreak} days • Keep going!
+                      💪
                     </p>
                   </div>
                 </div>
@@ -550,7 +581,7 @@ export default function PortalPage() {
           <Card className="border-0 shadow-sm">
             <CardHeader className="px-4 pt-4 pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                   <Award className="h-4 w-4 text-yellow-600" />
                   Recent PRs
                 </CardTitle>
@@ -561,7 +592,7 @@ export default function PortalPage() {
                   onClick={() => router.push("/portal/log?tab=analytics")}
                 >
                   View All
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </div>
             </CardHeader>
@@ -571,20 +602,20 @@ export default function PortalPage() {
                   {(prs.data as any[]).slice(0, 3).map((pr: any) => (
                     <div
                       key={pr.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30"
+                      className="border-border/50 bg-muted/30 flex items-center justify-between rounded-lg border p-2.5"
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
                           {pr.exercise?.name ?? "Unknown Exercise"}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                           {pr.prType === "1RM" ? "1RM" : pr.prType}
                         </p>
                       </div>
-                      <div className="text-right ml-3 shrink-0">
+                      <div className="ml-3 shrink-0 text-right">
                         <p className="text-sm font-bold">{pr.value} kg</p>
                         {pr.reps && (
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-muted-foreground text-[10px]">
                             {pr.reps} reps
                           </p>
                         )}
@@ -593,10 +624,12 @@ export default function PortalPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  <Award className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-muted-foreground py-6 text-center text-sm">
+                  <Award className="mx-auto mb-2 h-8 w-8 opacity-50" />
                   <p>No PRs yet</p>
-                  <p className="text-xs mt-1">Complete workouts to set records!</p>
+                  <p className="mt-1 text-xs">
+                    Complete workouts to set records!
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -607,41 +640,41 @@ export default function PortalPage() {
             <CardHeader className="px-4 pt-4 pb-3">
               <CardTitle className="text-sm">Quick Links</CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-2">
+            <CardContent className="space-y-2 px-4 pb-4">
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full justify-start h-9 text-xs"
+                className="h-9 w-full justify-start text-xs"
                 onClick={() => router.push("/portal/exercises")}
               >
-                <Dumbbell className="h-3.5 w-3.5 mr-2" />
+                <Dumbbell className="mr-2 h-3.5 w-3.5" />
                 Exercise Library
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full justify-start h-9 text-xs"
+                className="h-9 w-full justify-start text-xs"
                 onClick={() => router.push("/portal/plans")}
               >
-                <Target className="h-3.5 w-3.5 mr-2" />
+                <Target className="mr-2 h-3.5 w-3.5" />
                 My Plans
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full justify-start h-9 text-xs"
+                className="h-9 w-full justify-start text-xs"
                 onClick={() => router.push("/portal/log?tab=analytics")}
               >
-                <BarChart3 className="h-3.5 w-3.5 mr-2" />
+                <BarChart3 className="mr-2 h-3.5 w-3.5" />
                 Analytics
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full justify-start h-9 text-xs"
+                className="h-9 w-full justify-start text-xs"
                 onClick={() => router.push("/portal/log?tab=progress")}
               >
-                <TrendingUp className="h-3.5 w-3.5 mr-2" />
+                <TrendingUp className="mr-2 h-3.5 w-3.5" />
                 Progress Tracking
               </Button>
             </CardContent>

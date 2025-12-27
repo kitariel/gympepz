@@ -77,7 +77,7 @@ export function SetRow({
     <div
       className={cn(
         "flex items-center gap-2 sm:gap-3 md:gap-4 p-2.5 sm:p-2.5 md:p-3 rounded-lg transition-colors touch-manipulation",
-        completed ? "bg-green-50 dark:bg-green-950/20" : "bg-muted/50"
+        completed ? "bg-primary/10" : "bg-muted/50"
       )}
     >
       <Checkbox
