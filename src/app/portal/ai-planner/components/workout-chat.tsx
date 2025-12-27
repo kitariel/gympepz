@@ -379,10 +379,9 @@ export default function WorkoutChat({
     setInput(suggestion);
     setShowSuggestions(false);
     setTimeout(() => {
-      const inputEl = document.querySelector(
-        'input[placeholder*="Describe"]',
-      ) as HTMLInputElement;
-      inputEl?.focus();
+      const inputEl = document.querySelector('input[placeholder*="Describe"]');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      (inputEl as HTMLInputElement)?.focus();
     }, 100);
   };
 
@@ -397,8 +396,8 @@ export default function WorkoutChat({
             <div className="max-w-lg space-y-2">
               <h3 className="text-lg font-semibold">AI Workout Planner</h3>
               <p className="text-muted-foreground text-sm">
-                Describe your fitness goals or choose a suggestion below. I'll
-                create a personalized workout plan for you!
+                Describe your fitness goals or choose a suggestion below.
+                I&apos;ll create a personalized workout plan for you!
               </p>
             </div>
 
@@ -519,7 +518,7 @@ export default function WorkoutChat({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  send();
+                  void send();
                   setShowSuggestions(false);
                 }
               }}
@@ -532,7 +531,7 @@ export default function WorkoutChat({
             <Button
               type="button"
               onClick={() => {
-                send();
+                void send();
                 setShowSuggestions(false);
               }}
               disabled={loading || !input.trim()}

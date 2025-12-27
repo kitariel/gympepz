@@ -6,8 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { Plus, Scale, Percent } from "lucide-react";
@@ -23,7 +37,10 @@ export function ProgressView() {
   const [notes, setNotes] = useState("");
 
   const utils = api.useUtils();
-  const progress = api.progress.list.useQuery({ userId }, { enabled: !!userId });
+  const progress = api.progress.list.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
   const createEntry = api.progress.create.useMutation({
     onSuccess: () => {
       setIsOpen(false);
@@ -45,18 +62,21 @@ export function ProgressView() {
     });
   };
 
-  const data = progress.data?.map((p) => ({
-    date: format(new Date(p.date), "MMM d"),
-    weight: p.weight,
-    bodyFat: p.bodyFat,
-  })) ?? [];
+  const data =
+    progress.data?.map((p) => ({
+      date: format(new Date(p.date), "MMM d"),
+      weight: p.weight,
+      bodyFat: p.bodyFat,
+    })) ?? [];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Progress Tracking</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-xl font-bold tracking-tight">
+            Progress Tracking
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
             Track your weight and body composition over time
           </p>
         </div>
@@ -103,7 +123,11 @@ export function ProgressView() {
                   placeholder="How are you feeling?"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={createEntry.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createEntry.isPending}
+              >
                 {createEntry.isPending ? "Saving..." : "Save Entry"}
               </Button>
             </form>
@@ -114,8 +138,8 @@ export function ProgressView() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Scale className="h-4 w-4 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Scale className="text-primary h-4 w-4" />
               Weight History
             </CardTitle>
           </CardHeader>
@@ -123,21 +147,38 @@ export function ProgressView() {
             {data.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis domain={["auto", "auto"]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--muted))"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                  />
+                  <YAxis
+                    domain={["auto", "auto"]}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                  />
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
                     }}
                   />
-                  <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
                 No data yet
               </div>
             )}
@@ -146,8 +187,8 @@ export function ProgressView() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Percent className="h-4 w-4 text-secondary-foreground" />
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Percent className="text-secondary-foreground h-4 w-4" />
               Body Fat %
             </CardTitle>
           </CardHeader>
@@ -155,21 +196,38 @@ export function ProgressView() {
             {data.length > 0 && data.some((d) => d.bodyFat) ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis domain={["auto", "auto"]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <Tooltip 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--muted))"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                  />
+                  <YAxis
+                    domain={["auto", "auto"]}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                  />
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
                     }}
                   />
-                  <Line type="monotone" dataKey="bodyFat" stroke="hsl(var(--secondary-foreground))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line
+                    type="monotone"
+                    dataKey="bodyFat"
+                    stroke="hsl(var(--secondary-foreground))"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
                 No body fat data yet
               </div>
             )}
@@ -183,21 +241,38 @@ export function ProgressView() {
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="space-y-3">
-            {progress.data?.slice().reverse().slice(0, 5).map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors">
-                <div>
-                  <p className="font-medium text-sm">{format(new Date(entry.date), "MMM d, yyyy")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{entry.notes || "No notes"}</p>
+            {progress.data
+              ?.slice()
+              .reverse()
+              .slice(0, 5)
+              .map((entry) => (
+                <div
+                  key={entry.id}
+                  className="border-border/50 hover:bg-accent/50 flex items-center justify-between rounded-lg border p-2.5 transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {format(new Date(entry.date), "MMM d, yyyy")}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      {entry.notes ?? "No notes"}
+                    </p>
+                  </div>
+                  <div className="ml-3 text-right">
+                    {entry.weight && (
+                      <p className="text-sm font-bold">{entry.weight} kg</p>
+                    )}
+                    {entry.bodyFat && (
+                      <p className="text-muted-foreground text-xs">
+                        {entry.bodyFat}% BF
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right ml-3">
-                  {entry.weight && <p className="font-bold text-sm">{entry.weight} kg</p>}
-                  {entry.bodyFat && <p className="text-xs text-muted-foreground">{entry.bodyFat}% BF</p>}
-                </div>
-              </div>
-            ))}
+              ))}
             {(!progress.data || progress.data.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                <Scale className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <div className="text-muted-foreground py-8 text-center text-sm">
+                <Scale className="mx-auto mb-3 h-10 w-10 opacity-50" />
                 <p>No progress entries yet. Add your first entry!</p>
               </div>
             )}

@@ -94,7 +94,9 @@ export default function WorkoutBuilderPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState("All");
   const [selectedEquipment, setSelectedEquipment] = useState("All");
-  const [selectedBodyPart, setSelectedBodyPart] = useState<"Push" | "Pull" | "Legs" | null>(null);
+  const [selectedBodyPart, setSelectedBodyPart] = useState<
+    "Push" | "Pull" | "Legs" | null
+  >(null);
 
   // Plan state
   const [name, setName] = useState("");
@@ -104,7 +106,7 @@ export default function WorkoutBuilderPage() {
 
   // Current week/month tracking
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -266,13 +268,15 @@ export default function WorkoutBuilderPage() {
   };
 
   // Normal mode: flexible days state
-  const [days, setDays] = useState<{ title: string; items: Item[]; isRestDay?: boolean }[]>([
-    { title: "Push Day", items: [] },
-  ]);
+  const [days, setDays] = useState<
+    { title: string; items: Item[]; isRestDay?: boolean }[]
+  >([{ title: "Push Day", items: [] }]);
 
   // Exercise selection dialog
   const [isExerciseDialogOpen, setIsExerciseDialogOpen] = useState(false);
-  const [targetDayIdx, setTargetDayIdx] = useState<number | string | null>(null);
+  const [targetDayIdx, setTargetDayIdx] = useState<number | string | null>(
+    null,
+  );
   const [selectedExerciseForConfig, setSelectedExerciseForConfig] = useState<{
     id: string;
     name: string;
@@ -298,7 +302,7 @@ export default function WorkoutBuilderPage() {
   const filteredExercisesNormal = useMemo(() => {
     const baseExercises = exercisesQuery.data ?? [];
     if (!selectedBodyPart) return baseExercises;
-    
+
     return baseExercises.filter((ex) => {
       const muscle = ex.muscleGroup.toLowerCase();
       if (selectedBodyPart === "Push") {
@@ -327,17 +331,19 @@ export default function WorkoutBuilderPage() {
     });
   }, [exercisesQuery.data, selectedBodyPart]);
 
-
   const setActive = api.plan.setActive.useMutation();
-  
+
   const create = api.plan.create.useMutation({
     onSuccess: (plan) => {
       // Set as active plan after creation
       if (userId) {
-        setActive.mutate({ userId, planId: plan.id }, {
-          onSuccess: () => router.push("/portal/start"),
-          onError: () => router.push("/portal/start"), // Still redirect even if setActive fails
-        });
+        setActive.mutate(
+          { userId, planId: plan.id },
+          {
+            onSuccess: () => router.push("/portal/start"),
+            onError: () => router.push("/portal/start"), // Still redirect even if setActive fails
+          },
+        );
       } else {
         router.push("/portal/start");
       }
@@ -375,7 +381,7 @@ export default function WorkoutBuilderPage() {
   };
 
   const openExerciseDialogMonth = (dateKey: string) => {
-    setTargetDayIdx(dateKey as any); // Store dateKey as target
+    setTargetDayIdx(dateKey); // Store dateKey as target
     setIsExerciseDialogOpen(true);
   };
 
@@ -390,11 +396,14 @@ export default function WorkoutBuilderPage() {
         if (day.items.some((item) => item.exerciseId === exerciseId)) {
           return prev;
         }
-        
+
         newMap.set(dateKey, {
           ...day,
           isRestDay: false, // Unmark as rest day if adding exercises
-          items: [...day.items, { exerciseId, sets: 3, reps: 10, weight: undefined }],
+          items: [
+            ...day.items,
+            { exerciseId, sets: 3, reps: 10, weight: undefined },
+          ],
         });
       }
       return newMap;
@@ -409,7 +418,7 @@ export default function WorkoutBuilderPage() {
     dateKey: string,
     itemIdx: number,
     field: "sets" | "reps" | "weight",
-    value: number
+    value: number,
   ) => {
     setMonthDays((prev) => {
       const newMap = new Map(prev);
@@ -451,9 +460,9 @@ export default function WorkoutBuilderPage() {
 
   const handleAddExerciseWithConfig = () => {
     if (!selectedExerciseForConfig || targetDayIdx === null) return;
-    
+
     const exerciseId = selectedExerciseForConfig.id;
-    
+
     // Check if it's normal mode (number index for days array) or quick mode
     if (!isQuickMode && typeof targetDayIdx === "number") {
       // Normal mode
@@ -461,12 +470,12 @@ export default function WorkoutBuilderPage() {
         const next = [...d];
         const day = next[targetDayIdx];
         if (!day) return next;
-        
+
         // Check if exercise already exists to prevent duplicates
         if (day.items.some((item) => item.exerciseId === exerciseId)) {
           return next;
         }
-        
+
         day.items.push({
           exerciseId,
           sets: exerciseConfig.sets,
@@ -491,7 +500,7 @@ export default function WorkoutBuilderPage() {
           if (day.items.some((item) => item.exerciseId === exerciseId)) {
             return prev;
           }
-          
+
           newMap.set(targetDayIdx, {
             ...day,
             isRestDay: false,
@@ -520,12 +529,12 @@ export default function WorkoutBuilderPage() {
         const next = [...prev];
         const day = next[dayIdx];
         if (!day) return next;
-        
+
         // Check if exercise already exists to prevent duplicates
         if (day.items.some((item: Item) => item.exerciseId === exerciseId)) {
           return next;
         }
-        
+
         // Unmark as rest day if adding exercises
         day.isRestDay = false;
         day.items.push({
@@ -556,7 +565,7 @@ export default function WorkoutBuilderPage() {
     dayIdx: number,
     itemIdx: number,
     field: "sets" | "reps" | "weight",
-    value: number
+    value: number,
   ) => {
     setWeekDays((prev) => {
       const next = [...prev];
@@ -600,7 +609,7 @@ export default function WorkoutBuilderPage() {
     dayIdx: number,
     itemIdx: number,
     field: "sets" | "reps" | "weight",
-    value: number
+    value: number,
   ) => {
     setDays((d) => {
       const next = [...d];
@@ -622,7 +631,8 @@ export default function WorkoutBuilderPage() {
     if (!userId || !name) return;
 
     if (isQuickMode) {
-      let workoutDays: Array<{ title: string; order: number; items: any[] }> = [];
+      let workoutDays: Array<{ title: string; order: number; items: Item[] }> =
+        [];
 
       if (viewMode === "week") {
         // Filter out rest days and convert to plan format
@@ -641,7 +651,10 @@ export default function WorkoutBuilderPage() {
       } else {
         // Month view: collect all days with workouts
         const sortedDays = Array.from(monthDays.values())
-          .filter((day) => day.isCurrentMonth && !day.isRestDay && day.items.length > 0)
+          .filter(
+            (day) =>
+              day.isCurrentMonth && !day.isRestDay && day.items.length > 0,
+          )
           .sort((a, b) => a.date.getTime() - b.date.getTime())
           .map((day, idx) => ({
             title: `${format(day.date, "EEE")} - ${format(day.date, "MMM d")}`,
@@ -663,7 +676,8 @@ export default function WorkoutBuilderPage() {
 
       await create.mutateAsync({
         userId,
-        name: name || (viewMode === "week" ? "My Weekly Plan" : "My Monthly Plan"),
+        name:
+          name || (viewMode === "week" ? "My Weekly Plan" : "My Monthly Plan"),
         days: workoutDays,
       });
     } else {
@@ -688,14 +702,17 @@ export default function WorkoutBuilderPage() {
   const totalExercises = isQuickMode
     ? viewMode === "week"
       ? weekDays.reduce((sum, d) => sum + d.items.length, 0)
-      : Array.from(monthDays.values()).reduce((sum, d) => sum + d.items.length, 0)
+      : Array.from(monthDays.values()).reduce(
+          (sum, d) => sum + d.items.length,
+          0,
+        )
     : days.reduce((sum, d) => sum + d.items.length, 0);
 
   const workoutDaysCount = isQuickMode
     ? viewMode === "week"
       ? weekDays.filter((d) => !d.isRestDay && d.items.length > 0).length
       : Array.from(monthDays.values()).filter(
-          (d) => d.isCurrentMonth && !d.isRestDay && d.items.length > 0
+          (d) => d.isCurrentMonth && !d.isRestDay && d.items.length > 0,
         ).length
     : days.length;
 
@@ -704,19 +721,21 @@ export default function WorkoutBuilderPage() {
   // Quick Mode View
   if (isQuickMode) {
     return (
-      <div className="flex-1 space-y-4 p-4 sm:p-6 pt-4">
+      <div className="flex-1 space-y-4 p-4 pt-4 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Quick Workout Builder</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
+              Quick Workout Builder
+            </h2>
+            <p className="text-muted-foreground mt-0.5 text-xs sm:text-sm">
               Set up your week - add exercises or mark rest days
             </p>
           </div>
           <Button
             onClick={save}
             disabled={!canSave || create.isPending}
-            className="gap-2 w-full sm:w-auto"
+            className="w-full gap-2 sm:w-auto"
             size="sm"
           >
             <Save className="h-4 w-4" />
@@ -745,16 +764,23 @@ export default function WorkoutBuilderPage() {
 
         {/* View Toggle and Navigation */}
         <Card className="border-0 shadow-sm">
-          <CardContent className="px-3 sm:px-4 py-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "week" | "month")}>
+          <CardContent className="px-3 py-3 sm:px-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Tabs
+                value={viewMode}
+                onValueChange={(v) => setViewMode(v as "week" | "month")}
+              >
                 <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="week" className="flex-1 sm:flex-none">Week</TabsTrigger>
-                  <TabsTrigger value="month" className="flex-1 sm:flex-none">Month</TabsTrigger>
+                  <TabsTrigger value="week" className="flex-1 sm:flex-none">
+                    Week
+                  </TabsTrigger>
+                  <TabsTrigger value="month" className="flex-1 sm:flex-none">
+                    Month
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="flex items-center justify-between sm:justify-end gap-2">
+              <div className="flex items-center justify-between gap-2 sm:justify-end">
                 {viewMode === "week" ? (
                   <>
                     <Button
@@ -792,7 +818,7 @@ export default function WorkoutBuilderPage() {
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-sm font-medium min-w-[120px] text-center px-2">
+                    <div className="min-w-[120px] px-2 text-center text-sm font-medium">
                       {format(currentMonth, "MMM yyyy")}
                     </div>
                     <Button
@@ -807,7 +833,7 @@ export default function WorkoutBuilderPage() {
                       variant="outline"
                       size="sm"
                       onClick={goToToday}
-                      className="h-8 text-xs ml-2"
+                      className="ml-2 h-8 text-xs"
                     >
                       Today
                     </Button>
@@ -824,400 +850,470 @@ export default function WorkoutBuilderPage() {
             <h3 className="text-base font-semibold">
               Week of {format(currentWeekStart, "MMM d")}
             </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {weekDays.map((day, dayIdx) => {
-              const exercise = exercises.find((e) => true); // For exercise lookup
-              return (
-                <Card
-                  key={dayIdx}
-                  className={cn(
-                    "border-0 shadow-sm transition-all",
-                    day.isToday && "ring-2 ring-teal-500 ring-offset-2",
-                    day.isRestDay && "bg-muted/50"
-                  )}
-                >
-                  <CardHeader className="px-4 pt-4 pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-base">{day.dayName}</p>
-                          {day.isToday && (
-                            <Badge variant="default" className="text-[9px] px-1.5 py-0">
-                              Today
-                            </Badge>
-                          )}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {weekDays.map((day, dayIdx) => {
+                const exercise = exercises.find((e) => true); // For exercise lookup
+                return (
+                  <Card
+                    key={dayIdx}
+                    className={cn(
+                      "border-0 shadow-sm transition-all",
+                      day.isToday && "ring-2 ring-teal-500 ring-offset-2",
+                      day.isRestDay && "bg-muted/50",
+                    )}
+                  >
+                    <CardHeader className="px-4 pt-4 pb-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-base font-semibold">
+                              {day.dayName}
+                            </p>
+                            {day.isToday && (
+                              <Badge
+                                variant="default"
+                                className="px-1.5 py-0 text-[9px]"
+                              >
+                                Today
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground mt-0.5 text-xs">
+                            {format(day.date, "MMM d")}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {format(day.date, "MMM d")}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={day.isRestDay}
+                            onCheckedChange={() => toggleRestDay(dayIdx)}
+                          />
+                          <span className="text-muted-foreground text-xs">
+                            Rest
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={day.isRestDay}
-                          onCheckedChange={() => toggleRestDay(dayIdx)}
-                        />
-                        <span className="text-xs text-muted-foreground">Rest</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4 space-y-3">
-                    {day.isRestDay ? (
-                      <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <Moon className="h-8 w-8 text-muted-foreground mb-2 opacity-50" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Rest Day
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Add Exercise Button */}
-                        <Dialog
-                          open={isExerciseDialogOpen && targetDayIdx === dayIdx}
-                          onOpenChange={(open) => {
-                            if (!open) {
-                              setIsExerciseDialogOpen(false);
-                              setTargetDayIdx(null);
-                              setSelectedExerciseForConfig(null);
-                              setSearchQuery("");
-                              setSelectedMuscle("All");
-                              setSelectedEquipment("All");
+                    </CardHeader>
+                    <CardContent className="space-y-3 px-4 pb-4">
+                      {day.isRestDay ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <Moon className="text-muted-foreground mb-2 h-8 w-8 opacity-50" />
+                          <p className="text-muted-foreground text-sm font-medium">
+                            Rest Day
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Add Exercise Button */}
+                          <Dialog
+                            open={
+                              isExerciseDialogOpen && targetDayIdx === dayIdx
                             }
-                          }}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-dashed gap-2"
-                            onClick={() => openExerciseDialogQuick(dayIdx)}
+                            onOpenChange={(open) => {
+                              if (!open) {
+                                setIsExerciseDialogOpen(false);
+                                setTargetDayIdx(null);
+                                setSelectedExerciseForConfig(null);
+                                setSearchQuery("");
+                                setSelectedMuscle("All");
+                                setSelectedEquipment("All");
+                              }
+                            }}
                           >
-                            <Plus className="h-4 w-4" />
-                            Add Exercise
-                          </Button>
-                          <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="text-base sm:text-lg">
-                                Select Exercise for {day.dayName} ({format(day.date, "MMM d")})
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              {/* Search and Filters */}
-                              <div className="space-y-3">
-                                <div className="relative">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    placeholder="Search exercises..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 pr-10 h-9"
-                                  />
-                                  {searchQuery && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                                      onClick={() => setSearchQuery("")}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  <Select
-                                    value={selectedMuscle}
-                                    onValueChange={setSelectedMuscle}
-                                  >
-                                    <SelectTrigger className="h-9">
-                                      <Target className="h-3.5 w-3.5 mr-2" />
-                                      <SelectValue placeholder="Muscle Group" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="All">All Muscle Groups</SelectItem>
-                                      <SelectItem value="Chest">Chest</SelectItem>
-                                      <SelectItem value="Back">Back</SelectItem>
-                                      <SelectItem value="Shoulders">Shoulders</SelectItem>
-                                      <SelectItem value="Arms">Arms</SelectItem>
-                                      <SelectItem value="Legs">Legs</SelectItem>
-                                      <SelectItem value="Core">Core</SelectItem>
-                                      <SelectItem value="Glutes">Glutes</SelectItem>
-                                      <SelectItem value="Calves">Calves</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Select
-                                    value={selectedEquipment}
-                                    onValueChange={setSelectedEquipment}
-                                  >
-                                    <SelectTrigger className="h-9">
-                                      <Wrench className="h-3.5 w-3.5 mr-2" />
-                                      <SelectValue placeholder="Equipment" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="All">All Equipment</SelectItem>
-                                      <SelectItem value="Barbell">Barbell</SelectItem>
-                                      <SelectItem value="Dumbbell">Dumbbell</SelectItem>
-                                      <SelectItem value="Cable">Cable</SelectItem>
-                                      <SelectItem value="Machine">Machine</SelectItem>
-                                      <SelectItem value="Bodyweight">Bodyweight</SelectItem>
-                                      <SelectItem value="Kettlebell">Kettlebell</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              {/* Exercise Configuration Form */}
-                              {selectedExerciseForConfig ? (
-                                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <p className="font-semibold text-sm">
-                                        {selectedExerciseForConfig.name}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        Configure sets, reps, and weight
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7"
-                                      onClick={() => setSelectedExerciseForConfig(null)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-
-                                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                                    <div className="space-y-2">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Sets
-                                      </label>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        max="20"
-                                        value={exerciseConfig.sets}
-                                        onChange={(e) =>
-                                          setExerciseConfig((prev) => ({
-                                            ...prev,
-                                            sets: parseInt(e.target.value) || 1,
-                                          }))
-                                        }
-                                        className="h-9 text-center"
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Reps
-                                      </label>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        max="50"
-                                        value={exerciseConfig.reps}
-                                        onChange={(e) =>
-                                          setExerciseConfig((prev) => ({
-                                            ...prev,
-                                            reps: parseInt(e.target.value) || 1,
-                                          }))
-                                        }
-                                        className="h-9 text-center"
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Weight (kg)
-                                      </label>
-                                      <Input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        placeholder="Optional"
-                                        value={exerciseConfig.weight ?? ""}
-                                        onChange={(e) =>
-                                          setExerciseConfig((prev) => ({
-                                            ...prev,
-                                            weight:
-                                              e.target.value === ""
-                                                ? undefined
-                                                : parseFloat(e.target.value) || undefined,
-                                          }))
-                                        }
-                                        className="h-9 text-center"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="flex gap-2 pt-2">
-                                    <Button
-                                      variant="outline"
-                                      className="flex-1"
-                                      onClick={() => setSelectedExerciseForConfig(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      className="flex-1"
-                                      onClick={handleAddExerciseWithConfig}
-                                      disabled={
-                                        exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full gap-2 border-dashed"
+                              onClick={() => openExerciseDialogQuick(dayIdx)}
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add Exercise
+                            </Button>
+                            <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto sm:max-h-[80vh] sm:w-full">
+                              <DialogHeader>
+                                <DialogTitle className="text-base sm:text-lg">
+                                  Select Exercise for {day.dayName} (
+                                  {format(day.date, "MMM d")})
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 pt-4">
+                                {/* Search and Filters */}
+                                <div className="space-y-3">
+                                  <div className="relative">
+                                    <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                                    <Input
+                                      placeholder="Search exercises..."
+                                      value={searchQuery}
+                                      onChange={(e) =>
+                                        setSearchQuery(e.target.value)
                                       }
-                                    >
-                                      <Plus className="h-4 w-4 mr-2" />
-                                      Add Exercise
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  {/* Exercise List */}
-                                  <div className="max-h-[300px] sm:max-h-[400px] overflow-y-auto space-y-1.5 -mx-1 px-1">
-                                    {exercises.length === 0 ? (
-                                      <div className="text-center py-8 text-muted-foreground text-sm">
-                                        <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        <p>No exercises found</p>
-                                      </div>
-                                    ) : (
-                                      exercises.map((ex) => (
-                                        <Button
-                                          key={ex.id}
-                                          variant="ghost"
-                                          className="w-full justify-start h-auto p-3 hover:bg-accent touch-manipulation"
-                                          onClick={() =>
-                                            handleExerciseSelect(ex.id, ex.name)
-                                          }
-                                        >
-                                          <div className="flex items-start gap-3 w-full text-left">
-                                            <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
-                                              <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="font-medium text-sm">{ex.name}</p>
-                                              <div className="flex items-center gap-2 mt-1">
-                                                <Badge
-                                                  variant="secondary"
-                                                  className="text-[9px] px-1.5 py-0 h-4"
-                                                >
-                                                  {ex.muscleGroup}
-                                                </Badge>
-                                                {ex.equipment && (
-                                                  <Badge
-                                                    variant="outline"
-                                                    className="text-[9px] px-1.5 py-0 h-4"
-                                                  >
-                                                    {ex.equipment}
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                            </div>
-                                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                                          </div>
-                                        </Button>
-                                      ))
+                                      className="h-9 pr-10 pl-10"
+                                    />
+                                    {searchQuery && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
+                                        onClick={() => setSearchQuery("")}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
                                     )}
                                   </div>
-                                </>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-
-                        {/* Exercise Items */}
-                        {day.items.length === 0 ? (
-                          <div className="text-center py-4 text-muted-foreground text-xs border border-dashed rounded-lg">
-                            <p>No exercises yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {day.items.map((item, itemIdx) => {
-                              const exercise = exercises.find((e) => e.id === item.exerciseId);
-                              return (
-                                <div
-                                  key={itemIdx}
-                                  className="flex items-center gap-2 p-2 rounded-lg border border-border/50 bg-muted/30"
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-xs truncate">
-                                      {exercise?.name ?? "Unknown Exercise"}
-                                    </p>
+                                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                    <Select
+                                      value={selectedMuscle}
+                                      onValueChange={setSelectedMuscle}
+                                    >
+                                      <SelectTrigger className="h-9">
+                                        <Target className="mr-2 h-3.5 w-3.5" />
+                                        <SelectValue placeholder="Muscle Group" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="All">
+                                          All Muscle Groups
+                                        </SelectItem>
+                                        <SelectItem value="Chest">
+                                          Chest
+                                        </SelectItem>
+                                        <SelectItem value="Back">
+                                          Back
+                                        </SelectItem>
+                                        <SelectItem value="Shoulders">
+                                          Shoulders
+                                        </SelectItem>
+                                        <SelectItem value="Arms">
+                                          Arms
+                                        </SelectItem>
+                                        <SelectItem value="Legs">
+                                          Legs
+                                        </SelectItem>
+                                        <SelectItem value="Core">
+                                          Core
+                                        </SelectItem>
+                                        <SelectItem value="Glutes">
+                                          Glutes
+                                        </SelectItem>
+                                        <SelectItem value="Calves">
+                                          Calves
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Select
+                                      value={selectedEquipment}
+                                      onValueChange={setSelectedEquipment}
+                                    >
+                                      <SelectTrigger className="h-9">
+                                        <Wrench className="mr-2 h-3.5 w-3.5" />
+                                        <SelectValue placeholder="Equipment" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="All">
+                                          All Equipment
+                                        </SelectItem>
+                                        <SelectItem value="Barbell">
+                                          Barbell
+                                        </SelectItem>
+                                        <SelectItem value="Dumbbell">
+                                          Dumbbell
+                                        </SelectItem>
+                                        <SelectItem value="Cable">
+                                          Cable
+                                        </SelectItem>
+                                        <SelectItem value="Machine">
+                                          Machine
+                                        </SelectItem>
+                                        <SelectItem value="Bodyweight">
+                                          Bodyweight
+                                        </SelectItem>
+                                        <SelectItem value="Kettlebell">
+                                          Kettlebell
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                      <span className="text-[10px] text-muted-foreground">Sets:</span>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        max="20"
-                                        value={item.sets}
-                                        onChange={(e) =>
-                                          updateItemQuick(
-                                            dayIdx,
-                                            itemIdx,
-                                            "sets",
-                                            parseInt(e.target.value) || 0
-                                          )
+                                </div>
+
+                                {/* Exercise Configuration Form */}
+                                {selectedExerciseForConfig ? (
+                                  <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="text-sm font-semibold">
+                                          {selectedExerciseForConfig.name}
+                                        </p>
+                                        <p className="text-muted-foreground text-xs">
+                                          Configure sets, reps, and weight
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() =>
+                                          setSelectedExerciseForConfig(null)
                                         }
-                                        className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
-                                      />
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
                                     </div>
-                                    <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                      <span className="text-[10px] text-muted-foreground">Reps:</span>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        max="50"
-                                        value={item.reps}
-                                        onChange={(e) =>
-                                          updateItemQuick(
-                                            dayIdx,
-                                            itemIdx,
-                                            "reps",
-                                            parseInt(e.target.value) || 0
-                                          )
-                                        }
-                                        className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
-                                      />
-                                    </div>
-                                    {item.weight !== undefined && item.weight !== null && (
-                                      <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                        <span className="text-[10px] text-muted-foreground">kg:</span>
+
+                                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                                      <div className="space-y-2">
+                                        <label className="text-muted-foreground text-xs font-medium">
+                                          Sets
+                                        </label>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="20"
+                                          value={exerciseConfig.sets}
+                                          onChange={(e) =>
+                                            setExerciseConfig((prev) => ({
+                                              ...prev,
+                                              sets:
+                                                parseInt(e.target.value) || 1,
+                                            }))
+                                          }
+                                          className="h-9 text-center"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-muted-foreground text-xs font-medium">
+                                          Reps
+                                        </label>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="50"
+                                          value={exerciseConfig.reps}
+                                          onChange={(e) =>
+                                            setExerciseConfig((prev) => ({
+                                              ...prev,
+                                              reps:
+                                                parseInt(e.target.value) || 1,
+                                            }))
+                                          }
+                                          className="h-9 text-center"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-muted-foreground text-xs font-medium">
+                                          Weight (kg)
+                                        </label>
                                         <Input
                                           type="number"
                                           min="0"
                                           step="0.5"
-                                          value={item.weight}
+                                          placeholder="Optional"
+                                          value={exerciseConfig.weight ?? ""}
+                                          onChange={(e) =>
+                                            setExerciseConfig((prev) => ({
+                                              ...prev,
+                                              weight:
+                                                e.target.value === ""
+                                                  ? undefined
+                                                  : parseFloat(
+                                                      e.target.value,
+                                                    ) || undefined,
+                                            }))
+                                          }
+                                          className="h-9 text-center"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                      <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() =>
+                                          setSelectedExerciseForConfig(null)
+                                        }
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        className="flex-1"
+                                        onClick={handleAddExerciseWithConfig}
+                                        disabled={
+                                          exerciseConfig.sets < 1 ||
+                                          exerciseConfig.reps < 1
+                                        }
+                                      >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Exercise
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Exercise List */}
+                                    <div className="-mx-1 max-h-[300px] space-y-1.5 overflow-y-auto px-1 sm:max-h-[400px]">
+                                      {exercises.length === 0 ? (
+                                        <div className="text-muted-foreground py-8 text-center text-sm">
+                                          <Dumbbell className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                                          <p>No exercises found</p>
+                                        </div>
+                                      ) : (
+                                        exercises.map((ex) => (
+                                          <Button
+                                            key={ex.id}
+                                            variant="ghost"
+                                            className="hover:bg-accent h-auto w-full touch-manipulation justify-start p-3"
+                                            onClick={() =>
+                                              handleExerciseSelect(
+                                                ex.id,
+                                                ex.name,
+                                              )
+                                            }
+                                          >
+                                            <div className="flex w-full items-start gap-3 text-left">
+                                              <div className="shrink-0 rounded bg-teal-100 p-1.5 dark:bg-teal-900/30">
+                                                <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                                              </div>
+                                              <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium">
+                                                  {ex.name}
+                                                </p>
+                                                <div className="mt-1 flex items-center gap-2">
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className="h-4 px-1.5 py-0 text-[9px]"
+                                                  >
+                                                    {ex.muscleGroup}
+                                                  </Badge>
+                                                  {ex.equipment && (
+                                                    <Badge
+                                                      variant="outline"
+                                                      className="h-4 px-1.5 py-0 text-[9px]"
+                                                    >
+                                                      {ex.equipment}
+                                                    </Badge>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <Plus className="text-muted-foreground h-4 w-4 shrink-0" />
+                                            </div>
+                                          </Button>
+                                        ))
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+
+                          {/* Exercise Items */}
+                          {day.items.length === 0 ? (
+                            <div className="text-muted-foreground rounded-lg border border-dashed py-4 text-center text-xs">
+                              <p>No exercises yet</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {day.items.map((item, itemIdx) => {
+                                const exercise = exercises.find(
+                                  (e) => e.id === item.exerciseId,
+                                );
+                                return (
+                                  <div
+                                    key={itemIdx}
+                                    className="border-border/50 bg-muted/30 flex items-center gap-2 rounded-lg border p-2"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-xs font-medium">
+                                        {exercise?.name ?? "Unknown Exercise"}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                        <span className="text-muted-foreground text-[10px]">
+                                          Sets:
+                                        </span>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="20"
+                                          value={item.sets}
                                           onChange={(e) =>
                                             updateItemQuick(
                                               dayIdx,
                                               itemIdx,
-                                              "weight",
-                                              parseFloat(e.target.value) || 0
+                                              "sets",
+                                              parseInt(e.target.value) || 0,
                                             )
                                           }
-                                          className="w-14 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                          className="h-7 w-12 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
                                         />
                                       </div>
-                                    )}
+                                      <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                        <span className="text-muted-foreground text-[10px]">
+                                          Reps:
+                                        </span>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="50"
+                                          value={item.reps}
+                                          onChange={(e) =>
+                                            updateItemQuick(
+                                              dayIdx,
+                                              itemIdx,
+                                              "reps",
+                                              parseInt(e.target.value) || 0,
+                                            )
+                                          }
+                                          className="h-7 w-12 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
+                                        />
+                                      </div>
+                                      {item.weight !== undefined &&
+                                        item.weight !== null && (
+                                          <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                            <span className="text-muted-foreground text-[10px]">
+                                              kg:
+                                            </span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              step="0.5"
+                                              value={item.weight}
+                                              onChange={(e) =>
+                                                updateItemQuick(
+                                                  dayIdx,
+                                                  itemIdx,
+                                                  "weight",
+                                                  parseFloat(e.target.value) ||
+                                                    0,
+                                                )
+                                              }
+                                              className="h-7 w-14 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
+                                            />
+                                          </div>
+                                        )}
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-destructive h-7 w-7 shrink-0"
+                                      onClick={() =>
+                                        deleteItemQuick(dayIdx, itemIdx)
+                                      }
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive shrink-0"
-                                    onClick={() => deleteItemQuick(dayIdx, itemIdx)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-        </div>
         )}
 
         {/* Month View */}
@@ -1229,7 +1325,7 @@ export default function WorkoutBuilderPage() {
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-medium text-muted-foreground py-2"
+                  className="text-muted-foreground py-2 text-center text-xs font-medium"
                 >
                   {day}
                 </div>
@@ -1240,29 +1336,38 @@ export default function WorkoutBuilderPage() {
                 const monthStart = startOfMonth(currentMonth);
                 const monthEnd = endOfMonth(currentMonth);
                 const firstDayOfWeek = monthStart.getDay();
-                const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                const daysInMonth = eachDayOfInterval({
+                  start: monthStart,
+                  end: monthEnd,
+                });
                 const todayStart = startOfDay(today);
-                
+
                 // Filter out past dates - only show today and future dates
                 const futureDays = daysInMonth.filter((date) => {
                   const dateStart = startOfDay(date);
-                  return !isBefore(dateStart, todayStart) || isSameDay(date, today);
+                  return (
+                    !isBefore(dateStart, todayStart) || isSameDay(date, today)
+                  );
                 });
-                
+
                 // Calculate how many empty cells we need at the start
                 // Find the first visible day's position in the week
                 const firstVisibleDay = futureDays[0];
-                const firstVisibleDayOfWeek = firstVisibleDay ? firstVisibleDay.getDay() : firstDayOfWeek;
-                
+                const firstVisibleDayOfWeek = firstVisibleDay
+                  ? firstVisibleDay.getDay()
+                  : firstDayOfWeek;
+
                 // Add empty cells for days before first visible day
                 const calendarDays = [
-                  ...Array(firstVisibleDayOfWeek).fill(null),
+                  ...Array.from({ length: firstVisibleDayOfWeek }, () => null),
                   ...futureDays,
                 ];
 
                 return calendarDays.map((date, index) => {
                   if (!date) {
-                    return <div key={`empty-${index}`} className="aspect-square" />;
+                    return (
+                      <div key={`empty-${index}`} className="aspect-square" />
+                    );
                   }
 
                   const dateKey = format(date, "yyyy-MM-dd");
@@ -1283,7 +1388,7 @@ export default function WorkoutBuilderPage() {
                     monthDays.set(dateKey, newDay);
                   }
 
-                  const dayData = monthDays.get(dateKey) || {
+                  const dayData = monthDays.get(dateKey) ?? {
                     date,
                     dateNumber: date.getDate(),
                     isToday,
@@ -1296,21 +1401,23 @@ export default function WorkoutBuilderPage() {
                     <Card
                       key={dateKey}
                       className={cn(
-                        "border-0 shadow-sm aspect-square p-2 hover:shadow-md transition-all cursor-pointer",
+                        "aspect-square cursor-pointer border-0 p-2 shadow-sm transition-all hover:shadow-md",
                         !isCurrentMonth && "opacity-40",
                         isToday && "ring-2 ring-teal-500 ring-offset-1",
-                        dayData.isRestDay && "bg-muted/50"
+                        dayData.isRestDay && "bg-muted/50",
                       )}
                     >
-                      <CardContent className="p-0 h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-1">
+                      <CardContent className="flex h-full flex-col p-0">
+                        <div className="mb-1 flex items-center justify-between">
                           <span
                             className={cn(
                               "text-xs font-medium",
-                              isToday && "text-teal-600 font-bold"
+                              isToday && "font-bold text-teal-600",
                             )}
                           >
-                            {date.getDate()}
+                            {date instanceof Date && !isNaN(date.getTime())
+                              ? date.getDate()
+                              : ""}
                           </span>
                           <button
                             onClick={(e) => {
@@ -1320,8 +1427,9 @@ export default function WorkoutBuilderPage() {
                               }
                             }}
                             className={cn(
-                              "p-0.5 rounded hover:bg-muted transition-colors",
-                              dayData.isRestDay && "bg-teal-100 dark:bg-teal-900/30"
+                              "hover:bg-muted rounded p-0.5 transition-colors",
+                              dayData.isRestDay &&
+                                "bg-teal-100 dark:bg-teal-900/30",
                             )}
                           >
                             <Moon
@@ -1329,15 +1437,19 @@ export default function WorkoutBuilderPage() {
                                 "h-3 w-3",
                                 dayData.isRestDay
                                   ? "text-teal-600 dark:text-teal-400"
-                                  : "text-muted-foreground/50"
+                                  : "text-muted-foreground/50",
                               )}
                             />
                           </button>
                         </div>
                         {dayData.items.length > 0 && (
-                          <div className="flex-1 flex items-center justify-center">
-                            <Badge variant="secondary" className="text-[8px] px-1 py-0">
-                              {dayData.items.length} {dayData.items.length === 1 ? "ex" : "ex"}
+                          <div className="flex flex-1 items-center justify-center">
+                            <Badge
+                              variant="secondary"
+                              className="px-1 py-0 text-[8px]"
+                            >
+                              {dayData.items.length}{" "}
+                              {dayData.items.length === 1 ? "ex" : "ex"}
                             </Badge>
                           </div>
                         )}
@@ -1347,9 +1459,9 @@ export default function WorkoutBuilderPage() {
                               e.stopPropagation();
                               openExerciseDialogMonth(dateKey);
                             }}
-                            className="mt-auto pt-1 flex items-center justify-center"
+                            className="mt-auto flex items-center justify-center pt-1"
                           >
-                            <Plus className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
+                            <Plus className="text-muted-foreground hover:text-foreground h-3 w-3 transition-colors" />
                           </button>
                         )}
                       </CardContent>
@@ -1363,15 +1475,18 @@ export default function WorkoutBuilderPage() {
             {(() => {
               // Find days with workouts for current month
               const daysWithWorkouts = Array.from(monthDays.values()).filter(
-                (day) => day.isCurrentMonth && (!day.isRestDay && day.items.length > 0)
+                (day) =>
+                  day.isCurrentMonth && !day.isRestDay && day.items.length > 0,
               );
 
               if (daysWithWorkouts.length === 0) {
                 return (
                   <Card className="border-0 shadow-sm">
-                    <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    <CardContent className="text-muted-foreground py-8 text-center text-sm">
                       <p>Click on a day to add exercises</p>
-                      <p className="text-xs mt-1">Or click the checkbox to mark as rest day</p>
+                      <p className="mt-1 text-xs">
+                        Or click the checkbox to mark as rest day
+                      </p>
                     </CardContent>
                   </Card>
                 );
@@ -1392,7 +1507,10 @@ export default function WorkoutBuilderPage() {
                                   {format(day.date, "EEEE, MMM d")}
                                 </CardTitle>
                                 {day.isToday && (
-                                  <Badge variant="default" className="text-[9px] mt-1">
+                                  <Badge
+                                    variant="default"
+                                    className="mt-1 text-[9px]"
+                                  >
                                     Today
                                   </Badge>
                                 )}
@@ -1400,16 +1518,22 @@ export default function WorkoutBuilderPage() {
                               <div className="flex items-center gap-2">
                                 <Checkbox
                                   checked={day.isRestDay}
-                                  onCheckedChange={() => toggleRestDayMonth(dateKey)}
+                                  onCheckedChange={() =>
+                                    toggleRestDayMonth(dateKey)
+                                  }
                                 />
-                                <span className="text-xs text-muted-foreground">Rest</span>
+                                <span className="text-muted-foreground text-xs">
+                                  Rest
+                                </span>
                               </div>
                             </div>
                           </CardHeader>
-                          <CardContent className="px-4 pb-4 space-y-2">
+                          <CardContent className="space-y-2 px-4 pb-4">
                             {/* Add Exercise Button */}
                             <Dialog
-                              open={isExerciseDialogOpen && targetDayIdx === dateKey}
+                              open={
+                                isExerciseDialogOpen && targetDayIdx === dateKey
+                              }
                               onOpenChange={(open) => {
                                 if (!open) {
                                   setIsExerciseDialogOpen(false);
@@ -1424,59 +1548,80 @@ export default function WorkoutBuilderPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-full border-dashed gap-2"
+                                className="w-full gap-2 border-dashed"
                                 onClick={() => openExerciseDialogMonth(dateKey)}
                               >
                                 <Plus className="h-4 w-4" />
                                 Add Exercise
                               </Button>
-                              <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
+                              <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto sm:max-h-[80vh] sm:w-full">
                                 <DialogHeader>
                                   <DialogTitle className="text-base sm:text-lg">
-                                    Select Exercise for {format(day.date, "MMM d")}
+                                    Select Exercise for{" "}
+                                    {format(day.date, "MMM d")}
                                   </DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4 pt-4">
                                   {/* Search and Filters - Same as week view */}
                                   <div className="space-y-3">
                                     <div className="relative">
-                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                      <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                                       <Input
                                         placeholder="Search exercises..."
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-10 pr-10 h-9"
+                                        onChange={(e) =>
+                                          setSearchQuery(e.target.value)
+                                        }
+                                        className="h-9 pr-10 pl-10"
                                       />
                                       {searchQuery && (
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                          className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
                                           onClick={() => setSearchQuery("")}
                                         >
                                           <X className="h-4 w-4" />
                                         </Button>
                                       )}
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                       <Select
                                         value={selectedMuscle}
                                         onValueChange={setSelectedMuscle}
                                       >
                                         <SelectTrigger className="h-9">
-                                          <Target className="h-3.5 w-3.5 mr-2" />
+                                          <Target className="mr-2 h-3.5 w-3.5" />
                                           <SelectValue placeholder="Muscle Group" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="All">All Muscle Groups</SelectItem>
-                                          <SelectItem value="Chest">Chest</SelectItem>
-                                          <SelectItem value="Back">Back</SelectItem>
-                                          <SelectItem value="Shoulders">Shoulders</SelectItem>
-                                          <SelectItem value="Arms">Arms</SelectItem>
-                                          <SelectItem value="Legs">Legs</SelectItem>
-                                          <SelectItem value="Core">Core</SelectItem>
-                                          <SelectItem value="Glutes">Glutes</SelectItem>
-                                          <SelectItem value="Calves">Calves</SelectItem>
+                                          <SelectItem value="All">
+                                            All Muscle Groups
+                                          </SelectItem>
+                                          <SelectItem value="Chest">
+                                            Chest
+                                          </SelectItem>
+                                          <SelectItem value="Back">
+                                            Back
+                                          </SelectItem>
+                                          <SelectItem value="Shoulders">
+                                            Shoulders
+                                          </SelectItem>
+                                          <SelectItem value="Arms">
+                                            Arms
+                                          </SelectItem>
+                                          <SelectItem value="Legs">
+                                            Legs
+                                          </SelectItem>
+                                          <SelectItem value="Core">
+                                            Core
+                                          </SelectItem>
+                                          <SelectItem value="Glutes">
+                                            Glutes
+                                          </SelectItem>
+                                          <SelectItem value="Calves">
+                                            Calves
+                                          </SelectItem>
                                         </SelectContent>
                                       </Select>
                                       <Select
@@ -1484,17 +1629,31 @@ export default function WorkoutBuilderPage() {
                                         onValueChange={setSelectedEquipment}
                                       >
                                         <SelectTrigger className="h-9">
-                                          <Wrench className="h-3.5 w-3.5 mr-2" />
+                                          <Wrench className="mr-2 h-3.5 w-3.5" />
                                           <SelectValue placeholder="Equipment" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="All">All Equipment</SelectItem>
-                                          <SelectItem value="Barbell">Barbell</SelectItem>
-                                          <SelectItem value="Dumbbell">Dumbbell</SelectItem>
-                                          <SelectItem value="Cable">Cable</SelectItem>
-                                          <SelectItem value="Machine">Machine</SelectItem>
-                                          <SelectItem value="Bodyweight">Bodyweight</SelectItem>
-                                          <SelectItem value="Kettlebell">Kettlebell</SelectItem>
+                                          <SelectItem value="All">
+                                            All Equipment
+                                          </SelectItem>
+                                          <SelectItem value="Barbell">
+                                            Barbell
+                                          </SelectItem>
+                                          <SelectItem value="Dumbbell">
+                                            Dumbbell
+                                          </SelectItem>
+                                          <SelectItem value="Cable">
+                                            Cable
+                                          </SelectItem>
+                                          <SelectItem value="Machine">
+                                            Machine
+                                          </SelectItem>
+                                          <SelectItem value="Bodyweight">
+                                            Bodyweight
+                                          </SelectItem>
+                                          <SelectItem value="Kettlebell">
+                                            Kettlebell
+                                          </SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -1502,13 +1661,13 @@ export default function WorkoutBuilderPage() {
 
                                   {/* Exercise Configuration Form */}
                                   {selectedExerciseForConfig ? (
-                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                    <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
                                       <div className="flex items-center justify-between">
                                         <div>
-                                          <p className="font-semibold text-sm">
+                                          <p className="text-sm font-semibold">
                                             {selectedExerciseForConfig.name}
                                           </p>
-                                          <p className="text-xs text-muted-foreground">
+                                          <p className="text-muted-foreground text-xs">
                                             Configure sets, reps, and weight
                                           </p>
                                         </div>
@@ -1516,7 +1675,9 @@ export default function WorkoutBuilderPage() {
                                           variant="ghost"
                                           size="icon"
                                           className="h-7 w-7"
-                                          onClick={() => setSelectedExerciseForConfig(null)}
+                                          onClick={() =>
+                                            setSelectedExerciseForConfig(null)
+                                          }
                                         >
                                           <X className="h-4 w-4" />
                                         </Button>
@@ -1524,7 +1685,7 @@ export default function WorkoutBuilderPage() {
 
                                       <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                         <div className="space-y-2">
-                                          <label className="text-xs font-medium text-muted-foreground">
+                                          <label className="text-muted-foreground text-xs font-medium">
                                             Sets
                                           </label>
                                           <Input
@@ -1535,14 +1696,15 @@ export default function WorkoutBuilderPage() {
                                             onChange={(e) =>
                                               setExerciseConfig((prev) => ({
                                                 ...prev,
-                                                sets: parseInt(e.target.value) || 1,
+                                                sets:
+                                                  parseInt(e.target.value) || 1,
                                               }))
                                             }
                                             className="h-9 text-center"
                                           />
                                         </div>
                                         <div className="space-y-2">
-                                          <label className="text-xs font-medium text-muted-foreground">
+                                          <label className="text-muted-foreground text-xs font-medium">
                                             Reps
                                           </label>
                                           <Input
@@ -1553,14 +1715,15 @@ export default function WorkoutBuilderPage() {
                                             onChange={(e) =>
                                               setExerciseConfig((prev) => ({
                                                 ...prev,
-                                                reps: parseInt(e.target.value) || 1,
+                                                reps:
+                                                  parseInt(e.target.value) || 1,
                                               }))
                                             }
                                             className="h-9 text-center"
                                           />
                                         </div>
                                         <div className="space-y-2">
-                                          <label className="text-xs font-medium text-muted-foreground">
+                                          <label className="text-muted-foreground text-xs font-medium">
                                             Weight (kg)
                                           </label>
                                           <Input
@@ -1575,7 +1738,9 @@ export default function WorkoutBuilderPage() {
                                                 weight:
                                                   e.target.value === ""
                                                     ? undefined
-                                                    : parseFloat(e.target.value) || undefined,
+                                                    : parseFloat(
+                                                        e.target.value,
+                                                      ) || undefined,
                                               }))
                                             }
                                             className="h-9 text-center"
@@ -1587,7 +1752,9 @@ export default function WorkoutBuilderPage() {
                                         <Button
                                           variant="outline"
                                           className="flex-1"
-                                          onClick={() => setSelectedExerciseForConfig(null)}
+                                          onClick={() =>
+                                            setSelectedExerciseForConfig(null)
+                                          }
                                         >
                                           Cancel
                                         </Button>
@@ -1595,10 +1762,11 @@ export default function WorkoutBuilderPage() {
                                           className="flex-1"
                                           onClick={handleAddExerciseWithConfig}
                                           disabled={
-                                            exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                                            exerciseConfig.sets < 1 ||
+                                            exerciseConfig.reps < 1
                                           }
                                         >
-                                          <Plus className="h-4 w-4 mr-2" />
+                                          <Plus className="mr-2 h-4 w-4" />
                                           Add Exercise
                                         </Button>
                                       </div>
@@ -1606,10 +1774,10 @@ export default function WorkoutBuilderPage() {
                                   ) : (
                                     <>
                                       {/* Exercise List */}
-                                      <div className="max-h-[300px] sm:max-h-[400px] overflow-y-auto space-y-1.5 -mx-1 px-1">
+                                      <div className="-mx-1 max-h-[300px] space-y-1.5 overflow-y-auto px-1 sm:max-h-[400px]">
                                         {exercises.length === 0 ? (
-                                          <div className="text-center py-8 text-muted-foreground text-sm">
-                                            <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                          <div className="text-muted-foreground py-8 text-center text-sm">
+                                            <Dumbbell className="mx-auto mb-2 h-8 w-8 opacity-50" />
                                             <p>No exercises found</p>
                                           </div>
                                         ) : (
@@ -1617,35 +1785,40 @@ export default function WorkoutBuilderPage() {
                                             <Button
                                               key={ex.id}
                                               variant="ghost"
-                                              className="w-full justify-start h-auto p-3 hover:bg-accent"
+                                              className="hover:bg-accent h-auto w-full justify-start p-3"
                                               onClick={() =>
-                                                handleExerciseSelect(ex.id, ex.name)
+                                                handleExerciseSelect(
+                                                  ex.id,
+                                                  ex.name,
+                                                )
                                               }
                                             >
-                                              <div className="flex items-start gap-3 w-full text-left">
-                                                <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
+                                              <div className="flex w-full items-start gap-3 text-left">
+                                                <div className="shrink-0 rounded bg-teal-100 p-1.5 dark:bg-teal-900/30">
                                                   <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                  <p className="font-medium text-sm">{ex.name}</p>
-                                                  <div className="flex items-center gap-2 mt-1">
+                                                <div className="min-w-0 flex-1">
+                                                  <p className="text-sm font-medium">
+                                                    {ex.name}
+                                                  </p>
+                                                  <div className="mt-1 flex items-center gap-2">
                                                     <Badge
                                                       variant="secondary"
-                                                      className="text-[9px] px-1.5 py-0 h-4"
+                                                      className="h-4 px-1.5 py-0 text-[9px]"
                                                     >
                                                       {ex.muscleGroup}
                                                     </Badge>
                                                     {ex.equipment && (
                                                       <Badge
                                                         variant="outline"
-                                                        className="text-[9px] px-1.5 py-0 h-4"
+                                                        className="h-4 px-1.5 py-0 text-[9px]"
                                                       >
                                                         {ex.equipment}
                                                       </Badge>
                                                     )}
                                                   </div>
                                                 </div>
-                                                <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                                <Plus className="text-muted-foreground h-4 w-4 shrink-0" />
                                               </div>
                                             </Button>
                                           ))
@@ -1661,20 +1834,24 @@ export default function WorkoutBuilderPage() {
                             {day.items.length > 0 && (
                               <div className="space-y-2">
                                 {day.items.map((item, itemIdx) => {
-                                  const exercise = exercises.find((e) => e.id === item.exerciseId);
+                                  const exercise = exercises.find(
+                                    (e) => e.id === item.exerciseId,
+                                  );
                                   return (
                                     <div
                                       key={itemIdx}
-                                      className="flex items-center gap-2 p-2 rounded-lg border border-border/50 bg-muted/30"
+                                      className="border-border/50 bg-muted/30 flex items-center gap-2 rounded-lg border p-2"
                                     >
-                                      <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-xs truncate">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-medium">
                                           {exercise?.name ?? "Unknown Exercise"}
                                         </p>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                          <span className="text-[10px] text-muted-foreground">Sets:</span>
+                                        <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                          <span className="text-muted-foreground text-[10px]">
+                                            Sets:
+                                          </span>
                                           <Input
                                             type="number"
                                             min="1"
@@ -1685,14 +1862,16 @@ export default function WorkoutBuilderPage() {
                                                 dateKey,
                                                 itemIdx,
                                                 "sets",
-                                                parseInt(e.target.value) || 0
+                                                parseInt(e.target.value) || 0,
                                               )
                                             }
-                                            className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                            className="h-7 w-12 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
                                           />
                                         </div>
-                                        <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                          <span className="text-[10px] text-muted-foreground">Reps:</span>
+                                        <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                          <span className="text-muted-foreground text-[10px]">
+                                            Reps:
+                                          </span>
                                           <Input
                                             type="number"
                                             min="1"
@@ -1703,38 +1882,45 @@ export default function WorkoutBuilderPage() {
                                                 dateKey,
                                                 itemIdx,
                                                 "reps",
-                                                parseInt(e.target.value) || 0
+                                                parseInt(e.target.value) || 0,
                                               )
                                             }
-                                            className="w-12 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
+                                            className="h-7 w-12 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
                                           />
                                         </div>
-                                        {item.weight !== undefined && item.weight !== null && (
-                                          <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-                                            <span className="text-[10px] text-muted-foreground">kg:</span>
-                                            <Input
-                                              type="number"
-                                              min="0"
-                                              step="0.5"
-                                              value={item.weight}
-                                              onChange={(e) =>
-                                                updateItemMonth(
-                                                  dateKey,
-                                                  itemIdx,
-                                                  "weight",
-                                                  parseFloat(e.target.value) || 0
-                                                )
-                                              }
-                                              className="w-14 h-7 text-center text-xs border-0 bg-transparent p-0 focus-visible:ring-0"
-                                            />
-                                          </div>
-                                        )}
+                                        {item.weight !== undefined &&
+                                          item.weight !== null && (
+                                            <div className="bg-muted/50 flex items-center gap-1 rounded px-2 py-1">
+                                              <span className="text-muted-foreground text-[10px]">
+                                                kg:
+                                              </span>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.5"
+                                                value={item.weight}
+                                                onChange={(e) =>
+                                                  updateItemMonth(
+                                                    dateKey,
+                                                    itemIdx,
+                                                    "weight",
+                                                    parseFloat(
+                                                      e.target.value,
+                                                    ) || 0,
+                                                  )
+                                                }
+                                                className="h-7 w-14 border-0 bg-transparent p-0 text-center text-xs focus-visible:ring-0"
+                                              />
+                                            </div>
+                                          )}
                                       </div>
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-destructive shrink-0"
-                                        onClick={() => deleteItemMonth(dateKey, itemIdx)}
+                                        className="text-destructive h-7 w-7 shrink-0"
+                                        onClick={() =>
+                                          deleteItemMonth(dateKey, itemIdx)
+                                        }
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
@@ -1755,17 +1941,19 @@ export default function WorkoutBuilderPage() {
         )}
 
         {/* Summary */}
-        <Card className="border-0 shadow-sm bg-muted/50">
+        <Card className="bg-muted/50 border-0 shadow-sm">
           <CardContent className="px-4 py-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-muted-foreground flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  {workoutDaysCount} workout {workoutDaysCount === 1 ? "day" : "days"}
+                  {workoutDaysCount} workout{" "}
+                  {workoutDaysCount === 1 ? "day" : "days"}
                 </span>
-                <span className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-muted-foreground flex items-center gap-1">
                   <Dumbbell className="h-3.5 w-3.5" />
-                  {totalExercises} {totalExercises === 1 ? "exercise" : "exercises"}
+                  {totalExercises}{" "}
+                  {totalExercises === 1 ? "exercise" : "exercises"}
                 </span>
               </div>
               <Button
@@ -1786,19 +1974,21 @@ export default function WorkoutBuilderPage() {
 
   // Normal Mode View (existing code)
   return (
-    <div className="flex-1 space-y-4 p-4 sm:p-6 pt-4">
+    <div className="flex-1 space-y-4 p-4 pt-4 sm:p-6">
       {/* Compact Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Workout Builder</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
+            Workout Builder
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-xs sm:text-sm">
             Create a custom workout plan
           </p>
         </div>
         <Button
           onClick={save}
           disabled={!canSave || create.isPending}
-          className="gap-2 w-full sm:w-auto"
+          className="w-full gap-2 sm:w-auto"
           size="sm"
         >
           <Save className="h-4 w-4" />
@@ -1811,14 +2001,14 @@ export default function WorkoutBuilderPage() {
         <CardHeader className="px-4 pt-4 pb-3">
           <CardTitle className="text-sm">Plan Details</CardTitle>
         </CardHeader>
-        <CardContent className="px-4 pb-4 space-y-2.5">
+        <CardContent className="space-y-2.5 px-4 pb-4">
           <Input
             placeholder="Enter plan name (e.g., My Strength Program)"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="h-9"
           />
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {days.length} {days.length === 1 ? "day" : "days"}
@@ -1845,9 +2035,11 @@ export default function WorkoutBuilderPage() {
         {days.length === 0 ? (
           <Card className="border-0 shadow-sm">
             <CardContent className="flex flex-col items-center justify-center py-10">
-              <Dumbbell className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-              <h3 className="text-base font-semibold mb-1">No workout days yet</h3>
-              <p className="text-xs text-muted-foreground mb-3 text-center">
+              <Dumbbell className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
+              <h3 className="mb-1 text-base font-semibold">
+                No workout days yet
+              </h3>
+              <p className="text-muted-foreground mb-3 text-center text-xs">
                 Add your first workout day to get started
               </p>
               <Button size="sm" onClick={addDay} className="gap-2">
@@ -1866,18 +2058,18 @@ export default function WorkoutBuilderPage() {
                     onChange={(e) =>
                       setDays((prev) =>
                         prev.map((d, i) =>
-                          i === dayIdx ? { ...d, title: e.target.value } : d
-                        )
+                          i === dayIdx ? { ...d, title: e.target.value } : d,
+                        ),
                       )
                     }
-                    className="h-8 text-sm font-semibold flex-1"
+                    className="h-8 flex-1 text-sm font-semibold"
                     placeholder="Day title (e.g., Monday - Push)"
                   />
                   {days.length > 1 && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
+                      className="text-destructive h-8 w-8"
                       onClick={() => deleteDay(dayIdx)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -1885,7 +2077,7 @@ export default function WorkoutBuilderPage() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-3">
+              <CardContent className="space-y-3 px-4 pb-4">
                 {/* Add Exercise Button */}
                 <Dialog
                   open={isExerciseDialogOpen && targetDayIdx === dayIdx}
@@ -1905,33 +2097,35 @@ export default function WorkoutBuilderPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-dashed gap-2"
+                      className="w-full gap-2 border-dashed"
                       onClick={() => openExerciseDialog(dayIdx)}
                     >
                       <Plus className="h-4 w-4" />
                       Add Exercise
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto sm:max-h-[80vh] sm:w-full">
                     <DialogHeader>
-                      <DialogTitle className="text-base sm:text-lg">Select Exercise</DialogTitle>
+                      <DialogTitle className="text-base sm:text-lg">
+                        Select Exercise
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       {/* Search and Filters */}
                       <div className="space-y-3">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                           <Input
                             placeholder="Search exercises..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 pr-10 h-9"
+                            className="h-9 pr-10 pl-10"
                           />
                           {searchQuery && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
                               onClick={() => setSearchQuery("")}
                             >
                               <X className="h-4 w-4" />
@@ -1939,33 +2133,39 @@ export default function WorkoutBuilderPage() {
                           )}
                         </div>
                         {/* Quick Body Part Filters */}
-                        <div className="flex gap-2 flex-wrap">
-                          {(["Push", "Pull", "Legs"] as const).map((bodyPart) => (
-                            <Button
-                              key={bodyPart}
-                              variant={selectedBodyPart === bodyPart ? "default" : "outline"}
-                              size="sm"
-                              className="h-9 sm:h-8 text-xs flex-1 sm:flex-none min-w-[80px] touch-manipulation"
-                              onClick={() => {
-                                if (selectedBodyPart === bodyPart) {
-                                  setSelectedBodyPart(null);
-                                  setSelectedMuscle("All");
-                                } else {
-                                  setSelectedBodyPart(bodyPart);
-                                  // Auto-set muscle filter based on body part
-                                  if (bodyPart === "Push") {
-                                    setSelectedMuscle("Chest");
-                                  } else if (bodyPart === "Pull") {
-                                    setSelectedMuscle("Back");
-                                  } else if (bodyPart === "Legs") {
-                                    setSelectedMuscle("Legs");
-                                  }
+                        <div className="flex flex-wrap gap-2">
+                          {(["Push", "Pull", "Legs"] as const).map(
+                            (bodyPart) => (
+                              <Button
+                                key={bodyPart}
+                                variant={
+                                  selectedBodyPart === bodyPart
+                                    ? "default"
+                                    : "outline"
                                 }
-                              }}
-                            >
-                              {bodyPart}
-                            </Button>
-                          ))}
+                                size="sm"
+                                className="h-9 min-w-[80px] flex-1 touch-manipulation text-xs sm:h-8 sm:flex-none"
+                                onClick={() => {
+                                  if (selectedBodyPart === bodyPart) {
+                                    setSelectedBodyPart(null);
+                                    setSelectedMuscle("All");
+                                  } else {
+                                    setSelectedBodyPart(bodyPart);
+                                    // Auto-set muscle filter based on body part
+                                    if (bodyPart === "Push") {
+                                      setSelectedMuscle("Chest");
+                                    } else if (bodyPart === "Pull") {
+                                      setSelectedMuscle("Back");
+                                    } else if (bodyPart === "Legs") {
+                                      setSelectedMuscle("Legs");
+                                    }
+                                  }
+                                }}
+                              >
+                                {bodyPart}
+                              </Button>
+                            ),
+                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <Select
@@ -1977,14 +2177,18 @@ export default function WorkoutBuilderPage() {
                             }}
                           >
                             <SelectTrigger className="h-9">
-                              <Target className="h-3.5 w-3.5 mr-2" />
+                              <Target className="mr-2 h-3.5 w-3.5" />
                               <SelectValue placeholder="Muscle Group" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="All">All Muscle Groups</SelectItem>
+                              <SelectItem value="All">
+                                All Muscle Groups
+                              </SelectItem>
                               <SelectItem value="Chest">Chest</SelectItem>
                               <SelectItem value="Back">Back</SelectItem>
-                              <SelectItem value="Shoulders">Shoulders</SelectItem>
+                              <SelectItem value="Shoulders">
+                                Shoulders
+                              </SelectItem>
                               <SelectItem value="Arms">Arms</SelectItem>
                               <SelectItem value="Legs">Legs</SelectItem>
                               <SelectItem value="Core">Core</SelectItem>
@@ -1997,7 +2201,7 @@ export default function WorkoutBuilderPage() {
                             onValueChange={setSelectedEquipment}
                           >
                             <SelectTrigger className="h-9">
-                              <Wrench className="h-3.5 w-3.5 mr-2" />
+                              <Wrench className="mr-2 h-3.5 w-3.5" />
                               <SelectValue placeholder="Equipment" />
                             </SelectTrigger>
                             <SelectContent>
@@ -2006,22 +2210,28 @@ export default function WorkoutBuilderPage() {
                               <SelectItem value="Dumbbell">Dumbbell</SelectItem>
                               <SelectItem value="Cable">Cable</SelectItem>
                               <SelectItem value="Machine">Machine</SelectItem>
-                              <SelectItem value="Bodyweight">Bodyweight</SelectItem>
-                              <SelectItem value="Kettlebell">Kettlebell</SelectItem>
+                              <SelectItem value="Bodyweight">
+                                Bodyweight
+                              </SelectItem>
+                              <SelectItem value="Kettlebell">
+                                Kettlebell
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
 
                       {/* Exercise Configuration Form (Normal Mode) */}
-                      {!isQuickMode && selectedExerciseForConfig && typeof targetDayIdx === "number" ? (
-                        <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                      {!isQuickMode &&
+                      selectedExerciseForConfig &&
+                      typeof targetDayIdx === "number" ? (
+                        <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-semibold text-sm">
+                              <p className="text-sm font-semibold">
                                 {selectedExerciseForConfig.name}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 Configure sets, reps, and weight
                               </p>
                             </div>
@@ -2037,7 +2247,7 @@ export default function WorkoutBuilderPage() {
 
                           <div className="grid grid-cols-3 gap-3">
                             <div className="space-y-2">
-                              <label className="text-xs font-medium text-muted-foreground">
+                              <label className="text-muted-foreground text-xs font-medium">
                                 Sets
                               </label>
                               <Input
@@ -2055,7 +2265,7 @@ export default function WorkoutBuilderPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-xs font-medium text-muted-foreground">
+                              <label className="text-muted-foreground text-xs font-medium">
                                 Reps
                               </label>
                               <Input
@@ -2073,7 +2283,7 @@ export default function WorkoutBuilderPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-xs font-medium text-muted-foreground">
+                              <label className="text-muted-foreground text-xs font-medium">
                                 Weight (kg)
                               </label>
                               <Input
@@ -2088,7 +2298,8 @@ export default function WorkoutBuilderPage() {
                                     weight:
                                       e.target.value === ""
                                         ? undefined
-                                        : parseFloat(e.target.value) || undefined,
+                                        : parseFloat(e.target.value) ||
+                                          undefined,
                                   }))
                                 }
                                 className="h-9 text-center"
@@ -2108,59 +2319,62 @@ export default function WorkoutBuilderPage() {
                               className="flex-1"
                               onClick={handleAddExerciseWithConfig}
                               disabled={
-                                exerciseConfig.sets < 1 || exerciseConfig.reps < 1
+                                exerciseConfig.sets < 1 ||
+                                exerciseConfig.reps < 1
                               }
                             >
-                              <Plus className="h-4 w-4 mr-2" />
+                              <Plus className="mr-2 h-4 w-4" />
                               Add Exercise
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        <div className="max-h-[400px] overflow-y-auto space-y-1.5">
+                        <div className="max-h-[400px] space-y-1.5 overflow-y-auto">
                           {filteredExercisesNormal.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground text-sm">
-                              <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <div className="text-muted-foreground py-8 text-center text-sm">
+                              <Dumbbell className="mx-auto mb-2 h-8 w-8 opacity-50" />
                               <p>No exercises found</p>
                             </div>
                           ) : (
                             filteredExercisesNormal.map((ex) => (
-                            <Button
-                              key={ex.id}
-                              variant="ghost"
-                              className="w-full justify-start h-auto p-3 hover:bg-accent touch-manipulation"
-                              onClick={() => {
-                                if (!isQuickMode) {
-                                  handleExerciseSelect(ex.id, ex.name);
-                                } else {
-                                  addExercise(ex.id);
-                                }
-                              }}
-                            >
-                                <div className="flex items-start gap-3 w-full text-left">
-                                  <div className="p-1.5 rounded bg-teal-100 dark:bg-teal-900/30 shrink-0">
+                              <Button
+                                key={ex.id}
+                                variant="ghost"
+                                className="hover:bg-accent h-auto w-full touch-manipulation justify-start p-3"
+                                onClick={() => {
+                                  if (!isQuickMode) {
+                                    handleExerciseSelect(ex.id, ex.name);
+                                  } else {
+                                    addExercise(ex.id);
+                                  }
+                                }}
+                              >
+                                <div className="flex w-full items-start gap-3 text-left">
+                                  <div className="shrink-0 rounded bg-teal-100 p-1.5 dark:bg-teal-900/30">
                                     <Dumbbell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm">{ex.name}</p>
-                                    <div className="flex items-center gap-2 mt-1">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium">
+                                      {ex.name}
+                                    </p>
+                                    <div className="mt-1 flex items-center gap-2">
                                       <Badge
                                         variant="secondary"
-                                        className="text-[9px] px-1.5 py-0 h-4"
+                                        className="h-4 px-1.5 py-0 text-[9px]"
                                       >
                                         {ex.muscleGroup}
                                       </Badge>
                                       {ex.equipment && (
                                         <Badge
                                           variant="outline"
-                                          className="text-[9px] px-1.5 py-0 h-4"
+                                          className="h-4 px-1.5 py-0 text-[9px]"
                                         >
                                           {ex.equipment}
                                         </Badge>
                                       )}
                                     </div>
                                   </div>
-                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  <Plus className="text-muted-foreground h-4 w-4 shrink-0" />
                                 </div>
                               </Button>
                             ))
@@ -2173,27 +2387,31 @@ export default function WorkoutBuilderPage() {
 
                 {/* Exercise Items */}
                 {day.items.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground text-sm border border-dashed rounded-lg">
+                  <div className="text-muted-foreground rounded-lg border border-dashed py-6 text-center text-sm">
                     <p>No exercises added yet</p>
-                    <p className="text-xs mt-1">Click "Add Exercise" to get started</p>
+                    <p className="mt-1 text-xs">
+                      Click &quot;Add Exercise&quot; to get started
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {day.items.map((item, itemIdx) => {
-                      const exercise = (exercisesQuery.data ?? []).find((e) => e.id === item.exerciseId);
+                      const exercise = (exercisesQuery.data ?? []).find(
+                        (e) => e.id === item.exerciseId,
+                      );
                       return (
                         <div
                           key={itemIdx}
-                          className="flex items-center gap-2 p-2.5 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors"
+                          className="border-border/50 bg-muted/30 hover:bg-muted/50 flex items-center gap-2 rounded-lg border p-2.5 transition-colors"
                         >
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
                               {exercise?.name ?? "Unknown Exercise"}
                             </p>
                             {exercise && (
                               <Badge
                                 variant="secondary"
-                                className="text-[9px] px-1.5 py-0 h-4 mt-1"
+                                className="mt-1 h-4 px-1.5 py-0 text-[9px]"
                               >
                                 {exercise.muscleGroup}
                               </Badge>
@@ -2211,12 +2429,12 @@ export default function WorkoutBuilderPage() {
                                     dayIdx,
                                     itemIdx,
                                     "sets",
-                                    parseInt(e.target.value) || 0
+                                    parseInt(e.target.value) || 0,
                                   )
                                 }
-                                className="w-14 h-8 text-center text-xs"
+                                className="h-8 w-14 text-center text-xs"
                               />
-                              <span className="text-[10px] text-muted-foreground w-8">
+                              <span className="text-muted-foreground w-8 text-[10px]">
                                 sets
                               </span>
                             </div>
@@ -2232,12 +2450,12 @@ export default function WorkoutBuilderPage() {
                                     dayIdx,
                                     itemIdx,
                                     "reps",
-                                    parseInt(e.target.value) || 0
+                                    parseInt(e.target.value) || 0,
                                   )
                                 }
-                                className="w-14 h-8 text-center text-xs"
+                                className="h-8 w-14 text-center text-xs"
                               />
-                              <span className="text-[10px] text-muted-foreground w-10">
+                              <span className="text-muted-foreground w-10 text-[10px]">
                                 reps
                               </span>
                             </div>
@@ -2255,12 +2473,12 @@ export default function WorkoutBuilderPage() {
                                         dayIdx,
                                         itemIdx,
                                         "weight",
-                                        parseFloat(e.target.value) || 0
+                                        parseFloat(e.target.value) || 0,
                                       )
                                     }
-                                    className="w-16 h-8 text-center text-xs"
+                                    className="h-8 w-16 text-center text-xs"
                                   />
-                                  <span className="text-[10px] text-muted-foreground w-6">
+                                  <span className="text-muted-foreground w-6 text-[10px]">
                                     kg
                                   </span>
                                 </div>
@@ -2270,7 +2488,7 @@ export default function WorkoutBuilderPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive shrink-0"
+                            className="text-destructive h-8 w-8 shrink-0"
                             onClick={() => deleteItem(dayIdx, itemIdx)}
                           >
                             <Trash2 className="h-4 w-4" />

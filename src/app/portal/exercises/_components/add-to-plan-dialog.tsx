@@ -43,15 +43,15 @@ export function AddToPlanDialog({
 
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
-  
+
   const plans = api.plan.listByUser.useQuery(
     { userId },
-    { enabled: open && !!userId }
+    { enabled: open && !!userId },
   );
 
   const plan = api.plan.get.useQuery(
     { id: selectedPlanId },
-    { enabled: !!selectedPlanId && open }
+    { enabled: !!selectedPlanId && open },
   );
 
   const addExercise = api.plan.addExercise.useMutation({
@@ -96,10 +96,10 @@ export function AddToPlanDialog({
               <SelectContent>
                 {plans.data?.map((plan) => (
                   <SelectItem key={plan.id} value={plan.id}>
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex w-full items-center justify-between">
                       <span>{plan.name}</span>
                       {plan.isActive && (
-                        <span className="ml-2 text-xs text-muted-foreground">
+                        <span className="text-muted-foreground ml-2 text-xs">
                           (Active)
                         </span>
                       )}
@@ -109,11 +109,11 @@ export function AddToPlanDialog({
               </SelectContent>
             </Select>
             {!selectedPlanId && plans.data?.length === 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 No plans yet.{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-xs"
+                  className="h-auto p-0 text-xs"
                   onClick={() => router.push("/portal/workout-builder")}
                 >
                   Create one now
@@ -131,10 +131,10 @@ export function AddToPlanDialog({
                   <SelectValue placeholder="Choose a day..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableDays.map((day: any) => (
+                  {availableDays.map((day) => (
                     <SelectItem key={day.id} value={day.id}>
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <Calendar className="text-muted-foreground h-3 w-3" />
                         {day.title}
                       </div>
                     </SelectItem>
@@ -142,12 +142,14 @@ export function AddToPlanDialog({
                 </SelectContent>
               </Select>
               {selectedPlanId && availableDays.length === 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   This plan has no days yet.{" "}
                   <Button
                     variant="link"
-                    className="p-0 h-auto text-xs"
-                    onClick={() => router.push(`/portal/plans/${selectedPlanId}`)}
+                    className="h-auto p-0 text-xs"
+                    onClick={() =>
+                      router.push(`/portal/plans/${selectedPlanId}`)
+                    }
                   >
                     Add a day
                   </Button>
@@ -197,13 +199,10 @@ export function AddToPlanDialog({
               className="flex-1"
               onClick={handleAdd}
               disabled={
-                !selectedDayId ||
-                addExercise.isPending ||
-                sets < 1 ||
-                reps < 1
+                !selectedDayId || addExercise.isPending || sets < 1 || reps < 1
               }
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               {addExercise.isPending ? "Adding..." : "Add to Plan"}
             </Button>
           </div>

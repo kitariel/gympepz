@@ -17,7 +17,10 @@ interface OnboardingWizardProps {
   onSkip: () => void;
 }
 
-export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) {
+export function OnboardingWizard({
+  onComplete,
+  onSkip,
+}: OnboardingWizardProps) {
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState("");
   const [experience, setExperience] = useState<
@@ -54,12 +57,12 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="from-primary/5 via-background to-secondary/5 flex min-h-screen items-center justify-center bg-gradient-to-br p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Sparkles className="text-primary h-5 w-5" />
               AI Workout Generator
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={onSkip}>
@@ -67,7 +70,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
             </Button>
           </div>
           <Progress value={progress} className="h-2" />
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm">
             Step {step} of {totalSteps}
           </p>
         </CardHeader>
@@ -77,11 +80,11 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <Target className="h-8 w-8 text-primary mb-3" />
-                <h3 className="text-xl font-semibold mb-2">
-                  What's your primary goal?
+                <Target className="text-primary mb-3 h-8 w-8" />
+                <h3 className="mb-2 text-xl font-semibold">
+                  What&apos;s your primary goal?
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   This helps us create the perfect workout plan for you
                 </p>
               </div>
@@ -106,12 +109,13 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <Dumbbell className="h-8 w-8 text-primary mb-3" />
-                <h3 className="text-xl font-semibold mb-2">
-                  What's your experience level?
+                <Dumbbell className="text-primary mb-3 h-8 w-8" />
+                <h3 className="mb-2 text-xl font-semibold">
+                  What&apos;s your experience level?
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  We'll adjust the intensity and exercise selection accordingly
+                <p className="text-muted-foreground text-sm">
+                  We&apos;ll adjust the intensity and exercise selection
+                  accordingly
                 </p>
               </div>
 
@@ -133,7 +137,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                   <Button
                     key={l.level}
                     variant={experience === l.level ? "default" : "outline"}
-                    className="w-full h-auto py-4 flex-col items-start text-left"
+                    className="h-auto w-full flex-col items-start py-4 text-left"
                     onClick={() => setExperience(l.level)}
                   >
                     <span className="font-semibold">{l.level}</span>
@@ -148,12 +152,13 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <Dumbbell className="h-8 w-8 text-primary mb-3" />
-                <h3 className="text-xl font-semibold mb-2">
+                <Dumbbell className="text-primary mb-3 h-8 w-8" />
+                <h3 className="mb-2 text-xl font-semibold">
                   What equipment do you have access to?
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  We'll include exercises that match your available equipment
+                <p className="text-muted-foreground text-sm">
+                  We&apos;ll include exercises that match your available
+                  equipment
                 </p>
               </div>
 
@@ -183,7 +188,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                   <Button
                     key={e.value}
                     variant={equipment === e.value ? "default" : "outline"}
-                    className="h-24 flex-col gap-1 items-start text-left"
+                    className="h-24 flex-col items-start gap-1 text-left"
                     onClick={() => setEquipment(e.value)}
                   >
                     <span className="font-semibold">{e.label}</span>
@@ -198,12 +203,12 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
           {step === 4 && (
             <div className="space-y-4">
               <div>
-                <Calendar className="h-8 w-8 text-primary mb-3" />
-                <h3 className="text-xl font-semibold mb-2">
+                <Calendar className="text-primary mb-3 h-8 w-8" />
+                <h3 className="mb-2 text-xl font-semibold">
                   How many days per week can you train?
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  We'll create a schedule that fits your availability
+                <p className="text-muted-foreground text-sm">
+                  We&apos;ll create a schedule that fits your availability
                 </p>
               </div>
 
@@ -220,11 +225,12 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 ))}
               </div>
 
-              <div className="bg-muted p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Your Plan Summary:</h4>
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="mb-2 font-semibold">Your Plan Summary:</h4>
                 <div className="space-y-1 text-sm">
                   <p>
-                    <strong>Goal:</strong> {GOALS.find((g) => g.id === goal)?.label}
+                    <strong>Goal:</strong>{" "}
+                    {GOALS.find((g) => g.id === goal)?.label}
                   </p>
                   <p>
                     <strong>Experience:</strong> {experience}

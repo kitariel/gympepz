@@ -95,7 +95,7 @@ export async function handleSuggest(
 **USER REQUEST:** "${input.rawText ?? input.goal}"
 **Experience Level:** ${input.experience ?? "Intermediate"}
 **Available Equipment:** ${input.equipment ?? "Full Gym"}
-**Training Days:** ${input.scheduleDays ?? days} days per week
+**Training Days:** ${input.scheduleDays ?? 3} days per week
 **Specific Day:** ${input.dayLabel ?? "Not specified"}${prev}${history}
 
 **AVAILABLE EXERCISES (YOU MUST USE EXACT NAMES FROM THIS LIST):**

@@ -123,8 +123,8 @@ export default function StartWorkoutPage() {
                   No Workout Plan Found
                 </h2>
                 <p className="text-muted-foreground mx-auto max-w-md text-sm">
-                  Create a workout plan to get started. Choose how you'd like to
-                  build your plan.
+                  Create a workout plan to get started. Choose how you&apos;d
+                  like to build your plan.
                 </p>
               </div>
               <Button
@@ -238,7 +238,9 @@ export default function StartWorkoutPage() {
     <div className="container mx-auto max-w-4xl space-y-6 p-6">
       <div className="mb-8 space-y-2 text-center">
         <h1 className="text-3xl font-bold">Start Working Out</h1>
-        <p className="text-muted-foreground">Ready to crush today's workout?</p>
+        <p className="text-muted-foreground">
+          Ready to crush today&apos;s workout?
+        </p>
       </div>
 
       {/* Active Plan Card */}
@@ -269,7 +271,7 @@ export default function StartWorkoutPage() {
                 <div className="mb-3 flex items-center gap-2">
                   <Calendar className="text-primary h-4 w-4" />
                   <h3 className="text-base font-semibold">
-                    Today's Workout: {todayWorkout.title}
+                    Today&apos;s Workout: {todayWorkout.title}
                   </h3>
                 </div>
                 <div className="dark:bg-background/50 space-y-3 rounded-lg bg-white/50 p-4">

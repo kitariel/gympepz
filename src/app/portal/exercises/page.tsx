@@ -25,7 +25,9 @@ export default function ExercisesPage() {
   const [selectedTab, setSelectedTab] = useState("all");
 
   // Modal state
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddToPlanDialogOpen, setIsAddToPlanDialogOpen] = useState(false);
 
@@ -35,12 +37,9 @@ export default function ExercisesPage() {
   // API calls
   const exercisesQuery = api.exercise.list.useQuery({
     q: searchQuery,
-    muscleGroup:
-      selectedMuscle !== "All" ? selectedMuscle : undefined,
-    equipment:
-      selectedEquipment !== "All" ? selectedEquipment : undefined,
-    difficulty:
-      selectedDifficulty !== "All" ? selectedDifficulty : undefined,
+    muscleGroup: selectedMuscle !== "All" ? selectedMuscle : undefined,
+    equipment: selectedEquipment !== "All" ? selectedEquipment : undefined,
+    difficulty: selectedDifficulty !== "All" ? selectedDifficulty : undefined,
     take: 100,
   });
 
@@ -58,7 +57,7 @@ export default function ExercisesPage() {
   const exercisesByMuscle = useMemo(() => {
     const grouped: Record<string, number> = {};
     exercises.forEach((ex) => {
-      grouped[ex.muscleGroup] = (grouped[ex.muscleGroup] || 0) + 1;
+      grouped[ex.muscleGroup] = (grouped[ex.muscleGroup] ?? 0) + 1;
     });
     return grouped;
   }, [exercises]);
@@ -101,8 +100,10 @@ export default function ExercisesPage() {
       {/* Compact Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Exercise Library</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-2xl font-bold tracking-tight">
+            Exercise Library
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
             Browse and discover exercises for your workouts
           </p>
         </div>
@@ -115,52 +116,58 @@ export default function ExercisesPage() {
       {/* Compact Stats */}
       <div className="grid gap-3 md:grid-cols-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
             <CardTitle className="text-xs font-medium">Total</CardTitle>
-            <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
+            <Dumbbell className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">{exercises.length}</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">exercises</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">
+              exercises
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
             <CardTitle className="text-xs font-medium">Favorites</CardTitle>
-            <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+            <Heart className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">{favorites.size}</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">saved</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">saved</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
             <CardTitle className="text-xs font-medium">Muscle Groups</CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="text-xl font-bold">
               {Object.keys(exercisesByMuscle).length}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">categories</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">
+              categories
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
             <CardTitle className="text-xs font-medium">Top Group</CardTitle>
-            <Library className="h-3.5 w-3.5 text-muted-foreground" />
+            <Library className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold truncate">
+            <div className="truncate text-xl font-bold">
               {Object.entries(exercisesByMuscle).sort(
-                ([, a], [, b]) => b - a
-              )[0]?.[0] || "N/A"}
+                ([, a], [, b]) => b - a,
+              )[0]?.[0] ?? "N/A"}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">most common</p>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">
+              most common
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -180,7 +187,11 @@ export default function ExercisesPage() {
       />
 
       {/* Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="space-y-4"
+      >
         <TabsList className="h-9">
           <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm">
             <Dumbbell className="h-3.5 w-3.5" />
@@ -192,7 +203,7 @@ export default function ExercisesPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-4 mt-4">
+        <TabsContent value="all" className="mt-4 space-y-4">
           {filteredExercises.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredExercises.map((exercise) => (
@@ -218,13 +229,19 @@ export default function ExercisesPage() {
           ) : (
             <Card className="border-0 shadow-sm">
               <CardContent className="flex flex-col items-center justify-center py-10">
-                <Dumbbell className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-                <h3 className="text-base font-semibold mb-1">No exercises found</h3>
-                <p className="text-xs text-muted-foreground mb-3 text-center">
+                <Dumbbell className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
+                <h3 className="mb-1 text-base font-semibold">
+                  No exercises found
+                </h3>
+                <p className="text-muted-foreground mb-3 text-center text-xs">
                   Try adjusting your filters or search query
                 </p>
                 {activeFiltersCount > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearFilters}
+                  >
                     Clear Filters
                   </Button>
                 )}
@@ -233,7 +250,7 @@ export default function ExercisesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="favorites" className="space-y-4 mt-4">
+        <TabsContent value="favorites" className="mt-4 space-y-4">
           {filteredExercises.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredExercises.map((exercise) => (
@@ -259,12 +276,19 @@ export default function ExercisesPage() {
           ) : (
             <Card className="border-0 shadow-sm">
               <CardContent className="flex flex-col items-center justify-center py-10">
-                <Heart className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-                <h3 className="text-base font-semibold mb-1">No favorites yet</h3>
-                <p className="text-xs text-muted-foreground mb-3 text-center">
-                  Start adding exercises to your favorites by clicking the heart icon
+                <Heart className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
+                <h3 className="mb-1 text-base font-semibold">
+                  No favorites yet
+                </h3>
+                <p className="text-muted-foreground mb-3 text-center text-xs">
+                  Start adding exercises to your favorites by clicking the heart
+                  icon
                 </p>
-                <Button variant="outline" size="sm" onClick={() => setSelectedTab("all")}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedTab("all")}
+                >
                   Browse Exercises
                 </Button>
               </CardContent>
@@ -278,7 +302,9 @@ export default function ExercisesPage() {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         exercise={selectedExercise}
-        isFavorite={selectedExercise ? favorites.has(selectedExercise.id) : false}
+        isFavorite={
+          selectedExercise ? favorites.has(selectedExercise.id) : false
+        }
         onToggleFavorite={() =>
           selectedExercise && handleToggleFavorite(selectedExercise.id)
         }
