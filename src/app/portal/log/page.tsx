@@ -8,12 +8,7 @@ import { WorkoutLogList } from "./workout-log-list";
 import { ProgressView } from "./progress-view";
 import { AnalyticsTab } from "./_components/analytics-tab";
 import { CalendarTab } from "./_components/calendar-tab";
-import {
-  Dumbbell,
-  TrendingUp,
-  BarChart3,
-  Calendar,
-} from "lucide-react";
+import { Dumbbell, TrendingUp, BarChart3, Calendar } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
@@ -24,11 +19,14 @@ export default function LogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const [pendingQuickStart, setPendingQuickStart] = useState<{ planId: string; dayId: string } | null>(null);
+  const [pendingQuickStart, setPendingQuickStart] = useState<{
+    planId: string;
+    dayId: string;
+  } | null>(null);
 
   // Handle quickStart URL parameter - start workout from specific plan
   const quickStartPlanId = searchParams?.get("quickStart");
-  
+
   // Check if this quickStart has already been processed using sessionStorage
   const getProcessedQuickStart = () => {
     if (typeof window === "undefined") return null;
@@ -48,8 +46,9 @@ export default function LogPage() {
     }
   };
 
-  const hasProcessedThisQuickStart = quickStartPlanId === getProcessedQuickStart();
-  
+  const hasProcessedThisQuickStart =
+    quickStartPlanId === getProcessedQuickStart();
+
   // Remove query param if already processed (e.g., from browser back button)
   useEffect(() => {
     if (quickStartPlanId && hasProcessedThisQuickStart) {
@@ -59,19 +58,19 @@ export default function LogPage() {
 
   const planQuery = api.plan.get.useQuery(
     { id: quickStartPlanId ?? "" },
-    { enabled: !!quickStartPlanId && !!userId && !hasProcessedThisQuickStart }
+    { enabled: !!quickStartPlanId && !!userId && !hasProcessedThisQuickStart },
   );
 
   // Check for recent completed workout
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
 
   const createLogFromPlan = api.workoutLog.create.useMutation({
     onSuccess: (log) => {
       // Query param should already be removed, but ensure it's gone
-      router.replace("/portal/log"); 
+      router.replace("/portal/log");
       router.push(`/portal/log/workout/${log.id}`);
       setPendingQuickStart(null);
     },
@@ -107,18 +106,18 @@ export default function LogPage() {
   useEffect(() => {
     // Only process if we haven't processed this specific planId before
     if (
-      quickStartPlanId && 
-      userId && 
-      planQuery.data && 
+      quickStartPlanId &&
+      userId &&
+      planQuery.data &&
       !hasProcessedThisQuickStart &&
       recentWorkoutCheck.data !== undefined
     ) {
       // Mark this planId as processed BEFORE creating workout
       setProcessedQuickStart(quickStartPlanId);
-      
+
       // Remove query parameter immediately to prevent re-processing on back navigation
       router.replace("/portal/log", { scroll: false });
-      
+
       const plan = planQuery.data;
       if (plan.days && plan.days.length > 0) {
         // Get the first day (or could implement logic to get next day)
@@ -129,12 +128,21 @@ export default function LogPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quickStartPlanId, userId, planQuery.data, recentWorkoutCheck.data, hasProcessedThisQuickStart, router]);
+  }, [
+    quickStartPlanId,
+    userId,
+    planQuery.data,
+    recentWorkoutCheck.data,
+    hasProcessedThisQuickStart,
+    router,
+  ]);
 
   if (!userId) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Please log in to view your logs.</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          Please log in to view your logs.
+        </p>
       </div>
     );
   }
@@ -145,14 +153,18 @@ export default function LogPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Workout Logs</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-muted-foreground mt-0.5 text-sm">
             Track your workouts, progress, and analytics
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="workouts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto h-9">
+      <Tabs defaultValue="calendar" className="space-y-4">
+        <TabsList className="grid h-9 w-full grid-cols-4 lg:w-auto">
+          <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm">
+            <Calendar className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Calendar</span>
+          </TabsTrigger>
           <TabsTrigger value="workouts" className="gap-1.5 text-xs sm:text-sm">
             <Dumbbell className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Workouts</span>
@@ -165,13 +177,9 @@ export default function LogPage() {
             <BarChart3 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm">
-            <Calendar className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Calendar</span>
-          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="workouts" className="space-y-4 mt-4">
+        <TabsContent value="workouts" className="mt-4 space-y-4">
           <WorkoutLogList />
         </TabsContent>
 
@@ -188,15 +196,15 @@ export default function LogPage() {
           recentWorkout={recentWorkoutCheck.data?.workout ?? null}
         />
 
-        <TabsContent value="progress" className="space-y-4 mt-4">
+        <TabsContent value="progress" className="mt-4 space-y-4">
           <ProgressView />
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4 mt-4">
+        <TabsContent value="analytics" className="mt-4 space-y-4">
           <AnalyticsTab userId={userId} />
         </TabsContent>
 
-        <TabsContent value="calendar" className="space-y-4 mt-4">
+        <TabsContent value="calendar" className="mt-4 space-y-4">
           <CalendarTab userId={userId} />
         </TabsContent>
       </Tabs>
