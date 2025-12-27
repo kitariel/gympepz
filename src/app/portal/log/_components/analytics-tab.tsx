@@ -41,39 +41,18 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
     period: "month",
   });
 
-  const volumeByMuscle = api.progress.getVolumeByMuscleGroup.useQuery({
-    userId,
-    period: "month",
-  });
-
   const prs = api.progress.getPRs.useQuery({ userId, limit: 10 });
 
-  // Convert volumeByMuscle data to array format
-  // It can be either an array or an object (Record<string, number>)
   const chartData = (() => {
-    if (!volumeByMuscle.data) return [];
+    if (!analytics.data?.volumeByMuscleGroup) return [];
 
-    // If it's already an array, use it
-    if (Array.isArray(volumeByMuscle.data)) {
-      return volumeByMuscle.data.map((item, index) => ({
-        name: item.muscle,
-        value: item.volume,
+    return Object.entries(analytics.data.volumeByMuscleGroup).map(
+      ([muscle, volume], index) => ({
+        name: muscle,
+        value: volume,
         color: COLORS[index % COLORS.length],
-      }));
-    }
-
-    // If it's an object (Record<string, number>), convert to array
-    if (typeof volumeByMuscle.data === "object") {
-      return Object.entries(volumeByMuscle.data).map(
-        ([muscle, volume], index) => ({
-          name: muscle,
-          value: volume,
-          color: COLORS[index % COLORS.length],
-        }),
-      );
-    }
-
-    return [];
+      }),
+    );
   })();
 
   return (
@@ -190,8 +169,8 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                    label={(props: { name?: string; percent?: number }) =>
+                      `${props.name} ${((props.percent ?? 0) * 100).toFixed(0)}%`
                     }
                     outerRadius={100}
                     fill="#8884d8"
@@ -202,7 +181,9 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => `${Math.round(value)} kg`}
+                    formatter={(value: unknown) =>
+                      `${Math.round(value as number)} kg`
+                    }
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -240,39 +221,48 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="space-y-2">
-            {prs.data?.map((pr) => (
-              <div
-                key={pr.id}
-                className="ring-border bg-card hover:ring-primary/20 flex items-center justify-between rounded-lg p-3 ring-1 transition-all hover:shadow-md"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {pr.exercise.name}
-                  </p>
-                  <p className="text-muted-foreground/70 mt-1 text-[10px] font-medium tracking-wider uppercase">
-                    {pr.prType === "1RM" ? "Estimated 1RM" : pr.prType}
-                  </p>
-                </div>
-                <div className="ml-4 flex shrink-0 flex-col items-end gap-0.5 text-right">
-                  <p className="text-sm font-bold">
-                    {Math.round(pr.value)}{" "}
-                    <span className="text-muted-foreground text-[10px] font-normal uppercase">
-                      KG
-                    </span>
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {pr.reps && (
-                      <p className="text-muted-foreground text-[10px] font-medium">
-                        {pr.reps} REPS
-                      </p>
-                    )}
-                    <p className="text-muted-foreground/50 text-[10px]">
-                      {format(new Date(pr.date), "MMM d")}
+            {prs.data?.map(
+              (pr: {
+                id: string;
+                exercise: { name: string };
+                prType: string;
+                value: number;
+                reps?: number;
+                date: string;
+              }) => (
+                <div
+                  key={(pr as { id: string }).id}
+                  className="ring-border bg-card hover:ring-primary/20 flex items-center justify-between rounded-lg p-3 ring-1 transition-all hover:shadow-md"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">
+                      {pr.exercise.name}
+                    </p>
+                    <p className="text-muted-foreground/70 mt-1 text-[10px] font-medium tracking-wider uppercase">
+                      {pr.prType === "1RM" ? "Estimated 1RM" : pr.prType}
                     </p>
                   </div>
+                  <div className="ml-4 flex shrink-0 flex-col items-end gap-0.5 text-right">
+                    <p className="text-sm font-bold">
+                      {Math.round(pr.value)}{" "}
+                      <span className="text-muted-foreground text-[10px] font-normal uppercase">
+                        KG
+                      </span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {pr.reps && (
+                        <p className="text-muted-foreground text-[10px] font-medium">
+                          {pr.reps} REPS
+                        </p>
+                      )}
+                      <p className="text-muted-foreground/50 text-[10px]">
+                        {format(new Date(pr.date), "MMM d")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
 
             {(!prs.data || prs.data.length === 0) && (
               <div className="text-muted-foreground/50 py-8 text-center">
