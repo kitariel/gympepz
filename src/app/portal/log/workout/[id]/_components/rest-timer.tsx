@@ -44,17 +44,17 @@ export function RestTimer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/95 backdrop-blur border-t shadow-lg">
-      <Card className="max-w-md mx-auto p-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/80 backdrop-blur-md border-t border-border/50 shadow-2xl">
+      <Card className="max-w-md mx-auto p-4 border-0 shadow-sm ring-1 ring-border bg-card/50">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium">Rest Timer</span>
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+            <span className="text-sm font-semibold uppercase tracking-wider">Rest Timer</span>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 hover:bg-muted"
             onClick={onCancel}
           >
             <X className="h-4 w-4" />
@@ -63,10 +63,10 @@ export function RestTimer({
 
         <div className="relative mb-4">
           {/* Progress bar */}
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
             <div
               className={cn(
-                "h-full transition-all duration-1000 ease-linear",
+                "h-full transition-all duration-1000 ease-linear shadow-sm",
                 remainingSeconds > 30
                   ? "bg-green-500"
                   : remainingSeconds > 10
@@ -81,13 +81,13 @@ export function RestTimer({
           <div className="text-center mt-4">
             <div
               className={cn(
-                "text-5xl font-bold tabular-nums",
+                "text-6xl font-black tabular-nums tracking-tight",
                 remainingSeconds <= 10 && "text-red-500 animate-pulse"
               )}
             >
               {formatTime(remainingSeconds)}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">
               {remainingSeconds === 0
                 ? "Rest complete!"
                 : "Time remaining"}
@@ -101,6 +101,7 @@ export function RestTimer({
             size="icon"
             onClick={() => onAddTime(-15)}
             disabled={remainingSeconds <= 15}
+            className="h-10 w-10 border-border/50"
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -110,25 +111,25 @@ export function RestTimer({
             size="icon"
             onClick={() => onAddTime(-30)}
             disabled={remainingSeconds <= 30}
-            className="text-xs"
+            className="text-xs h-10 w-10 border-border/50 font-medium"
           >
-            -30s
+            -30
           </Button>
 
           <Button
             variant={isActive ? "default" : "secondary"}
             size="lg"
             onClick={isActive ? onPause : onResume}
-            className="min-w-24"
+            className="min-w-28 font-semibold shadow-sm"
           >
             {isActive ? (
               <>
-                <Pause className="h-4 w-4 mr-2" />
+                <Pause className="h-4 w-4 mr-2 fill-current" />
                 Pause
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-4 w-4 mr-2 fill-current" />
                 Resume
               </>
             )}
@@ -138,19 +139,19 @@ export function RestTimer({
             variant="outline"
             size="icon"
             onClick={() => onAddTime(30)}
-            className="text-xs"
+            className="text-xs h-10 w-10 border-border/50 font-medium"
           >
-            +30s
+            +30
           </Button>
 
-          <Button variant="outline" size="icon" onClick={() => onAddTime(15)}>
+          <Button variant="outline" size="icon" onClick={() => onAddTime(15)} className="h-10 w-10 border-border/50">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
 
         {remainingSeconds === 0 && (
-          <div className="mt-3 text-center">
-            <Button onClick={onCancel} variant="default" className="w-full">
+          <div className="mt-4 text-center animate-in fade-in slide-in-from-bottom-2">
+            <Button onClick={onCancel} variant="default" className="w-full font-semibold shadow-md">
               Start Next Set
             </Button>
           </div>

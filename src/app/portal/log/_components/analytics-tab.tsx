@@ -3,7 +3,14 @@
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Brain, TrendingUp, Award, Dumbbell, Calendar, Clock } from "lucide-react";
+import {
+  Brain,
+  TrendingUp,
+  Award,
+  Dumbbell,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -45,7 +52,7 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
   // It can be either an array or an object (Record<string, number>)
   const chartData = (() => {
     if (!volumeByMuscle.data) return [];
-    
+
     // If it's already an array, use it
     if (Array.isArray(volumeByMuscle.data)) {
       return volumeByMuscle.data.map((item, index) => ({
@@ -54,47 +61,58 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
         color: COLORS[index % COLORS.length],
       }));
     }
-    
+
     // If it's an object (Record<string, number>), convert to array
-    if (typeof volumeByMuscle.data === 'object') {
-      return Object.entries(volumeByMuscle.data).map(([muscle, volume], index) => ({
-        name: muscle,
-        value: volume,
-        color: COLORS[index % COLORS.length],
-      }));
+    if (typeof volumeByMuscle.data === "object") {
+      return Object.entries(volumeByMuscle.data).map(
+        ([muscle, volume], index) => ({
+          name: muscle,
+          value: volume,
+          color: COLORS[index % COLORS.length],
+        }),
+      );
     }
-    
+
     return [];
   })();
 
   return (
     <div className="space-y-4">
       {/* AI Insights - Compact */}
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3">
+      <Card className="ring-border border-0 bg-gradient-to-br from-purple-50/50 to-blue-50/50 shadow-sm ring-1 dark:from-purple-950/10 dark:to-blue-950/10">
+        <CardHeader className="px-4 pt-4 pb-2">
           <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-purple-600" />
-            <CardTitle className="text-sm">AI Coach Insights</CardTitle>
-            <Badge variant="secondary" className="ml-auto text-[10px]">
+            <Brain className="text-primary h-4 w-4" />
+            <CardTitle className="text-base font-bold">
+              AI Coach Insights
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="ml-auto text-[10px] font-semibold tracking-wider uppercase"
+            >
               Coming Soon
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="space-y-2">
-            <div className="p-2.5 bg-background rounded-lg">
+            <div className="bg-background/60 ring-border/50 rounded-lg p-3 ring-1 backdrop-blur-sm">
               <p className="text-xs">
-                💪 <strong>Great progress on bench press!</strong> You've increased your 1RM by 5kg this month.
+                💪 <strong>Great progress on bench press!</strong> You&apos;ve
+                increased your 1RM by 5kg this month.
               </p>
             </div>
-            <div className="p-2.5 bg-background rounded-lg">
+            <div className="bg-background/60 ring-border/50 rounded-lg p-3 ring-1 backdrop-blur-sm">
               <p className="text-xs">
-                📊 Your leg volume is down 15% compared to last month. Consider adding another leg day.
+                📊 Your leg volume is down 15% compared to last month. Consider
+                adding another leg day.
               </p>
             </div>
-            <div className="p-2.5 bg-background rounded-lg">
+            <div className="bg-background/60 ring-border/50 rounded-lg p-3 ring-1 backdrop-blur-sm">
               <p className="text-xs">
-                🎯 You're consistent with {analytics.data?.totalWorkouts ?? 0} workouts this month. Keep it up!
+                🎯 You&apos;re consistent with{" "}
+                {analytics.data?.totalWorkouts ?? 0} workouts this month. Keep
+                it up!
               </p>
             </div>
           </div>
@@ -103,50 +121,64 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
 
       {/* Monthly Stats - Compact */}
       <div className="grid gap-3 md:grid-cols-3">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Workouts</CardTitle>
-            <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="ring-border bg-card border-0 shadow-sm ring-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="text-muted-foreground/70 text-xs font-semibold tracking-wider uppercase">
+              Workouts
+            </CardTitle>
+            <Dumbbell className="text-muted-foreground/50 h-4 w-4" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">
+            <div className="text-2xl font-bold">
               {analytics.data?.totalWorkouts ?? 0}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">this month</p>
+            <p className="text-muted-foreground mt-1 text-[10px] font-medium">
+              this month
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Volume</CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="ring-border bg-card border-0 shadow-sm ring-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="text-muted-foreground/70 text-xs font-semibold tracking-wider uppercase">
+              Volume
+            </CardTitle>
+            <TrendingUp className="text-muted-foreground/50 h-4 w-4" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">
+            <div className="text-2xl font-bold">
               {Math.round((analytics.data?.totalVolume ?? 0) / 1000)}k
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">kg lifted</p>
+            <p className="text-muted-foreground mt-1 text-[10px] font-medium">
+              kg lifted
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-xs font-medium">Avg Duration</CardTitle>
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="ring-border bg-card border-0 shadow-sm ring-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
+            <CardTitle className="text-muted-foreground/70 text-xs font-semibold tracking-wider uppercase">
+              Avg Duration
+            </CardTitle>
+            <Clock className="text-muted-foreground/50 h-4 w-4" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">
+            <div className="text-2xl font-bold">
               {analytics.data?.avgDuration ?? 0}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">mins per workout</p>
+            <p className="text-muted-foreground mt-1 text-[10px] font-medium">
+              mins / workout
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Volume by Muscle Group - Compact */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3">
-          <CardTitle className="text-sm">Volume by Muscle Group</CardTitle>
+      <Card className="ring-border bg-card border-0 shadow-sm ring-1">
+        <CardHeader className="px-4 pt-4 pb-2">
+          <CardTitle className="text-base font-bold">
+            Volume by Muscle Group
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           {chartData.length > 0 ? (
@@ -171,26 +203,39 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
                   </Pie>
                   <Tooltip
                     formatter={(value: number) => `${Math.round(value)} kg`}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      fontSize: "12px",
+                    }}
                   />
-                  <Legend />
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No data yet. Complete some workouts to see analytics!</p>
+            <div className="text-muted-foreground/50 py-12 text-center">
+              <TrendingUp className="mx-auto mb-3 h-8 w-8 opacity-30" />
+              <p className="text-sm font-medium">
+                No data yet. Complete some workouts to see analytics!
+              </p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Personal Records - Compact */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3">
+      <Card className="ring-border bg-card border-0 shadow-sm ring-1">
+        <CardHeader className="px-4 pt-4 pb-2">
           <div className="flex items-center gap-2">
-            <Award className="h-4 w-4 text-yellow-500" />
-            <CardTitle className="text-sm">Recent Personal Records</CardTitle>
+            <Award className="text-primary h-4 w-4" />
+            <CardTitle className="text-base font-bold">
+              Recent Personal Records
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-4">
@@ -198,34 +243,43 @@ export function AnalyticsTab({ userId }: AnalyticsTabProps) {
             {prs.data?.map((pr) => (
               <div
                 key={pr.id}
-                className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
+                className="ring-border bg-card hover:ring-primary/20 flex items-center justify-between rounded-lg p-3 ring-1 transition-all hover:shadow-md"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{pr.exercise.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {pr.exercise.name}
+                  </p>
+                  <p className="text-muted-foreground/70 mt-1 text-[10px] font-medium tracking-wider uppercase">
                     {pr.prType === "1RM" ? "Estimated 1RM" : pr.prType}
                   </p>
                 </div>
-                <div className="text-right ml-3 shrink-0">
+                <div className="ml-4 flex shrink-0 flex-col items-end gap-0.5 text-right">
                   <p className="text-sm font-bold">
-                    {Math.round(pr.value)} kg
+                    {Math.round(pr.value)}{" "}
+                    <span className="text-muted-foreground text-[10px] font-normal uppercase">
+                      KG
+                    </span>
                   </p>
-                  {pr.reps && (
-                    <p className="text-[10px] text-muted-foreground">
-                      @ {pr.reps} reps
+                  <div className="flex items-center gap-2">
+                    {pr.reps && (
+                      <p className="text-muted-foreground text-[10px] font-medium">
+                        {pr.reps} REPS
+                      </p>
+                    )}
+                    <p className="text-muted-foreground/50 text-[10px]">
+                      {format(new Date(pr.date), "MMM d")}
                     </p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground">
-                    {format(new Date(pr.date), "MMM d")}
-                  </p>
+                  </div>
                 </div>
               </div>
             ))}
 
             {(!prs.data || prs.data.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Award className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No PRs yet. Keep pushing your limits!</p>
+              <div className="text-muted-foreground/50 py-8 text-center">
+                <Award className="mx-auto mb-3 h-8 w-8 opacity-30" />
+                <p className="text-sm font-medium">
+                  No PRs yet. Keep pushing your limits!
+                </p>
               </div>
             )}
           </div>

@@ -396,41 +396,65 @@ export function WorkoutLogList() {
           return (
             <Card
               key={log.id}
-              className="hover:bg-accent/50 cursor-pointer border-0 shadow-sm transition-all"
+              className="group ring-border hover:ring-primary/20 bg-card cursor-pointer border-0 shadow-sm ring-1 transition-all hover:shadow-md"
               onClick={() => router.push(`/portal/log/workout/${log.id}`)}
             >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <CardTitle
-                    className="cursor-pointer truncate text-sm font-semibold"
-                    onClick={() => router.push(`/portal/log/workout/${log.id}`)}
-                  >
-                    {log.planDay?.title ?? "Untitled Workout"}
-                  </CardTitle>
-                  {status && StatusIcon && (
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "h-5 px-1.5 py-0.5 text-[10px]",
-                        status.color,
-                      )}
+              <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pt-4 pb-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="mr-2 flex items-center justify-between">
+                    <span className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase">
+                      {format(new Date(log.date), "EEEE, MMM d")}
+                    </span>
+                    {status && StatusIcon && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "h-5 px-1.5 py-0.5 text-[10px] sm:hidden",
+                          status.color,
+                        )}
+                      >
+                        <StatusIcon className="mr-1 h-2.5 w-2.5" />
+                        {status.label}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <CardTitle
+                      className="cursor-pointer truncate text-base leading-tight font-bold"
+                      onClick={() =>
+                        router.push(`/portal/log/workout/${log.id}`)
+                      }
                     >
-                      <StatusIcon className="mr-1 h-2.5 w-2.5" />
-                      {status.label}
-                    </Badge>
-                  )}
+                      {log.planDay?.title ?? "Untitled Workout"}
+                    </CardTitle>
+                    {status && StatusIcon && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "hidden h-5 px-1.5 py-0.5 text-[10px] sm:flex",
+                          status.color,
+                        )}
+                      >
+                        <StatusIcon className="mr-1 h-2.5 w-2.5" />
+                        {status.label}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-muted-foreground text-xs">
-                    {format(new Date(log.date), "MMM d")}
-                  </span>
+
+                <div className="-mt-1 -mr-2 flex shrink-0 items-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       asChild
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <MoreVertical className="text-muted-foreground h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -457,34 +481,49 @@ export function WorkoutLogList() {
                   </DropdownMenu>
                 </div>
               </CardHeader>
+
               <CardContent
                 className="cursor-pointer px-4 pb-4"
                 onClick={() => router.push(`/portal/log/workout/${log.id}`)}
               >
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    {log.duration && (
-                      <div className="text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{log.duration} mins</span>
-                      </div>
-                    )}
-                    <div className="text-muted-foreground flex items-center gap-1">
-                      <Dumbbell className="h-3 w-3" />
-                      <span>{log._count?.exercises ?? 0} exercises</span>
-                    </div>
-                  </div>
-                  {log.totalVolume && (
-                    <span className="font-medium">
-                      {Math.round(log.totalVolume)} kg
-                    </span>
-                  )}
-                </div>
                 {log.notes && (
-                  <p className="text-muted-foreground mt-2 line-clamp-1 text-xs">
-                    {log.notes}
+                  <p className="text-muted-foreground mb-3 line-clamp-1 text-xs italic">
+                    &quot;{log.notes}&quot;
                   </p>
                 )}
+
+                <div className="border-border/50 mt-1 flex items-center justify-between border-t pt-1 text-xs">
+                  <div className="flex items-center gap-4">
+                    <div className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                      <Dumbbell className="h-3.5 w-3.5" />
+                      <span>{log._count?.exercises ?? 0}</span>
+                      <span className="text-muted-foreground/60 ml-0.5 hidden text-[10px] tracking-wider uppercase sm:inline">
+                        Exercises
+                      </span>
+                    </div>
+
+                    {log.duration && (
+                      <div className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{log.duration}</span>
+                        <span className="text-muted-foreground/60 ml-0.5 hidden text-[10px] tracking-wider uppercase sm:inline">
+                          Mins
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {log.totalVolume && (
+                    <div className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                      <span className="text-muted-foreground/60 text-[10px] tracking-wider uppercase">
+                        Vol
+                      </span>
+                      <span>
+                        {Math.round(log.totalVolume).toLocaleString()} kg
+                      </span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           );

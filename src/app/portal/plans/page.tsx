@@ -64,7 +64,7 @@ export default function PlansPage() {
     await list.refetch();
 
     // Show success and guide user
-    if (newPlan && !newPlan.isActive) {
+    if (newPlan) {
       // Auto-set first plan as active if no active plan exists
       const plansList = await list.refetch();
       const hasActivePlan = plansList.data?.some((p) => p.isActive);
@@ -108,15 +108,11 @@ export default function PlansPage() {
       });
 
       // If still not found, try reverse match (search name contains exercise name)
-      if (!found) {
-        found = (exercises.data ?? []).find((ex) => {
-          const exName = ex.name.toLowerCase();
-          // Check if search name is at the end (e.g., "Bench Press" matches "Barbell Bench Press")
-          return (
-            exName.endsWith(searchName) || exName.includes(` ${searchName}`)
-          );
-        });
-      }
+      found ??= (exercises.data ?? []).find((ex) => {
+        const exName = ex.name.toLowerCase();
+        // Check if search name is at the end (e.g., "Bench Press" matches "Barbell Bench Press")
+        return exName.endsWith(searchName) || exName.includes(` ${searchName}`);
+      });
 
       return found?.id ?? null;
     };
@@ -138,22 +134,22 @@ export default function PlansPage() {
             weight: exDef.weight,
           };
         })
-        .filter(
-          (
-            item,
-          ): item is {
-            exerciseId: string;
-            sets: number;
-            reps: number;
-            weight?: number;
-          } => item !== null,
-        ),
+        .filter((item) => item !== null),
     }));
 
     const newPlan = await create.mutateAsync({
       userId,
       name: newPlanName,
-      days,
+      days: days.map((day) => ({
+        title: day.title,
+        order: day.order,
+        items: day.items.filter((item) => item !== null) as {
+          exerciseId: string;
+          reps: number;
+          sets: number;
+          weight?: number;
+        }[],
+      })),
     });
     setNewPlanName("");
     setSelectedTemplate(null);

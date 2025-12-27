@@ -4,7 +4,15 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronDown, ChevronUp, Trash2, TrendingUp, CheckCircle2, Circle } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  TrendingUp,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
 import { SetRow } from "./set-row";
 import { cn } from "@/lib/utils";
 
@@ -62,65 +70,87 @@ export function ExerciseCard({
   const isDone = isMarkedDone || allCompleted;
 
   return (
-    <Card className={cn(
-      isDone && "border-primary bg-primary/5",
-      allCompleted && !isMarkedDone && "border-primary bg-primary/5"
-    )}>
-      <CardHeader className="pb-3 sm:pb-4 md:pb-4 px-3 sm:px-4 md:px-5 pt-3 sm:pt-4 md:pt-5">
+    <Card
+      className={cn(
+        "ring-border border-0 shadow-sm ring-1 transition-all hover:shadow-md",
+        isDone && "ring-primary bg-primary/5",
+        allCompleted && !isMarkedDone && "ring-primary bg-primary/5",
+      )}
+    >
+      <CardHeader className="px-3 pt-3 pb-3 sm:px-4 sm:pt-4 sm:pb-4 md:px-5 md:pt-5 md:pb-4">
         <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 md:gap-2.5 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
               {onToggleDone && (
                 <button
                   onClick={onToggleDone}
-                  className="shrink-0 mt-0.5 touch-manipulation"
-                  aria-label={isMarkedDone ? "Mark as incomplete" : "Mark exercise as done"}
+                  className="mt-0.5 shrink-0 touch-manipulation"
+                  aria-label={
+                    isMarkedDone
+                      ? "Mark as incomplete"
+                      : "Mark exercise as done"
+                  }
                 >
                   {isMarkedDone ? (
-                    <CheckCircle2 className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
+                    <CheckCircle2 className="text-primary h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                   ) : (
-                    <Circle className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-muted-foreground hover:text-primary transition-colors" />
+                    <Circle className="text-muted-foreground hover:text-primary h-5 w-5 transition-colors sm:h-5 sm:w-5 md:h-6 md:w-6" />
                   )}
                 </button>
               )}
-              <CardTitle className={cn(
-                "text-sm sm:text-base md:text-lg min-w-0 break-words",
-                isMarkedDone && "line-through text-muted-foreground"
-              )}>
+              <CardTitle
+                className={cn(
+                  "min-w-0 text-base font-bold tracking-tight break-words sm:text-lg md:text-xl",
+                  isMarkedDone && "text-muted-foreground line-through",
+                )}
+              >
                 {exerciseName}
               </CardTitle>
-              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
                 {allCompleted && !isMarkedDone && (
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs md:text-sm bg-primary/10 text-primary border-primary/20">
-                    <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5 mr-1" />
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold tracking-wider uppercase sm:text-xs md:text-sm"
+                  >
+                    <TrendingUp className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
                     Complete
                   </Badge>
                 )}
                 {isMarkedDone && (
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs md:text-sm">
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold tracking-wider uppercase sm:text-xs md:text-sm"
+                  >
                     Done
                   </Badge>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 mt-1.5 md:mt-2 flex-wrap">
-              <span className="text-[11px] sm:text-xs md:text-sm text-muted-foreground">{muscleGroup}</span>
-              <span className="text-[11px] sm:text-xs md:text-sm text-muted-foreground">
-                • {completedSets}/{totalSets} sets
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 md:mt-2 md:gap-3">
+              <span className="text-muted-foreground bg-muted/50 rounded-sm px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase sm:text-xs md:text-sm">
+                {muscleGroup}
+              </span>
+              <span className="text-muted-foreground text-[10px] font-medium sm:text-xs md:text-sm">
+                • {completedSets}/{totalSets} SETS
               </span>
             </div>
             {lastWorkoutData && (
-              <div className="text-[11px] sm:text-xs md:text-sm text-muted-foreground mt-1 md:mt-1.5">
-                Last: {lastWorkoutData.weight}kg × {lastWorkoutData.reps} reps
+              <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-[10px] font-medium sm:text-xs md:text-sm">
+                <span className="text-muted-foreground/60 text-[9px] tracking-wider uppercase sm:text-[10px]">
+                  Last Workout:
+                </span>
+                <span>
+                  {lastWorkoutData.weight}kg × {lastWorkoutData.reps} reps
+                </span>
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1 md:gap-1.5">
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 touch-manipulation"
+              className="h-9 w-9 touch-manipulation sm:h-8 sm:w-8 md:h-9 md:w-9"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? (
@@ -132,7 +162,7 @@ export function ExerciseCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 text-destructive touch-manipulation"
+              className="text-destructive h-9 w-9 touch-manipulation sm:h-8 sm:w-8 md:h-9 md:w-9"
               onClick={onDeleteExercise}
             >
               <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
@@ -142,7 +172,7 @@ export function ExerciseCard({
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="space-y-2 md:space-y-3 px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
+        <CardContent className="space-y-2 px-3 pb-3 sm:px-4 sm:pb-4 md:space-y-3 md:px-5 md:pb-5">
           {sets.map((set) => (
             <SetRow
               key={set.id}
@@ -165,10 +195,10 @@ export function ExerciseCard({
           <Button
             variant="outline"
             size="sm"
-            className="w-full mt-2 md:mt-3 text-sm md:text-base touch-manipulation h-9 md:h-10"
+            className="mt-2 h-9 w-full touch-manipulation text-sm md:mt-3 md:h-10 md:text-base"
             onClick={onAddSet}
           >
-            <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+            <Plus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
             Add Set
           </Button>
         </CardContent>

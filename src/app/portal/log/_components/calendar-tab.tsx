@@ -54,26 +54,26 @@ export function CalendarTab({ userId }: CalendarTabProps) {
   return (
     <div className="space-y-4">
       {/* Month Navigation - Compact */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3">
+      <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
+        <CardHeader className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-teal-600" />
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-primary" />
               {format(currentDate, "MMMM yyyy")}
             </CardTitle>
             <div className="flex gap-1.5">
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={previousMonth}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={previousMonth}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-8 text-xs font-medium"
                 onClick={() => setCurrentDate(new Date())}
               >
                 Today
               </Button>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={nextMonth}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={nextMonth}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -86,7 +86,7 @@ export function CalendarTab({ userId }: CalendarTabProps) {
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div
                 key={day}
-                className="text-center text-[10px] font-medium text-muted-foreground py-1.5"
+                className="text-center text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/70 py-1.5"
               >
                 {day.slice(0, 1)}
               </div>
@@ -107,21 +107,24 @@ export function CalendarTab({ userId }: CalendarTabProps) {
                   key={day.toISOString()}
                   onClick={() => workout && router.push(`/portal/log/workout/${workout.id}`)}
                   className={cn(
-                    "aspect-square p-1.5 rounded-lg border transition-colors relative text-xs",
-                    !isCurrentMonth && "text-muted-foreground opacity-50",
-                    isToday && "border-teal-500 ring-2 ring-teal-500/20 bg-teal-50/50 dark:bg-teal-950/20",
-                    workout && "bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800",
-                    !workout && !isToday && "hover:bg-accent/50",
-                    !isCurrentMonth && "cursor-default"
+                    "aspect-square p-1.5 rounded-lg ring-1 ring-border/50 transition-all relative text-xs flex flex-col items-center justify-center",
+                    !isCurrentMonth && "text-muted-foreground/30 ring-border/30",
+                    isToday && "ring-2 ring-primary bg-primary/5 font-semibold text-primary",
+                    workout && "bg-primary/10 ring-primary/30 hover:bg-primary/20 hover:ring-primary/50",
+                    !workout && !isToday && isCurrentMonth && "hover:bg-muted hover:ring-border",
+                    !isCurrentMonth && "cursor-default hover:bg-transparent"
                   )}
                   disabled={!workout && !isToday}
                 >
-                  <div className="text-xs font-medium">
+                  <span className={cn(
+                    "text-xs",
+                    isToday && "font-bold"
+                  )}>
                     {format(day, "d")}
-                  </div>
+                  </span>
                   {workout && (
-                    <div className="absolute inset-x-0 bottom-0.5 flex justify-center">
-                      <Dumbbell className="h-2.5 w-2.5 text-green-600 dark:text-green-400" />
+                    <div className="absolute inset-x-0 bottom-1 flex justify-center">
+                      <div className="h-1 w-1 rounded-full bg-primary" />
                     </div>
                   )}
                 </button>
@@ -130,15 +133,13 @@ export function CalendarTab({ userId }: CalendarTabProps) {
           </div>
 
           {/* Legend - Compact */}
-          <div className="flex items-center gap-3 mt-4 pt-3 border-t text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-end gap-4 mt-4 pt-3 border-t border-border/50 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded border-2 border-teal-500" />
+              <div className="w-2 h-2 rounded-full border border-primary bg-primary/5" />
               <span>Today</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-green-50 border-green-200 dark:bg-green-950/20 flex items-center justify-center">
-                <Dumbbell className="h-2 w-2 text-green-600 dark:text-green-400" />
-              </div>
+              <div className="w-2 h-2 rounded-full bg-primary/20" />
               <span>Workout</span>
             </div>
           </div>
@@ -146,43 +147,45 @@ export function CalendarTab({ userId }: CalendarTabProps) {
       </Card>
 
       {/* Workouts this month - Compact */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3">
-          <CardTitle className="text-sm">Workouts This Month</CardTitle>
+      <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
+        <CardHeader className="px-4 pt-4 pb-2">
+          <CardTitle className="text-base font-bold">Workouts This Month</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="space-y-2">
             {calendar.data?.map((log) => (
               <div
                 key={log.id}
-                className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 cursor-pointer hover:bg-accent/50 hover:border-accent transition-all group"
+                className="flex items-center justify-between p-3 rounded-lg ring-1 ring-border bg-card cursor-pointer hover:shadow-md hover:ring-primary/20 transition-all group"
                 onClick={() => router.push(`/portal/log/workout/${log.id}`)}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
+                  <p className="font-semibold text-sm truncate">
                     {log.planDay?.title ?? "Untitled Workout"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {format(new Date(log.date), "MMM d, yyyy")}
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mt-1 font-medium">
+                    {format(new Date(log.date), "EEEE, MMM d")}
                   </p>
                 </div>
-                <div className="text-right ml-3 shrink-0">
-                  <p className="text-xs font-medium">
-                    {log.duration ? `${log.duration}m` : "Completed"}
-                  </p>
+                <div className="text-right ml-4 shrink-0 flex flex-col items-end gap-0.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <span>{log.duration ? `${log.duration}` : "--"}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">MINS</span>
+                  </div>
                   {log.totalVolume && (
-                    <p className="text-[10px] text-muted-foreground">
-                      {Math.round(log.totalVolume)} kg
-                    </p>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                       <span>{Math.round(log.totalVolume).toLocaleString()}</span>
+                       <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">KG</span>
+                    </div>
                   )}
                 </div>
               </div>
             ))}
 
             {(!calendar.data || calendar.data.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No workouts this month yet.</p>
+              <div className="text-center py-8 text-muted-foreground/50">
+                <Dumbbell className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium">No workouts this month</p>
               </div>
             )}
           </div>

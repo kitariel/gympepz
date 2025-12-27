@@ -218,8 +218,7 @@ export const workoutLogRouter = createTRPCRouter({
         const lastDayOrder = lastLog.planDay.order;
         const nextDayIndex =
           user.activePlan.days.findIndex((d) => d.order > lastDayOrder) ?? 0;
-        nextDay =
-          user.activePlan.days[nextDayIndex] ?? user.activePlan.days[0];
+        nextDay = user.activePlan.days[nextDayIndex] ?? user.activePlan.days[0];
       }
 
       if (!nextDay) {
@@ -260,7 +259,7 @@ export const workoutLogRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         includeLastWorkout: z.boolean().default(true),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const workout = await ctx.db.workoutLog.findUnique({
@@ -309,7 +308,7 @@ export const workoutLogRouter = createTRPCRouter({
         userId: z.string().min(1),
         month: z.number().min(1).max(12),
         year: z.number().min(2020),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const startDate = new Date(input.year, input.month - 1, 1);
@@ -339,7 +338,7 @@ export const workoutLogRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Get recent completed workouts
       const recentLogs = await ctx.db.workoutLog.findMany({
-        where: { 
+        where: {
           userId: input.userId,
           completed: true,
         },
@@ -362,7 +361,7 @@ export const workoutLogRouter = createTRPCRouter({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const workoutDates = recentLogs.map(log => {
+      const workoutDates = recentLogs.map((log) => {
         const date = new Date(log.date);
         date.setHours(0, 0, 0, 0);
         return date.getTime();
@@ -374,11 +373,13 @@ export const workoutLogRouter = createTRPCRouter({
       // Calculate current streak from today
       let expectedDate = today.getTime();
       for (const date of uniqueDates) {
-        const diffDays = Math.floor((expectedDate - date) / (1000 * 60 * 60 * 24));
-        
+        const diffDays = Math.floor(
+          (expectedDate - date) / (1000 * 60 * 60 * 24),
+        );
+
         if (diffDays === 0 || diffDays === 1) {
           currentStreak++;
-          expectedDate = date - (1000 * 60 * 60 * 24);
+          expectedDate = date - 1000 * 60 * 60 * 24;
         } else {
           break;
         }
@@ -387,8 +388,10 @@ export const workoutLogRouter = createTRPCRouter({
       // Calculate longest streak
       tempStreak = 1;
       for (let i = 1; i < uniqueDates.length; i++) {
-        const diffDays = Math.floor((uniqueDates[i - 1] - uniqueDates[i]) / (1000 * 60 * 60 * 24));
-        
+        const diffDays = Math.floor(
+          (uniqueDates[i - 1]! - uniqueDates[i]!) / (1000 * 60 * 60 * 24),
+        );
+
         if (diffDays === 1) {
           tempStreak++;
           longestStreak = Math.max(longestStreak, tempStreak);
@@ -412,14 +415,26 @@ export const workoutLogRouter = createTRPCRouter({
       z.object({
         userId: z.string().min(1),
         startDate: z.date().optional(),
-      })
+        period: z.enum(["week", "month", "year"]).optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       const now = new Date();
-      let startDate = input.startDate ?? new Date();
-      
+      const startDate = input.startDate ?? new Date();
+
       if (!input.startDate) {
-        startDate.setMonth(now.getMonth() - 1);
+        switch (input.period) {
+          case "week":
+            startDate.setDate(now.getDate() - 7);
+            break;
+          case "year":
+            startDate.setFullYear(now.getFullYear() - 1);
+            break;
+          case "month":
+          default:
+            startDate.setMonth(now.getMonth() - 1);
+            break;
+        }
       }
 
       const logs = await ctx.db.workoutLog.findMany({
@@ -436,27 +451,29 @@ export const workoutLogRouter = createTRPCRouter({
       });
 
       const totalWorkouts = logs.length;
-      
+
       // Calculate total volume from exercises (estimate)
       let totalVolume = 0;
       const volumeByMuscleGroup: Record<string, number> = {};
-      
+
       logs.forEach((log) => {
         log.exercises?.forEach((exercise) => {
           const muscle = exercise.exercise.muscleGroup;
           const volume = (exercise.weight ?? 0) * exercise.reps * exercise.sets;
           totalVolume += volume;
-          volumeByMuscleGroup[muscle] = (volumeByMuscleGroup[muscle] ?? 0) + volume;
+          volumeByMuscleGroup[muscle] =
+            (volumeByMuscleGroup[muscle] ?? 0) + volume;
         });
       });
 
-      const avgDuration = 
-        logs.reduce((sum, log) => sum + (log.duration ?? 0), 0) / totalWorkouts || 0;
+      const avgDuration =
+        logs.reduce((sum, log) => sum + (log.duration ?? 0), 0) /
+          totalWorkouts || 0;
 
       return {
         totalWorkouts,
         totalVolume,
-        averageDuration: Math.round(avgDuration),
+        avgDuration: Math.round(avgDuration),
         volumeByMuscleGroup,
       };
     }),
@@ -482,7 +499,7 @@ export const workoutLogRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         duration: z.number().min(0),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.workoutLog.update({
@@ -497,7 +514,7 @@ export const workoutLogRouter = createTRPCRouter({
       z.object({
         userId: z.string().min(1),
         hoursBack: z.number().default(6), // Default: check last 6 hours
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const hoursAgo = new Date();
@@ -527,7 +544,9 @@ export const workoutLogRouter = createTRPCRouter({
 
       const timeDiff = Date.now() - recentWorkout.date.getTime();
       const hoursSince = Math.floor(timeDiff / (1000 * 60 * 60));
-      const minutesSince = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const minutesSince = Math.floor(
+        (timeDiff % (1000 * 60 * 60)) / (1000 * 60),
+      );
 
       return {
         hasRecentWorkout: true,
@@ -593,7 +612,7 @@ export const workoutLogRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         date: z.date(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.workoutLog.update({

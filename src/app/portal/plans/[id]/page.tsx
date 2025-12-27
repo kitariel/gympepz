@@ -85,7 +85,7 @@ function SortableDayCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: dayData.id,
     disabled: false,
   });
@@ -95,20 +95,25 @@ function SortableDayCard({
     transition,
   };
 
+  const totalSets = (dayData.items ?? []).reduce(
+    (sum: number, item: unknown) => sum + (item.sets || 0),
+    0,
+  );
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
       className={cn(
-        "border-0 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group border-2 border-transparent min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] flex flex-col",
-        isDragging && "opacity-50"
+        "group ring-border hover:ring-primary/20 bg-card flex h-full min-h-[180px] cursor-pointer flex-col border-0 shadow-sm ring-1 transition-all hover:shadow-md",
+        isDragging && "ring-primary z-50 rotate-2 opacity-50 ring-2",
       )}
       onClick={(e) => {
         // Only open drawer if click was not on interactive elements
         const target = e.target as HTMLElement;
         if (
-          !target.closest('[data-drag-handle]') &&
-          !target.closest('button') &&
+          !target.closest("[data-drag-handle]") &&
+          !target.closest("button") &&
           !target.closest('[role="menuitem"]') &&
           !isDragging
         ) {
@@ -116,26 +121,24 @@ function SortableDayCard({
         }
       }}
     >
-      <CardHeader className="px-3 sm:px-3 md:px-4 pt-3 sm:pt-3 md:pt-4 pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-xs sm:text-xs md:text-sm font-medium text-muted-foreground truncate flex-1">
+      <CardHeader className="space-y-1 px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase">
             {dayName}
-          </CardTitle>
+          </span>
           <div
             {...attributes}
             {...listeners}
             data-drag-handle
-            className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            className="hover:bg-muted -mt-2 -mr-2 shrink-0 cursor-grab touch-none rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
             onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
           >
-            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+            <GripVertical className="text-muted-foreground h-4 w-4" />
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col px-3 sm:px-3 md:px-4 pb-3 sm:pb-3 md:pb-4 space-y-2 min-h-0">
+
         {editingDayId === dayData.id ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 pt-1">
             <Input
               value={editingDayTitle}
               onChange={(e) => onEditingDayTitleChange(e.target.value)}
@@ -146,96 +149,130 @@ function SortableDayCard({
                   onCancelEdit();
                 }
               }}
-              className="h-7 sm:h-8 text-xs sm:text-sm font-semibold"
+              className="h-8 text-sm font-semibold"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 sm:h-7 sm:w-7"
+                size="sm"
+                className="h-7 px-2 text-xs"
                 onClick={() => onSaveDayTitle(dayData.id)}
                 disabled={updateDay.isPending || !editingDayTitle.trim()}
               >
-                <Save className="h-3 w-3" />
+                Save
               </Button>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-6 w-6 sm:h-7 sm:w-7"
+                size="sm"
+                className="h-7 px-2 text-xs"
                 onClick={onCancelEdit}
               >
-                ×
+                Cancel
               </Button>
             </div>
           </div>
         ) : (
-          <>
-            <div className="flex-1 min-h-0 flex flex-col">
-              <h4 className="font-semibold text-xs sm:text-sm md:text-base mb-1.5 sm:mb-2 line-clamp-2 leading-tight">
-                {dayData.title}
-              </h4>
-              <div className="flex flex-col gap-1 sm:gap-1.5">
-                <Badge variant="secondary" className="text-[10px] sm:text-xs w-fit">
-                  {dayData.items?.length ?? 0} {dayData.items?.length === 1 ? 'ex' : 'ex'}
-                </Badge>
-                {(dayData.items ?? []).length > 0 && (
-                  <span className="text-[10px] sm:text-xs text-muted-foreground">
-                    {dayData.items.reduce((sum: number, item: any) => sum + (item.sets || 0), 0)} sets
+          <div className="group/title flex items-start justify-between gap-2">
+            <CardTitle className="line-clamp-2 text-base leading-tight font-bold">
+              {dayData.title}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-mr-1 h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover/title:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditDay(dayData.id);
+              }}
+            >
+              <Pencil className="text-muted-foreground h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col gap-4 px-4 pb-4">
+        {/* Exercise Preview */}
+        <div className="min-h-[3rem] flex-1 space-y-1.5">
+          {(dayData.items ?? []).length > 0 ? (
+            <>
+              {(dayData.items ?? []).slice(0, 3).map((item: any) => (
+                <div
+                  key={item.id}
+                  className="text-muted-foreground flex items-center gap-2 text-sm"
+                >
+                  <div className="bg-primary/40 h-1.5 w-1.5 shrink-0 rounded-full" />
+                  <span className="truncate">
+                    {item.exercise?.name ?? "Exercise"}
                   </span>
-                )}
-              </div>
+                  {item.sets && (
+                    <span className="text-muted-foreground/50 ml-auto shrink-0 text-[10px]">
+                      {item.sets} sets
+                    </span>
+                  )}
+                </div>
+              ))}
+              {(dayData.items?.length ?? 0) > 3 && (
+                <p className="text-muted-foreground/60 pt-0.5 pl-3.5 text-xs">
+                  + {(dayData.items?.length ?? 0) - 3} more
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="text-muted-foreground/40 flex h-full flex-col items-center justify-center py-2 text-xs italic">
+              No exercises added
             </div>
-            <div className="flex items-center gap-1 pt-2 mt-auto border-t">
+          )}
+        </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-0.5">
+          <div className="flex items-center gap-3">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+              <Dumbbell className="h-3.5 w-3.5" />
+              <span>{dayData.items?.length ?? 0}</span>
+            </div>
+            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+              <span className="text-muted-foreground/60 text-[10px] tracking-wider uppercase">
+                Sets
+              </span>
+              <span>{totalSets}</span>
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 sm:h-7 sm:w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditDay(dayData.id);
-                }}
+                className="-mr-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
               >
-                <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <MoreVertical className="text-muted-foreground h-3.5 w-3.5" />
               </Button>
-              <div className="flex-1" />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 sm:h-7 sm:w-7 opacity-70 hover:opacity-100 shrink-0"
-                  >
-                    <MoreVertical className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[160px]">
-                  <DropdownMenuItem
-                    onClick={() => onDuplicateDay(dayData.id)}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onOpenCopyDialog(dayData.id)}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy To...
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onDeleteDay(dayData.id)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </>
-        )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[160px]">
+              <DropdownMenuItem onClick={() => onDuplicateDay(dayData.id)}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenCopyDialog(dayData.id)}>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy To...
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onDeleteDay(dayData.id)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardContent>
     </Card>
   );
@@ -259,27 +296,25 @@ function EmptyDaySlot({
     <Card
       ref={setNodeRef}
       className={cn(
-        "border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 transition-all min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] flex flex-col",
-        isOver && "border-primary bg-primary/5"
+        "group border-muted-foreground/10 bg-muted/5 hover:border-primary/40 hover:bg-primary/5 flex h-full min-h-[180px] cursor-pointer flex-col border-2 border-dashed transition-all",
+        isOver && "border-primary bg-primary/10",
       )}
+      onClick={() => onAddDay(slotIndex)}
     >
-      <CardHeader className="px-3 sm:px-3 md:px-4 pt-3 sm:pt-3 md:pt-4 pb-2">
-        <CardTitle className="text-xs sm:text-xs md:text-sm font-medium text-muted-foreground text-center">
+      <CardHeader className="px-4 pt-4 pb-2">
+        <span className="text-muted-foreground/50 group-hover:text-primary/60 text-[10px] font-semibold tracking-wider uppercase transition-colors">
           {dayName}
-        </CardTitle>
+        </span>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col items-center justify-center px-3 sm:px-3 md:px-4 pb-3 sm:pb-3 md:pb-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full h-auto py-2 sm:py-3 md:py-4 gap-1.5 sm:gap-2 flex-col"
-          onClick={() => onAddDay(slotIndex)}
-        >
-          <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-          <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground text-center leading-tight">
-            {isOver ? "Drop here" : "Add Workout Day"}
-          </span>
-        </Button>
+      <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 pb-8">
+        <div className="bg-muted-foreground/5 group-hover:bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
+          <Plus className="text-muted-foreground/40 group-hover:text-primary h-5 w-5 transition-colors" />
+        </div>
+        <div className="text-center">
+          <p className="text-muted-foreground/60 group-hover:text-primary/80 text-sm font-medium transition-colors">
+            {isOver ? "Drop Day Here" : "Add Workout"}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -339,17 +374,17 @@ export default function PlanDetailPage({
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [localDays, setLocalDays] = useState<any[]>([]);
 
-  const p = plan.data as any;
+  const p = plan.data as unknown;
 
   // Initialize local days from plan data
   useEffect(() => {
     if (plan.data?.days && plan.data.days.length > 0) {
       // Sort days by order
       const sortedDays = [...plan.data.days].sort((a, b) => a.order - b.order);
-      
+
       // Create array with 7 slots (Sunday = 0, Monday = 1, etc.)
       const weekSlots = Array(7).fill(null);
-      
+
       // Map days to slots: order should directly map to slot (0-6)
       // This ensures drag-and-drop positions persist correctly
       sortedDays.forEach((day: any) => {
@@ -362,7 +397,9 @@ export default function PlanDetailPage({
           } else {
             // Conflict: day with same order already exists
             // This shouldn't happen, but if it does, find next available slot
-            console.warn(`Order conflict: day ${day.id} has order ${day.order} but slot is taken`);
+            console.warn(
+              `Order conflict: day ${day.id} has order ${day.order} but slot is taken`,
+            );
             for (let i = 0; i < 7; i++) {
               const checkSlot = (slotIndex + 1 + i) % 7;
               if (!weekSlots[checkSlot]) {
@@ -394,12 +431,12 @@ export default function PlanDetailPage({
         distance: 8, // Require 8px of movement before drag starts
       },
     }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
-    { enabled: isAddExerciseDialogOpen }
+    { enabled: isAddExerciseDialogOpen },
   );
 
   useEffect(() => {
@@ -419,8 +456,9 @@ export default function PlanDetailPage({
       setIsAddDayDialogOpen(true);
       return;
     }
-    
-    const order = targetSlot !== undefined ? targetSlot : (p?.days?.length ?? 0);
+
+    const order =
+      targetSlot !== undefined ? targetSlot : (p?.days?.length ?? 0);
     await addDay.mutateAsync({
       planId: id,
       title: newDayTitle || `Day ${order + 1}`,
@@ -436,35 +474,48 @@ export default function PlanDetailPage({
     if (!over || active.id === over.id) return;
 
     const activeDayId = active.id as string;
-    const overSlotIndex = parseInt(over.id as string);
-    
+    let overSlotIndex = -1;
+
+    // Check if over.id is a slot index (0-6)
+    if (["0", "1", "2", "3", "4", "5", "6"].includes(over.id as string)) {
+      overSlotIndex = parseInt(over.id as string);
+    } else {
+      // Otherwise assume it's a day ID and look it up
+      overSlotIndex = localDays.findIndex((d) => d?.id === over.id);
+    }
+
     // If dropping on a slot (slot index 0-6)
-    if (!isNaN(overSlotIndex) && overSlotIndex >= 0 && overSlotIndex < 7) {
+    if (overSlotIndex >= 0 && overSlotIndex < 7) {
       const newDays = [...localDays];
       const activeDay = p?.days?.find((d: any) => d.id === activeDayId);
-      
+
       if (!activeDay) return;
-      
+
       // Find current position of dragged day
-      const currentSlotIndex = newDays.findIndex((day) => day?.id === activeDayId);
-      
+      const currentSlotIndex = newDays.findIndex(
+        (day) => day?.id === activeDayId,
+      );
+
       // Check if target slot already has a day (need to swap)
       const existingDayAtSlot = newDays[overSlotIndex];
-      
+
       if (currentSlotIndex >= 0) {
         // Clear current slot
         newDays[currentSlotIndex] = null;
-        
+
         // If target slot has a day, move it to the source slot (swap)
         if (existingDayAtSlot && existingDayAtSlot.id !== activeDayId) {
           // Update the swapped day's order to match its new slot position
-          newDays[currentSlotIndex] = { ...existingDayAtSlot, order: currentSlotIndex };
+          newDays[currentSlotIndex] = {
+            ...existingDayAtSlot,
+            order: currentSlotIndex,
+          };
         }
       }
-      
+
       // Place active day in target slot with updated order
       newDays[overSlotIndex] = { ...activeDay, order: overSlotIndex };
-      
+
       // Update local state immediately for responsive UI
       setLocalDays(newDays);
 
@@ -479,7 +530,7 @@ export default function PlanDetailPage({
           });
         }
       });
-      
+
       // Update all days' orders atomically in a single transaction
       if (orderUpdates.length > 0) {
         try {
@@ -487,7 +538,7 @@ export default function PlanDetailPage({
             planId: id,
             orders: orderUpdates,
           });
-          
+
           // Refetch to sync with database after updates complete
           await plan.refetch();
         } catch (error) {
@@ -521,7 +572,7 @@ export default function PlanDetailPage({
   const handleUpdateItem = async (
     itemId: string,
     field: "sets" | "reps" | "weight",
-    value: number
+    value: number,
   ) => {
     await updItem.mutateAsync({ id: itemId, [field]: value });
   };
@@ -573,44 +624,45 @@ export default function PlanDetailPage({
 
   if (plan.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <Dumbbell className="h-10 w-10 animate-pulse mx-auto mb-3 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading plan...</p>
+          <Dumbbell className="text-muted-foreground mx-auto mb-3 h-10 w-10 animate-pulse" />
+          <p className="text-muted-foreground text-sm">Loading plan...</p>
         </div>
       </div>
     );
   }
 
-  const totalExercises = p?.days?.reduce(
-    (sum: number, d: any) => sum + (d.items?.length ?? 0),
-    0
-  ) ?? 0;
+  const totalExercises =
+    p?.days?.reduce((sum: number, d: any) => sum + (d.items?.length ?? 0), 0) ??
+    0;
 
   return (
-    <div className="flex-1 space-y-3 sm:space-y-4 p-4 sm:p-6 pt-4">
+    <div className="flex-1 space-y-3 p-4 pt-4 sm:space-y-4 sm:p-6">
       {/* Responsive Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 sm:h-8 sm:w-8 shrink-0" 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 sm:h-8 sm:w-8"
             onClick={() => router.back()}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight truncate">Edit Plan</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
+            <h2 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+              Edit Plan
+            </h2>
+            <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block sm:text-sm">
               Customize your workout program
             </p>
           </div>
         </div>
-        <Button 
-          size="sm" 
-          onClick={() => router.push(`/portal/log`)} 
-          className="gap-2 w-full sm:w-auto h-9 sm:h-8"
+        <Button
+          size="sm"
+          onClick={() => router.push(`/portal/log`)}
+          className="h-9 w-full gap-2 sm:h-8 sm:w-auto"
         >
           <Eye className="h-4 w-4" />
           <span className="hidden sm:inline">Preview</span>
@@ -620,11 +672,11 @@ export default function PlanDetailPage({
 
       {/* Plan Name - Responsive */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 sm:px-4 pt-4 pb-3">
+        <CardHeader className="px-4 pt-4 pb-3 sm:px-4">
           <CardTitle className="text-sm font-semibold">Plan Details</CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-4 pb-4 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-2">
+        <CardContent className="space-y-3 px-4 pb-4 sm:px-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               placeholder="Plan name"
               value={planName}
@@ -634,36 +686,41 @@ export default function PlanDetailPage({
                   handleSaveName();
                 }
               }}
-              className="h-10 sm:h-9 flex-1"
+              className="h-10 flex-1 sm:h-9"
             />
             <Button
               size="sm"
               onClick={handleSaveName}
               disabled={updateMeta.isPending || !planName}
-              className="h-10 sm:h-9 w-full sm:w-auto"
+              className="h-10 w-full sm:h-9 sm:w-auto"
             >
-              <Save className="h-4 w-4 sm:h-3.5 sm:w-3.5 mr-1.5" />
+              <Save className="mr-1.5 h-4 w-4 sm:h-3.5 sm:w-3.5" />
               {updateMeta.isPending ? "Saving..." : "Save"}
             </Button>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground flex-wrap">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs sm:gap-3">
             <span className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
-              {p?.days?.length ?? 0} {p?.days?.length === 1 ? 'day' : 'days'}
+              {p?.days?.length ?? 0} {p?.days?.length === 1 ? "day" : "days"}
             </span>
             <span className="hidden sm:inline">•</span>
-            <span>{totalExercises} {totalExercises === 1 ? 'exercise' : 'exercises'}</span>
+            <span>
+              {totalExercises} {totalExercises === 1 ? "exercise" : "exercises"}
+            </span>
           </div>
         </CardContent>
       </Card>
 
       {/* Weekly Workout Days */}
       <div className="space-y-3 sm:space-y-3 md:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 md:gap-0">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 md:gap-0">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base sm:text-base md:text-lg font-semibold">Weekly Schedule</h3>
-            <p className="text-xs sm:text-xs md:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-              Drag and drop workout days to rearrange. Click empty days to add workouts.
+            <h3 className="text-base font-semibold sm:text-base md:text-lg">
+              Weekly Schedule
+            </h3>
+            <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block sm:text-xs md:text-sm">
+              Drag and drop workout days to rearrange. Click empty days to add
+              workouts.
             </p>
           </div>
         </div>
@@ -674,51 +731,61 @@ export default function PlanDetailPage({
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={localDays.filter((day) => day !== null).map((day) => day!.id)}
+            items={localDays
+              .filter((day) => day !== null)
+              .map((day) => day!.id)}
             strategy={horizontalListSortingStrategy}
             disabled={false}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3 sm:gap-3 md:gap-4">
-              {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(
-                (dayName, slotIndex) => {
-                  const dayData = localDays[slotIndex];
-                  
-                  if (!dayData) {
-                    return (
-                      <EmptyDaySlot
-                        key={slotIndex}
-                        dayName={dayName}
-                        slotIndex={slotIndex}
-                        onAddDay={(slot) => {
-                          setNewDayTitle(`${dayName} Workout`);
-                          handleAddDay(slot);
-                        }}
-                      />
-                    );
-                  }
-                  
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+              {[
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ].map((dayName, slotIndex) => {
+                const dayData = localDays[slotIndex];
+
+                if (!dayData) {
                   return (
-                    <SortableDayCard
-                      key={dayData.id}
-                      dayData={dayData}
+                    <EmptyDaySlot
+                      key={slotIndex}
                       dayName={dayName}
                       slotIndex={slotIndex}
-                      onEditDay={(dayId) => handleStartEditDay(dayId, dayData.title)}
-                      onSaveDayTitle={(dayId) => handleSaveDayTitle(dayId)}
-                      onCancelEdit={handleCancelEditDay}
-                      onDeleteDay={handleDeleteDay}
-                      onDuplicateDay={handleDuplicateDay}
-                      onOpenCopyDialog={handleOpenCopyDialog}
-                      onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
-                      editingDayId={editingDayId}
-                      editingDayTitle={editingDayTitle}
-                      onEditingDayTitleChange={setEditingDayTitle}
-                      updateDay={updateDay}
-                      p={p}
+                      onAddDay={(slot) => {
+                        setNewDayTitle(`${dayName} Workout`);
+                        handleAddDay(slot);
+                      }}
                     />
                   );
                 }
-              )}
+
+                return (
+                  <SortableDayCard
+                    key={dayData.id}
+                    dayData={dayData}
+                    dayName={dayName}
+                    slotIndex={slotIndex}
+                    onEditDay={(dayId) =>
+                      handleStartEditDay(dayId, dayData.title)
+                    }
+                    onSaveDayTitle={(dayId) => handleSaveDayTitle(dayId)}
+                    onCancelEdit={handleCancelEditDay}
+                    onDeleteDay={handleDeleteDay}
+                    onDuplicateDay={handleDuplicateDay}
+                    onOpenCopyDialog={handleOpenCopyDialog}
+                    onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
+                    editingDayId={editingDayId}
+                    editingDayTitle={editingDayTitle}
+                    onEditingDayTitleChange={setEditingDayTitle}
+                    updateDay={updateDay}
+                    p={p}
+                  />
+                );
+              })}
             </div>
           </SortableContext>
         </DndContext>
@@ -727,9 +794,12 @@ export default function PlanDetailPage({
         <Dialog open={isAddDayDialogOpen} onOpenChange={setIsAddDayDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">Add New Workout Day</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-2">
-                A workout day is a collection of exercises you'll do together in one session.
+              <DialogTitle className="text-lg sm:text-xl">
+                Add New Workout Day
+              </DialogTitle>
+              <p className="text-muted-foreground mt-2 text-sm">
+                A workout day is a collection of exercises you'll do together in
+                one session.
               </p>
             </DialogHeader>
             <div className="space-y-4 pt-4">
@@ -746,12 +816,13 @@ export default function PlanDetailPage({
                   }}
                   className="h-10 sm:h-9"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Tip: Use descriptive names like "Push Day", "Pull Day", or day of the week.
+                <p className="text-muted-foreground text-xs">
+                  Tip: Use descriptive names like "Push Day", "Pull Day", or day
+                  of the week.
                 </p>
               </div>
               <Button
-                className="w-full h-10 sm:h-9"
+                className="h-10 w-full sm:h-9"
                 onClick={() => handleAddDay()}
                 disabled={!newDayTitle || addDay.isPending}
               >
@@ -761,110 +832,146 @@ export default function PlanDetailPage({
           </DialogContent>
         </Dialog>
 
-            {/* Exercise Drawer/Sheet */}
-            {selectedDayId && (() => {
-              const selectedDay = (p?.days ?? []).find((d: any) => d.id === selectedDayId);
-              if (!selectedDay) return null;
+        {/* Exercise Drawer/Sheet */}
+        {selectedDayId &&
+          (() => {
+            const selectedDay = (p?.days ?? []).find(
+              (d: any) => d.id === selectedDayId,
+            );
+            if (!selectedDay) return null;
 
-              return (
-                <Sheet open={!!selectedDayId} onOpenChange={(open) => !open && setSelectedDayId(null)}>
-                  <SheetContent side="bottom" className="w-full max-h-[95vh] sm:max-h-[92vh] md:max-h-[85vh] overflow-y-auto p-0 flex flex-col">
-                    <SheetHeader className="sticky top-0 bg-background z-10 pb-4 pt-6 px-6 border-b">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          {editingDayId === selectedDay.id ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={editingDayTitle}
-                                onChange={(e) => setEditingDayTitle(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    handleSaveDayTitle(selectedDay.id);
-                                  } else if (e.key === "Escape") {
-                                    handleCancelEditDay();
-                                  }
-                                }}
-                                className="h-9 text-base font-semibold flex-1"
-                                autoFocus
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 shrink-0"
-                                onClick={() => handleSaveDayTitle(selectedDay.id)}
-                                disabled={updateDay.isPending || !editingDayTitle.trim()}
-                              >
-                                <Save className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 shrink-0"
-                                onClick={handleCancelEditDay}
-                              >
-                                ×
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <SheetTitle className="text-xl sm:text-2xl">{selectedDay.title}</SheetTitle>
-                              <SheetDescription className="mt-2">
-                                {selectedDay.items?.length ?? 0} {selectedDay.items?.length === 1 ? 'exercise' : 'exercises'}
-                                {(selectedDay.items ?? []).length > 0 && (
-                                  <span className="ml-2">
-                                    • {selectedDay.items.reduce((sum: number, item: any) => sum + (item.sets || 0), 0)} total sets
-                                  </span>
-                                )}
-                              </SheetDescription>
-                            </>
-                          )}
-                        </div>
-                        {editingDayId !== selectedDay.id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 shrink-0"
-                            onClick={() => handleStartEditDay(selectedDay.id, selectedDay.title)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+            return (
+              <Sheet
+                open={!!selectedDayId}
+                onOpenChange={(open) => !open && setSelectedDayId(null)}
+              >
+                <SheetContent
+                  side="bottom"
+                  className="flex max-h-[95vh] w-full flex-col overflow-y-auto p-0 sm:max-h-[92vh] md:max-h-[85vh]"
+                >
+                  <SheetHeader className="bg-background sticky top-0 z-10 border-b px-6 pt-6 pb-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {editingDayId === selectedDay.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editingDayTitle}
+                              onChange={(e) =>
+                                setEditingDayTitle(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleSaveDayTitle(selectedDay.id);
+                                } else if (e.key === "Escape") {
+                                  handleCancelEditDay();
+                                }
+                              }}
+                              className="h-9 flex-1 text-base font-semibold"
+                              autoFocus
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 shrink-0"
+                              onClick={() => handleSaveDayTitle(selectedDay.id)}
+                              disabled={
+                                updateDay.isPending || !editingDayTitle.trim()
+                              }
+                            >
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 shrink-0"
+                              onClick={handleCancelEditDay}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <SheetTitle className="text-xl sm:text-2xl">
+                              {selectedDay.title}
+                            </SheetTitle>
+                            <SheetDescription className="mt-2">
+                              {selectedDay.items?.length ?? 0}{" "}
+                              {selectedDay.items?.length === 1
+                                ? "exercise"
+                                : "exercises"}
+                              {(selectedDay.items ?? []).length > 0 && (
+                                <span className="ml-2">
+                                  •{" "}
+                                  {selectedDay.items.reduce(
+                                    (sum: number, item: any) =>
+                                      sum + (item.sets ?? 0),
+                                    0,
+                                  )}{" "}
+                                  total sets
+                                </span>
+                              )}
+                            </SheetDescription>
+                          </>
                         )}
                       </div>
-                    </SheetHeader>
+                      {editingDayId !== selectedDay.id && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0"
+                          onClick={() =>
+                            handleStartEditDay(
+                              selectedDay.id,
+                              selectedDay.title,
+                            )
+                          }
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 space-y-4">
-                      {/* Add Exercise Button */}
-                      <Button
-                        className="w-full h-11 gap-2"
-                        onClick={() => {
-                          setTargetDayId(selectedDay.id);
-                          setIsAddExerciseDialogOpen(true);
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Exercise
-                      </Button>
+                  <div className="flex-1 space-y-4 overflow-y-auto px-6 pt-6 pb-6">
+                    {/* Add Exercise Button */}
+                    <Button
+                      className="h-11 w-full gap-2"
+                      onClick={() => {
+                        setTargetDayId(selectedDay.id);
+                        setIsAddExerciseDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Exercise
+                    </Button>
 
-                      {/* Exercise List */}
-                      {(selectedDay.items ?? []).length > 0 ? (
-                        <div className="space-y-4">
-                          {(selectedDay.items ?? []).map((item: any, itemIndex: number) => (
+                    {/* Exercise List */}
+                    {(selectedDay.items ?? []).length > 0 ? (
+                      <div className="space-y-4">
+                        {(selectedDay.items ?? []).map(
+                          (item: any, itemIndex: number) => (
                             <Card key={item.id} className="border shadow-sm">
-                              <CardContent className="p-5 sm:p-4 space-y-4">
+                              <CardContent className="space-y-4 p-5 sm:p-4">
                                 {/* Exercise Header */}
                                 <div className="flex items-start justify-between gap-3">
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-base mb-2">
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="mb-2 text-base font-semibold">
                                       {item.exercise?.name ?? item.exerciseId}
                                     </h4>
-                                    <div className="flex gap-2 flex-wrap">
+                                    <div className="flex flex-wrap gap-2">
                                       {item.exercise?.muscleGroup && (
-                                        <Badge variant="outline" className="text-xs">
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
                                           {item.exercise.muscleGroup}
                                         </Badge>
                                       )}
                                       {item.exercise?.equipment && (
-                                        <Badge variant="outline" className="text-xs">
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
                                           {item.exercise.equipment}
                                         </Badge>
                                       )}
@@ -883,7 +990,9 @@ export default function PlanDetailPage({
                                 {/* Sets/Reps/Weight */}
                                 <div className="grid grid-cols-3 gap-3">
                                   <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-muted-foreground">Sets</label>
+                                    <label className="text-muted-foreground text-xs font-medium">
+                                      Sets
+                                    </label>
                                     <Input
                                       type="number"
                                       className="h-10 text-base"
@@ -892,14 +1001,16 @@ export default function PlanDetailPage({
                                         handleUpdateItem(
                                           item.id,
                                           "sets",
-                                          Number(e.target.value)
+                                          Number(e.target.value),
                                         )
                                       }
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
                                   <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-muted-foreground">Reps</label>
+                                    <label className="text-muted-foreground text-xs font-medium">
+                                      Reps
+                                    </label>
                                     <Input
                                       type="number"
                                       className="h-10 text-base"
@@ -908,14 +1019,16 @@ export default function PlanDetailPage({
                                         handleUpdateItem(
                                           item.id,
                                           "reps",
-                                          Number(e.target.value)
+                                          Number(e.target.value),
                                         )
                                       }
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
                                   <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-muted-foreground">Weight (kg)</label>
+                                    <label className="text-muted-foreground text-xs font-medium">
+                                      Weight (kg)
+                                    </label>
                                     <Input
                                       type="number"
                                       className="h-10 text-base"
@@ -925,7 +1038,7 @@ export default function PlanDetailPage({
                                         handleUpdateItem(
                                           item.id,
                                           "weight",
-                                          Number(e.target.value)
+                                          Number(e.target.value),
                                         )
                                       }
                                       onBlur={() => plan.refetch()}
@@ -934,34 +1047,36 @@ export default function PlanDetailPage({
                                 </div>
                               </CardContent>
                             </Card>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 px-4">
-                          <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                          <h3 className="font-semibold mb-2 text-lg">No exercises yet</h3>
-                          <p className="text-sm text-muted-foreground mb-6">
-                            Add your first exercise to this workout day
-                          </p>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setTargetDayId(selectedDay.id);
-                              setIsAddExerciseDialogOpen(true);
-                            }}
-                            className="h-11"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Exercise
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              );
-            })()}
-
+                          ),
+                        )}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-12 text-center">
+                        <Dumbbell className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
+                        <h3 className="mb-2 text-lg font-semibold">
+                          No exercises yet
+                        </h3>
+                        <p className="text-muted-foreground mb-6 text-sm">
+                          Add your first exercise to this workout day
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setTargetDayId(selectedDay.id);
+                            setIsAddExerciseDialogOpen(true);
+                          }}
+                          className="h-11"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Exercise
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            );
+          })()}
       </div>
 
       {/* Add Exercise Dialog - Responsive */}
@@ -969,38 +1084,48 @@ export default function PlanDetailPage({
         open={isAddExerciseDialogOpen}
         onOpenChange={setIsAddExerciseDialogOpen}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col">
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col sm:max-h-[85vh]">
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="text-lg sm:text-xl">Add Exercise to Workout Day</DialogTitle>
-            <p className="text-sm text-muted-foreground mt-2">
+            <DialogTitle className="text-lg sm:text-xl">
+              Add Exercise to Workout Day
+            </DialogTitle>
+            <p className="text-muted-foreground mt-2 text-sm">
               Search and select exercises to add to this workout session.
             </p>
           </DialogHeader>
-          <div className="space-y-4 pt-4 flex-1 flex flex-col min-h-0">
+          <div className="flex min-h-0 flex-1 flex-col space-y-4 pt-4">
             <Input
               placeholder="Search exercises..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 sm:h-9 flex-shrink-0"
+              className="h-10 flex-shrink-0 sm:h-9"
             />
-            <div className="max-h-[50vh] sm:max-h-[400px] overflow-y-auto space-y-2 flex-1">
+            <div className="max-h-[50vh] flex-1 space-y-2 overflow-y-auto sm:max-h-[400px]">
               {exercises.data?.map((ex) => (
                 <Button
                   key={ex.id}
                   variant="outline"
-                  className="w-full justify-start h-auto py-3 sm:py-2.5"
+                  className="h-auto w-full justify-start py-3 sm:py-2.5"
                   onClick={() => handleAddExercise(ex.id)}
                 >
-                  <div className="flex items-start gap-2.5 sm:gap-2 text-left w-full">
-                    <Dumbbell className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm sm:text-xs">{ex.name}</p>
-                      <div className="flex gap-1.5 mt-1.5 sm:mt-1 flex-wrap">
-                        <Badge variant="outline" className="text-[10px] sm:text-[9px] px-2 py-0.5 sm:px-1.5 sm:py-0">
+                  <div className="flex w-full items-start gap-2.5 text-left sm:gap-2">
+                    <Dumbbell className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium sm:text-xs">
+                        {ex.name}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5 sm:mt-1">
+                        <Badge
+                          variant="outline"
+                          className="px-2 py-0.5 text-[10px] sm:px-1.5 sm:py-0 sm:text-[9px]"
+                        >
                           {ex.muscleGroup}
                         </Badge>
                         {ex.equipment && (
-                          <Badge variant="outline" className="text-[10px] sm:text-[9px] px-2 py-0.5 sm:px-1.5 sm:py-0">
+                          <Badge
+                            variant="outline"
+                            className="px-2 py-0.5 text-[10px] sm:px-1.5 sm:py-0 sm:text-[9px]"
+                          >
                             {ex.equipment}
                           </Badge>
                         )}
@@ -1010,7 +1135,7 @@ export default function PlanDetailPage({
                 </Button>
               ))}
               {searchQuery && exercises.data?.length === 0 && (
-                <p className="text-center text-xs sm:text-sm text-muted-foreground py-6 sm:py-4">
+                <p className="text-muted-foreground py-6 text-center text-xs sm:py-4 sm:text-sm">
                   No exercises found.
                 </p>
               )}
@@ -1023,36 +1148,42 @@ export default function PlanDetailPage({
       <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Copy Exercises To...</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Copy Exercises To...
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Select a day to copy exercises to:
             </p>
-            <div className="max-h-[50vh] sm:max-h-[300px] overflow-y-auto space-y-2">
+            <div className="max-h-[50vh] space-y-2 overflow-y-auto sm:max-h-[300px]">
               {(p?.days ?? [])
                 .filter((d: any) => d.id !== copyFromDayId)
                 .map((day: any) => (
                   <Button
                     key={day.id}
                     variant="outline"
-                    className="w-full justify-start h-auto py-3 sm:py-2.5"
+                    className="h-auto w-full justify-start py-3 sm:py-2.5"
                     onClick={() => handleCopyExercises(day.id)}
                     disabled={copyExercises.isPending}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="text-left min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{day.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {day.items?.length ?? 0} {day.items?.length === 1 ? 'exercise' : 'exercises'}
+                    <div className="flex w-full items-center justify-between">
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="truncate text-sm font-medium">
+                          {day.title}
+                        </p>
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          {day.items?.length ?? 0}{" "}
+                          {day.items?.length === 1 ? "exercise" : "exercises"}
                         </p>
                       </div>
-                      <Copy className="h-4 w-4 ml-2 shrink-0" />
+                      <Copy className="ml-2 h-4 w-4 shrink-0" />
                     </div>
                   </Button>
                 ))}
-              {(p?.days ?? []).filter((d: any) => d.id !== copyFromDayId).length === 0 && (
-                <p className="text-center text-xs sm:text-sm text-muted-foreground py-6 sm:py-4">
+              {(p?.days ?? []).filter((d: unknown) => d.id !== copyFromDayId)
+                .length === 0 && (
+                <p className="text-muted-foreground py-6 text-center text-xs sm:py-4 sm:text-sm">
                   No other days available.
                 </p>
               )}

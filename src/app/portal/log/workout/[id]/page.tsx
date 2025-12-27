@@ -22,6 +22,39 @@ import { ExerciseCard } from "./_components/exercise-card";
 import { RestTimer } from "./_components/rest-timer";
 import { useWorkoutTimer, useRestTimer } from "@/hooks/useWorkoutTimer";
 
+interface Exercise {
+  id: string;
+  name: string;
+  muscleGroup: string;
+}
+
+interface WorkoutSet {
+  id: string;
+  exerciseId: string;
+  exerciseLogId: string | null;
+  setNumber: number;
+  targetReps: number;
+  targetWeight: number | null;
+  actualReps: number | null;
+  actualWeight: number | null;
+  rpe: number | null;
+  completed: boolean;
+  exercise: Exercise;
+  isMock?: boolean;
+}
+
+interface ExerciseGroup {
+  exercise: Exercise;
+  sets: WorkoutSet[];
+  exerciseLogId: string | null;
+}
+
+interface SetUpdateData {
+  actualReps?: number;
+  actualWeight?: number;
+  rpe?: number;
+}
+
 export default function ActiveWorkoutPage({
   params,
 }: {
@@ -137,15 +170,12 @@ export default function ActiveWorkoutPage({
   const workout = log.data;
 
   // Group sets by exercise - handle both sets and exercises
-  const exerciseGroups = (() => {
+  const exerciseGroups: Record<string, ExerciseGroup> = (() => {
+    const w = workout as unknown;
     // If sets exist (WorkoutSet[]), use them
-    if (
-      workout.sets &&
-      Array.isArray(workout.sets) &&
-      workout.sets.length > 0
-    ) {
-      return workout.sets.reduce(
-        (acc, set) => {
+    if (w.sets && Array.isArray(w.sets) && w.sets.length > 0) {
+      return w.sets.reduce(
+        (acc: Record<string, ExerciseGroup>, set: WorkoutSet) => {
           const exerciseId = set.exerciseId;
           if (!acc[exerciseId]) {
             acc[exerciseId] = {
@@ -157,17 +187,14 @@ export default function ActiveWorkoutPage({
           acc[exerciseId].sets.push(set);
           return acc;
         },
-        {} as Record<
-          string,
-          { exercise: any; sets: any[]; exerciseLogId: string | null }
-        >,
+        {} as Record<string, ExerciseGroup>,
       );
     }
 
     // Otherwise, use exercises (WorkoutLogExercise[]) and create mock sets
-    if (workout.exercises && Array.isArray(workout.exercises)) {
-      return workout.exercises.reduce(
-        (acc, exerciseLog) => {
+    if (w.exercises && Array.isArray(w.exercises)) {
+      return w.exercises.reduce(
+        (acc: Record<string, ExerciseGroup>, exerciseLog: unknown) => {
           const exerciseId = exerciseLog.exerciseId;
           if (!acc[exerciseId]) {
             acc[exerciseId] = {
@@ -183,8 +210,8 @@ export default function ActiveWorkoutPage({
                 exerciseLogId: exerciseLog.id,
                 setNumber: i + 1,
                 targetReps: exerciseLog.reps,
-                actualReps: exerciseLog.reps ?? 0,
                 targetWeight: exerciseLog.weight,
+                actualReps: exerciseLog.reps ?? 0,
                 actualWeight: exerciseLog.weight,
                 rpe: exerciseLog.rpe,
                 completed: false,
@@ -195,18 +222,17 @@ export default function ActiveWorkoutPage({
           }
           return acc;
         },
-        {} as Record<
-          string,
-          { exercise: any; sets: any[]; exerciseLogId: string | null }
-        >,
+        {} as Record<string, ExerciseGroup>,
       );
     }
 
-    return {};
+    return {} as Record<string, ExerciseGroup>;
   })();
 
   // Calculate stats
-  const allSets = Object.values(exerciseGroups).flatMap((group) => group.sets);
+  const allSets = Object.values(exerciseGroups).flatMap(
+    (group: ExerciseGroup) => group.sets,
+  );
   const totalVolume = allSets.reduce((sum, set) => {
     return (
       sum +
@@ -226,12 +252,12 @@ export default function ActiveWorkoutPage({
       id: logId,
       completed: true,
       duration: duration,
-      notes: notes || workout.notes || undefined,
+      notes: (notes || workout.notes) ?? undefined,
     });
   };
 
   // Handle set updates (for mock sets, update via workoutLogExercise)
-  const handleUpdateSet = (setId: string, data: any) => {
+  const handleUpdateSet = (setId: string, data: SetUpdateData) => {
     const set = allSets.find((s) => s.id === setId);
     if (!set) return;
 
@@ -239,9 +265,9 @@ export default function ActiveWorkoutPage({
       // Update via workoutLogExercise
       updateExerciseMutation.mutate({
         id: set.exerciseLogId,
-        reps: data.actualReps ?? set.actualReps,
-        weight: data.actualWeight ?? set.actualWeight,
-        rpe: data.rpe ?? set.rpe,
+        reps: data.actualReps ?? set.actualReps ?? 0,
+        weight: data.actualWeight ?? set.actualWeight ?? undefined,
+        rpe: data.rpe ?? set.rpe ?? undefined,
       });
     } else {
       // Real sets - workoutSet router is disabled, so show message
@@ -345,17 +371,17 @@ export default function ActiveWorkoutPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold sm:text-lg md:text-xl">
+              <h1 className="truncate text-base font-bold tracking-tight sm:text-lg md:text-xl">
                 {workout.planDay?.title ?? "Workout"}
               </h1>
-              <p className="text-muted-foreground truncate text-xs sm:text-sm md:text-base">
+              <p className="text-muted-foreground/70 truncate text-xs font-medium tracking-wider uppercase sm:text-sm md:text-base">
                 {format(new Date(workout.date), "EEEE, MMM d")}
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3 md:gap-4">
-            <div className="bg-muted/50 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:gap-2 sm:px-3 sm:py-1.5 md:gap-2.5 md:rounded-lg md:px-3 md:py-2">
+            <div className="bg-muted/50 ring-border/50 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 ring-1 sm:gap-2 sm:px-3 sm:py-1.5 md:gap-2.5 md:rounded-lg md:px-3 md:py-2">
               <Clock className="text-muted-foreground h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 md:h-4 md:w-4" />
               <span className="font-mono text-xs font-medium tabular-nums sm:text-sm md:text-base">
                 {elapsedTime}
@@ -365,7 +391,7 @@ export default function ActiveWorkoutPage({
               onClick={handleFinish}
               disabled={completeWorkout.isPending || !logId}
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 shrink-0 px-3 text-xs disabled:opacity-50 sm:h-8 sm:px-4 sm:text-sm md:h-9 md:px-5 md:text-base"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 shrink-0 px-3 text-xs font-semibold disabled:opacity-50 sm:h-8 sm:px-4 sm:text-sm md:h-9 md:px-5 md:text-base"
             >
               {completeWorkout.isPending ? "Finishing..." : "Finish"}
             </Button>
@@ -409,11 +435,11 @@ export default function ActiveWorkoutPage({
         )}
 
         {/* Quick Stats - Mobile, Tablet & Desktop Optimized */}
-        <Card className="border-0 shadow-sm">
+        <Card className="ring-border bg-card border-0 shadow-sm ring-1">
           <CardContent className="px-3 pt-3 pb-3 sm:px-4 sm:pt-4 sm:pb-4 md:px-5 md:pt-5">
             <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:flex lg:items-center lg:justify-between">
               <div className="text-center sm:text-left">
-                <p className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">
+                <p className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase sm:text-xs md:text-sm">
                   Sets
                 </p>
                 <p className="text-base font-bold sm:text-lg md:text-xl">
@@ -421,15 +447,18 @@ export default function ActiveWorkoutPage({
                 </p>
               </div>
               <div className="text-center sm:text-left">
-                <p className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">
+                <p className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase sm:text-xs md:text-sm">
                   Volume
                 </p>
                 <p className="text-base font-bold sm:text-lg md:text-xl">
-                  {Math.round(totalVolume)} kg
+                  {Math.round(totalVolume)}{" "}
+                  <span className="text-muted-foreground text-xs font-medium sm:text-sm">
+                    kg
+                  </span>
                 </p>
               </div>
               <div className="text-center sm:text-left">
-                <p className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">
+                <p className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase sm:text-xs md:text-sm">
                   Exercises
                 </p>
                 <p className="text-base font-bold sm:text-lg md:text-xl">
@@ -440,7 +469,7 @@ export default function ActiveWorkoutPage({
                 <div className="col-span-3 mt-2 flex justify-center sm:col-span-1 sm:mt-0 sm:justify-end lg:mt-0 lg:flex lg:justify-end">
                   <Badge
                     variant="outline"
-                    className="text-[10px] sm:text-xs md:text-sm"
+                    className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase sm:text-xs md:text-sm"
                   >
                     Last: {format(new Date(workout.lastWorkout.date), "MMM d")}
                   </Badge>
@@ -451,7 +480,7 @@ export default function ActiveWorkoutPage({
         </Card>
 
         {/* Workout Notes - Mobile, Tablet & Desktop Optimized */}
-        <Card className="border-0 shadow-sm">
+        <Card className="ring-border bg-card border-0 shadow-sm ring-1">
           <CardContent className="px-3 pt-3 pb-3 sm:px-4 sm:pt-4 sm:pb-4 md:px-5 md:pt-5 md:pb-5">
             <Textarea
               placeholder="Add workout notes..."
@@ -468,7 +497,7 @@ export default function ActiveWorkoutPage({
                   });
                 }
               }}
-              className="resize-none text-sm md:text-base"
+              className="border-border/50 focus:border-primary/50 bg-muted/20 resize-none text-sm md:text-base"
               rows={2}
             />
           </CardContent>
@@ -476,75 +505,87 @@ export default function ActiveWorkoutPage({
 
         {/* Exercises - Mobile, Tablet & Desktop Optimized */}
         <div className="space-y-3 sm:space-y-4 md:space-y-5">
-          {Object.entries(exerciseGroups).map(
-            ([exerciseId, { exercise, sets, exerciseLogId }]) => {
-              // Find last workout data for this exercise
-              const lastWorkoutSet =
-                workout.lastWorkout?.sets?.find(
-                  (s) => s.exerciseId === exerciseId && s.completed,
-                ) ||
-                workout.lastWorkout?.exercises?.find(
-                  (e) => e.exerciseId === exerciseId,
-                );
-
-              const isMarkedDone = completedExercises.has(exerciseId);
-
-              return (
-                <ExerciseCard
-                  key={exerciseId}
-                  exerciseName={exercise.name}
-                  muscleGroup={exercise.muscleGroup}
-                  exerciseId={exerciseId}
-                  sets={sets.map((s: any) => ({
-                    id: s.id,
-                    setNumber: s.setNumber,
-                    targetReps: s.targetReps,
-                    targetWeight: s.targetWeight,
-                    actualReps: s.actualReps ?? 0,
-                    actualWeight: s.actualWeight,
-                    rpe: s.rpe,
-                    completed: s.completed ?? false,
-                  }))}
-                  lastWorkoutData={
-                    lastWorkoutSet
-                      ? {
-                          weight:
-                            (lastWorkoutSet as any).actualWeight ??
-                            (lastWorkoutSet as any).weight ??
-                            0,
-                          reps:
-                            (lastWorkoutSet as any).actualReps ??
-                            (lastWorkoutSet as any).reps ??
-                            0,
-                          date: workout.lastWorkout!.date,
-                        }
-                      : undefined
-                  }
-                  isMarkedDone={isMarkedDone}
-                  onToggleDone={() => {
-                    const newCompleted = new Set(completedExercises);
-                    if (isMarkedDone) {
-                      newCompleted.delete(exerciseId);
-                    } else {
-                      newCompleted.add(exerciseId);
-                    }
-                    setCompletedExercises(newCompleted);
-                  }}
-                  onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
-                  onCompleteSet={(setId) => {
-                    handleCompleteSet(setId);
-                    restTimer.start(180);
-                  }}
-                  onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
-                  onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
-                  onDeleteExercise={() =>
-                    handleDeleteExercise(exerciseId, exerciseLogId)
-                  }
-                  onStartRestTimer={() => restTimer.start(180)}
-                />
+          {Object.entries(exerciseGroups).map(([exerciseId, group]) => {
+            const { exercise, sets, exerciseLogId } = group;
+            // Find last workout data for this exercise
+            const w = workout as unknown as {
+              lastWorkout?: {
+                sets?: {
+                  exerciseId: string;
+                  actualWeight?: number | null;
+                  actualReps?: number | null;
+                  completed?: boolean | null;
+                }[];
+                exercises?: {
+                  exerciseId: string;
+                  weight?: number | null;
+                  reps?: number | null;
+                }[];
+              };
+            };
+            const lastWorkoutSet =
+              w.lastWorkout?.sets?.find(
+                (s) => s.exerciseId === exerciseId && s.completed,
+              ) ??
+              w.lastWorkout?.exercises?.find(
+                (e) => e.exerciseId === exerciseId,
               );
-            },
-          )}
+
+            const isMarkedDone = completedExercises.has(exerciseId);
+
+            return (
+              <ExerciseCard
+                key={exerciseId}
+                exerciseName={exercise.name}
+                muscleGroup={exercise.muscleGroup}
+                exerciseId={exerciseId}
+                sets={sets.map((s) => ({
+                  id: s.id,
+                  setNumber: s.setNumber,
+                  targetReps: s.targetReps,
+                  targetWeight: s.targetWeight,
+                  actualReps: s.actualReps ?? 0,
+                  actualWeight: s.actualWeight,
+                  rpe: s.rpe,
+                  completed: s.completed ?? false,
+                }))}
+                lastWorkoutData={
+                  lastWorkoutSet
+                    ? {
+                        weight:
+                          lastWorkoutSet.actualWeight ??
+                          lastWorkoutSet.weight ??
+                          0,
+                        reps:
+                          lastWorkoutSet.actualReps ?? lastWorkoutSet.reps ?? 0,
+                        date: w.lastWorkout!.date,
+                      }
+                    : undefined
+                }
+                isMarkedDone={isMarkedDone}
+                onToggleDone={() => {
+                  const newCompleted = new Set(completedExercises);
+                  if (isMarkedDone) {
+                    newCompleted.delete(exerciseId);
+                  } else {
+                    newCompleted.add(exerciseId);
+                  }
+                  setCompletedExercises(newCompleted);
+                }}
+                onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
+                onCompleteSet={(setId) => {
+                  handleCompleteSet(setId);
+                  restTimer.start(180);
+                }}
+                onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
+                onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
+                onDeleteExercise={() =>
+                  handleDeleteExercise(exerciseId, exerciseLogId)
+                }
+                onStartRestTimer={() => restTimer.start(180)}
+              />
+            );
+          })}
         </div>
 
         {/* Add Exercise Button - Mobile, Tablet & Desktop Optimized */}
@@ -552,10 +593,12 @@ export default function ActiveWorkoutPage({
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="w-full touch-manipulation border-dashed py-6 text-sm sm:py-7 sm:text-base md:py-8 md:text-lg"
+              className="hover:border-primary/50 hover:bg-primary/5 group w-full touch-manipulation border-2 border-dashed py-6 text-sm transition-all sm:py-7 sm:text-base md:py-8 md:text-lg"
             >
-              <Plus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-              Add Exercise
+              <Plus className="text-muted-foreground group-hover:text-primary mr-2 h-4 w-4 transition-colors md:h-5 md:w-5" />
+              <span className="text-muted-foreground group-hover:text-primary transition-colors">
+                Add Exercise
+              </span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-2xl sm:max-h-[80vh] sm:w-[calc(100vw-3rem)] md:max-h-[75vh] md:w-full">
