@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { GymFinder } from "./gym-finder";
 import {
   Loader2,
   Send,
@@ -27,7 +26,7 @@ type Props = {
   onPlanCreated: (id: string) => void;
 };
 
-type Msg = { role: "user" | "assistant"; text?: string; planId?: string; showGymFinder?: boolean };
+type Msg = { role: "user" | "assistant"; text?: string; planId?: string };
 type PreviewItem = {
   exerciseId: string;
   exerciseName: string;
@@ -100,27 +99,9 @@ export default function WorkoutChat({
     setInput("");
     setLastText(text);
     
-    // Check if user is asking about gyms
-    const gymKeywords = ['gym', 'fitness center', 'where to workout', 'find gym', 'gym near'];
-    const isGymQuery = gymKeywords.some(keyword => text.toLowerCase().includes(keyword));
-    
     if (text) {
       setMessages((m) => [...m, { role: "user", text }]);
       setShowSuggestions(false);
-    }
-    
-    // If asking about gyms, show gym finder
-    if (isGymQuery) {
-      setMessages((m) => [
-        ...m,
-        { 
-          role: "assistant", 
-          text: "I'd be happy to help you find gyms nearby! Use the search tool below to find fitness centers in your area. Just enter your address or city name.",
-          showGymFinder: true 
-        },
-      ]);
-      setLoading(false);
-      return;
     }
     
     setLoading(true);
@@ -499,11 +480,6 @@ export default function WorkoutChat({
               </div>
             )}
             {m.planId && renderPlanCard(m.planId)}
-            {m.showGymFinder && (
-              <div className="flex justify-start">
-                <GymFinder />
-              </div>
-            )}
           </div>
         ))}
         {preview && (

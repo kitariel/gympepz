@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 
 type AccountUser = {
   hasPassword?: boolean;
+  email?: string;
 };
 
 export function SecurityCard({
@@ -28,10 +29,73 @@ export function SecurityCard({
   userId: string;
   user: AccountUser | null;
 }) {
+  const { data: session } = useSession();
   const sessionsQuery = api.user.listSessions.useQuery(
     { userId },
     { enabled: !!userId },
   );
+
+  // Password change dialog state
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  // Change password mutation
+  const changePassword = api.user.changePassword.useMutation({
+    onSuccess: () => {
+      setSuccess(true);
+      setError("");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => {
+        setIsChangePasswordOpen(false);
+        setSuccess(false);
+      }, 2000);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setSuccess(false);
+    },
+  });
+
+  const handleChangePassword = async () => {
+    setError("");
+    setSuccess(false);
+
+    // Validation
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    const email = user?.email ?? session?.user?.email;
+    if (!email) {
+      setError("Email not found");
+      return;
+    }
+
+    try {
+      await changePassword.mutateAsync({
+        email,
+        currentPassword,
+        newPassword,
+      });
+    } catch (err) {
+      // Error is handled by onError callback
+      console.error("Password change error:", err);
+    }
+  };
 
   return (
     <Card className="border-0 shadow-sm">
@@ -112,7 +176,7 @@ export function SecurityCard({
             <DialogHeader>
               <DialogTitle>Change Password</DialogTitle>
               <DialogDescription>
-                Update your account password. Make sure it's at least 8 characters long.
+                Update your account password. Make sure it&apos;s at least 8 characters long.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
