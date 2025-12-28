@@ -166,14 +166,20 @@ export function ProgressView() {
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
+                      fontSize: "12px",
                     }}
+                    labelStyle={{ fontWeight: 600 }}
+                    cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                    isAnimationActive={true}
                   />
                   <Line
                     type="monotone"
                     dataKey="weight"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
-                    dot={{ r: 3 }}
+                    dot={{ r: 4, fill: "hsl(var(--primary))" }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={300}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -215,14 +221,20 @@ export function ProgressView() {
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
+                      fontSize: "12px",
                     }}
+                    labelStyle={{ fontWeight: 600 }}
+                    cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                    isAnimationActive={true}
                   />
                   <Line
                     type="monotone"
                     dataKey="bodyFat"
                     stroke="hsl(var(--secondary-foreground))"
                     strokeWidth={2}
-                    dot={{ r: 3 }}
+                    dot={{ r: 4, fill: "hsl(var(--secondary-foreground))" }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={300}
                   />
                 </LineChart>
               </ResponsiveContainer>

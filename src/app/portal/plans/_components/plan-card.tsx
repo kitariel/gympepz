@@ -19,7 +19,6 @@ import {
   Star,
   Trash2,
   TrendingUp,
-  HelpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -97,19 +96,6 @@ export function PlanCard({
                 <Edit className="h-3.5 w-3.5 mr-2" />
                 Edit Plan
               </DropdownMenuItem>
-              {!isActive && onSetActive && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem onClick={onSetActive}>
-                      <Star className="h-3.5 w-3.5 mr-2" />
-                      Set as Active
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set this plan as your default for quick workout starts</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
               {onDuplicate && (
                 <DropdownMenuItem onClick={onDuplicate}>
                   <Copy className="h-3.5 w-3.5 mr-2" />
@@ -135,25 +121,58 @@ export function PlanCard({
       </CardContent>
 
       <CardFooter className="pt-2 pb-4 px-4 gap-2">
-        {onStartWorkout && (
-          <Button
-            variant={isActive ? "default" : "outline"}
-            size="sm"
-            className="flex-1 h-8 text-xs"
-            onClick={onStartWorkout}
-          >
-            <Play className="h-3 w-3 mr-1.5" />
-            Start Workout
-          </Button>
+        {!isActive && onSetActive ? (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 text-xs gap-1.5 border-primary/50 hover:bg-primary/10 hover:border-primary"
+                  onClick={onSetActive}
+                >
+                  <Star className="h-3 w-3" />
+                  Set Active
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs text-xs">
+                  Active plans are used for quick workout starts and tracking. You can only have one active plan at a time.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-8 text-xs"
+              onClick={() => router.push(`/portal/plans/${id}`)}
+            >
+              Edit
+            </Button>
+          </>
+        ) : (
+          <>
+            {onStartWorkout && (
+              <Button
+                variant="default"
+                size="sm"
+                className="flex-1 h-8 text-xs"
+                onClick={onStartWorkout}
+              >
+                <Play className="h-3 w-3 mr-1.5" />
+                Start Workout
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-8 text-xs"
+              onClick={() => router.push(`/portal/plans/${id}`)}
+            >
+              Edit
+            </Button>
+          </>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-8 text-xs"
-          onClick={() => router.push(`/portal/plans/${id}`)}
-        >
-          Edit
-        </Button>
       </CardFooter>
     </Card>
   );

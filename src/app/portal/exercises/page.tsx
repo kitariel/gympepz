@@ -40,10 +40,18 @@ export default function ExercisesPage() {
     muscleGroup: selectedMuscle !== "All" ? selectedMuscle : undefined,
     equipment: selectedEquipment !== "All" ? selectedEquipment : undefined,
     difficulty: selectedDifficulty !== "All" ? selectedDifficulty : undefined,
-    take: 100,
+    take: 1000, // Increased to show all exercises
+  });
+
+  const exerciseCountQuery = api.exercise.count.useQuery({
+    q: searchQuery,
+    muscleGroup: selectedMuscle !== "All" ? selectedMuscle : undefined,
+    equipment: selectedEquipment !== "All" ? selectedEquipment : undefined,
+    difficulty: selectedDifficulty !== "All" ? selectedDifficulty : undefined,
   });
 
   const exercises = exercisesQuery.data ?? [];
+  const totalCount = exerciseCountQuery.data ?? 0;
 
   // Filter exercises by tab
   const filteredExercises = useMemo(() => {
@@ -121,9 +129,9 @@ export default function ExercisesPage() {
             <Dumbbell className="text-muted-foreground h-3.5 w-3.5" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">{exercises.length}</div>
+            <div className="text-xl font-bold">{totalCount}</div>
             <p className="text-muted-foreground mt-0.5 text-[10px]">
-              exercises
+              {exercises.length < totalCount ? `showing ${exercises.length} of ${totalCount}` : 'exercises'}
             </p>
           </CardContent>
         </Card>

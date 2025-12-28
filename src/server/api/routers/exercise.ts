@@ -10,7 +10,8 @@ export const exerciseRouter = createTRPCRouter({
           muscleGroup: z.string().optional(),
           equipment: z.string().optional(),
           difficulty: z.string().optional(),
-          take: z.number().min(1).max(100).optional(),
+          take: z.number().min(1).max(1000).optional(),
+          skip: z.number().min(0).optional(),
         })
         .optional(),
     )
@@ -19,7 +20,8 @@ export const exerciseRouter = createTRPCRouter({
       const mg = input?.muscleGroup?.trim();
       const eq = input?.equipment?.trim();
       const diff = input?.difficulty?.trim();
-      const take = input?.take ?? 50;
+      const take = input?.take ?? 1000;
+      const skip = input?.skip ?? 0;
       const where: Record<string, unknown> = {};
       if (q) {
         Object.assign(where, {
@@ -33,7 +35,38 @@ export const exerciseRouter = createTRPCRouter({
       if (mg) Object.assign(where, { muscleGroup: { contains: mg, mode: "insensitive" } });
       if (eq) Object.assign(where, { equipment: { contains: eq, mode: "insensitive" } });
       if (diff) Object.assign(where, { difficulty: { equals: diff } });
-      return ctx.db.exercise.findMany({ where, orderBy: { name: "asc" }, take });
+      return ctx.db.exercise.findMany({ where, orderBy: { name: "asc" }, take, skip });
+    }),
+  count: publicProcedure
+    .input(
+      z
+        .object({
+          q: z.string().optional(),
+          muscleGroup: z.string().optional(),
+          equipment: z.string().optional(),
+          difficulty: z.string().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const q = input?.q?.trim();
+      const mg = input?.muscleGroup?.trim();
+      const eq = input?.equipment?.trim();
+      const diff = input?.difficulty?.trim();
+      const where: Record<string, unknown> = {};
+      if (q) {
+        Object.assign(where, {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { muscleGroup: { contains: q, mode: "insensitive" } },
+            { equipment: { contains: q, mode: "insensitive" } },
+          ],
+        });
+      }
+      if (mg) Object.assign(where, { muscleGroup: { contains: mg, mode: "insensitive" } });
+      if (eq) Object.assign(where, { equipment: { contains: eq, mode: "insensitive" } });
+      if (diff) Object.assign(where, { difficulty: { equals: diff } });
+      return ctx.db.exercise.count({ where });
     }),
   create: publicProcedure
     .input(

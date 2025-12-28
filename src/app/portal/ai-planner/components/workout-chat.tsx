@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { GymFinder } from "./gym-finder";
 import {
   Loader2,
   Send,
@@ -26,7 +27,7 @@ type Props = {
   onPlanCreated: (id: string) => void;
 };
 
-type Msg = { role: "user" | "assistant"; text?: string; planId?: string };
+type Msg = { role: "user" | "assistant"; text?: string; planId?: string; showGymFinder?: boolean };
 type PreviewItem = {
   exerciseId: string;
   exerciseName: string;
@@ -57,6 +58,7 @@ export default function WorkoutChat({
   const [latestPlanId, setLatestPlanId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggest = api.plan.suggest.useMutation();
   const create = api.plan.create.useMutation();
@@ -87,15 +89,40 @@ export default function WorkoutChat({
     }
   }, [plan.data, latestPlanId]);
 
+  // Auto-scroll to bottom when messages, preview, or loading state changes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, preview, loading]);
+
   const send = async () => {
     if (!userId || !input.trim()) return;
     const text = input.trim();
     setInput("");
     setLastText(text);
+    
+    // Check if user is asking about gyms
+    const gymKeywords = ['gym', 'fitness center', 'where to workout', 'find gym', 'gym near'];
+    const isGymQuery = gymKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    
     if (text) {
       setMessages((m) => [...m, { role: "user", text }]);
       setShowSuggestions(false);
     }
+    
+    // If asking about gyms, show gym finder
+    if (isGymQuery) {
+      setMessages((m) => [
+        ...m,
+        { 
+          role: "assistant", 
+          text: "I'd be happy to help you find gyms nearby! Use the search tool below to find fitness centers in your area. Just enter your address or city name.",
+          showGymFinder: true 
+        },
+      ]);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const scheduleDays = days;
     const mappedEquip: "Full Gym" | "Dumbbells" | "Home Setup" | undefined =
@@ -173,26 +200,36 @@ export default function WorkoutChat({
 
   const savePreview = async () => {
     if (!preview || !userId) return;
-    const created = await create.mutateAsync({
-      userId,
-      name: preview.name,
-      days: preview.days.map((d, idx) => ({
-        title: d.title,
-        order: idx,
-        items: d.items.map((it) => ({
-          exerciseId: it.exerciseId,
-          sets: it.sets,
-          reps: it.reps,
+    try {
+      const created = await create.mutateAsync({
+        userId,
+        name: preview.name,
+        days: preview.days.map((d, idx) => ({
+          title: d.title,
+          order: idx,
+          items: d.items.map((it) => ({
+            exerciseId: it.exerciseId,
+            sets: it.sets,
+            reps: it.reps,
+          })),
         })),
-      })),
-    });
-    if (created?.id) {
-      setLatestPlanId(created.id);
-      onPlanCreated(created.id);
-      setPreview(null);
+      });
+      if (created?.id) {
+        setPreview(null);
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", text: "Plan saved successfully! 🎉 Redirecting..." },
+        ]);
+        // Wait a moment for the success message to show before redirecting
+        setTimeout(() => {
+          onPlanCreated(created.id);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Failed to save plan:", error);
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: "Plan saved successfully! 🎉" },
+        { role: "assistant", text: "Failed to save plan. Please try again." },
       ]);
     }
   };
@@ -233,9 +270,10 @@ export default function WorkoutChat({
               size="sm"
               className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 shrink-0 gap-2"
               onClick={savePreview}
+              disabled={create.isPending}
             >
               <Sparkles className="h-4 w-4" />
-              Save Plan
+              {create.isPending ? "Saving..." : "Save Plan"}
             </Button>
           </div>
         </CardHeader>
@@ -461,6 +499,11 @@ export default function WorkoutChat({
               </div>
             )}
             {m.planId && renderPlanCard(m.planId)}
+            {m.showGymFinder && (
+              <div className="flex justify-start">
+                <GymFinder />
+              </div>
+            )}
           </div>
         ))}
         {preview && (
@@ -480,6 +523,8 @@ export default function WorkoutChat({
             </Card>
           </div>
         )}
+        {/* Invisible element to scroll to */}
+        <div ref={messagesEndRef} />
       </div>
       <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky bottom-0 w-full border-t backdrop-blur">
         {/* Quick Suggestions Bar */}

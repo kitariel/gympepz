@@ -90,6 +90,7 @@ function SortableDayCard({
   onEditingDayTitleChange,
   updateDay,
   p,
+  isCurrentDay = false,
 }: {
   dayData: PlanDay;
   dayName: string;
@@ -106,6 +107,7 @@ function SortableDayCard({
   onEditingDayTitleChange: (title: string) => void;
   updateDay: { isPending: boolean };
   p: Plan | null | undefined;
+  isCurrentDay?: boolean;
 }) {
   const {
     attributes,
@@ -136,6 +138,7 @@ function SortableDayCard({
       className={cn(
         "group ring-border hover:ring-primary/20 bg-card flex h-full min-h-[180px] cursor-pointer flex-col border-0 shadow-sm ring-1 transition-all hover:shadow-md",
         isDragging && "ring-primary z-50 rotate-2 opacity-50 ring-2",
+        isCurrentDay && "ring-primary/60 bg-primary/5 ring-2",
       )}
       onClick={(e) => {
         // Only open drawer if click was not on interactive elements
@@ -152,9 +155,21 @@ function SortableDayCard({
     >
       <CardHeader className="space-y-1 px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase">
-            {dayName}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase",
+                isCurrentDay && "text-primary font-bold",
+              )}
+            >
+              {dayName}
+            </span>
+            {isCurrentDay && (
+              <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">
+                Today
+              </Badge>
+            )}
+          </div>
           <div
             {...attributes}
             {...listeners}
@@ -312,10 +327,12 @@ function EmptyDaySlot({
   dayName,
   slotIndex,
   onAddDay,
+  isCurrentDay = false,
 }: {
   dayName: string;
   slotIndex: number;
   onAddDay: (slot: number) => void;
+  isCurrentDay?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: slotIndex.toString(),
@@ -327,13 +344,26 @@ function EmptyDaySlot({
       className={cn(
         "group border-muted-foreground/10 bg-muted/5 hover:border-primary/40 hover:bg-primary/5 flex h-full min-h-[180px] cursor-pointer flex-col border-2 border-dashed transition-all",
         isOver && "border-primary bg-primary/10",
+        isCurrentDay && "border-primary/50 bg-primary/10",
       )}
       onClick={() => onAddDay(slotIndex)}
     >
       <CardHeader className="px-4 pt-4 pb-2">
-        <span className="text-muted-foreground/50 group-hover:text-primary/60 text-[10px] font-semibold tracking-wider uppercase transition-colors">
-          {dayName}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "text-muted-foreground/50 group-hover:text-primary/60 text-[10px] font-semibold tracking-wider uppercase transition-colors",
+              isCurrentDay && "text-primary font-bold",
+            )}
+          >
+            {dayName}
+          </span>
+          {isCurrentDay && (
+            <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">
+              Today
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 pb-8">
         <div className="bg-muted-foreground/5 group-hover:bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
@@ -404,6 +434,9 @@ export default function PlanDetailPage({
   const [localDays, setLocalDays] = useState<(PlanDay | null)[]>([]);
 
   const p = plan.data as Plan | null | undefined;
+
+  // Get current day of week (0 = Sunday, 6 = Saturday)
+  const currentDayOfWeek = new Date().getDay();
 
   // Initialize local days from plan data
   useEffect(() => {
@@ -778,6 +811,7 @@ export default function PlanDetailPage({
                 "Saturday",
               ].map((dayName, slotIndex) => {
                 const dayData = localDays[slotIndex];
+                const isCurrentDay = slotIndex === currentDayOfWeek;
 
                 if (!dayData) {
                   return (
@@ -789,6 +823,7 @@ export default function PlanDetailPage({
                         setNewDayTitle(`${dayName} Workout`);
                         void handleAddDay(slot);
                       }}
+                      isCurrentDay={isCurrentDay}
                     />
                   );
                 }
@@ -813,6 +848,7 @@ export default function PlanDetailPage({
                     onEditingDayTitleChange={setEditingDayTitle}
                     updateDay={updateDay}
                     p={p}
+                    isCurrentDay={isCurrentDay}
                   />
                 );
               })}
