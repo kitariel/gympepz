@@ -29,7 +29,7 @@ export default async function Home() {
             <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-lg">
               <Dumbbell className="h-5 w-5" />
             </div>
-            <span>KitProjects</span>
+            <span>GymPepz</span>
           </div>
           <nav className="flex items-center gap-4">
             {session ? (
@@ -244,9 +244,14 @@ export default async function Home() {
       {/* Footer */}
       <footer className="bg-muted/20 border-t py-12">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 sm:px-8 md:flex-row">
-          <p className="text-muted-foreground text-center text-sm leading-loose md:text-left">
-            Built by Kit Mikhael Bagares. All rights reserved.
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-md">
+              <Dumbbell className="h-3.5 w-3.5" />
+            </div>
+            <p className="text-muted-foreground text-center text-sm leading-loose md:text-left">
+              © 2025 GymPepz. Built with ❤️ for fitness enthusiasts.
+            </p>
+          </div>
           <div className="flex gap-4">
             <Link
               href="#"

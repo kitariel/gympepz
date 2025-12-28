@@ -12,7 +12,7 @@ export interface LoginHeaderProps {
 
 export function LoginHeader({
   step,
-  title = "AliPlace",
+  title = "GymPepz",
   subtitle,
 }: LoginHeaderProps) {
   // Dynamic subtitles based on step - mobile-first friendly

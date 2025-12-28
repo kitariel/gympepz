@@ -1,29 +1,103 @@
-# Create T3 App
+# GymPepz
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+**GymPepz** is a comprehensive fitness tracking and workout management application built with the T3 Stack. Track your workouts, analyze your progress, find nearby gyms, and achieve your fitness goals with intelligent training and personalized workout plans powered by AI.
 
-## What's next? How do I make an app with this?
+## ✨ Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- 🏋️ **Active Workout Mode** - Log every set, rep, and weight in real-time with granular tracking
+- 📊 **Progress Analytics** - Visualize strength gains and body composition changes with interactive charts
+- 📅 **Smart Scheduling** - Organize training with custom plans and never miss a workout
+- 🤖 **AI Workout Planner** - Get personalized workout plans based on your goals and fitness level
+- 🗺️ **Gym Finder** - Discover nearby gyms and fitness centers using location-based search
+- 📱 **Mobile-First Design** - Fully responsive interface optimized for all devices
+- 🔒 **Secure Authentication** - Email/password and Google OAuth integration with NextAuth
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## 🛠️ Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+This project is built with the [T3 Stack](https://create.t3.gg/):
 
-## Learn More
+- [Next.js](https://nextjs.org) 15 - React framework with App Router
+- [NextAuth.js](https://next-auth.js.org) - Authentication
+- [Prisma](https://prisma.io) - Database ORM
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [tRPC](https://trpc.io) - Type-safe API layer
+- [OpenAI](https://openai.com) - AI-powered workout planning
+- [Mapbox](https://mapbox.com) - Location services and gym search
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and pnpm
+- PostgreSQL database
+- Environment variables (see `.env.example`)
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Set up your environment variables
+cp .env.example .env
+
+# Run database migrations
+pnpm db:generate
+
+# Seed exercise database (optional)
+pnpm db:seed:exercises
+
+# Start development server
+pnpm dev
+```
+
+Visit `http://localhost:3000` to see your application.
+
+## 📝 Available Scripts
+
+- `pnpm dev` - Start development server with Turbopack
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+- `pnpm format:write` - Format code with Prettier
+- `pnpm db:studio` - Open Prisma Studio
+- `pnpm db:push` - Push schema changes to database
+
+## 🗄️ Database
+
+The application uses PostgreSQL with Prisma ORM. Key models include:
+
+- User authentication and profiles
+- Workout plans and exercises
+- Workout logs and progress tracking
+- Exercise library (528+ exercises)
+- Location data for gym search
+
+## 🔐 Authentication
+
+Supports multiple authentication methods:
+
+- Email/Password with OTP verification
+- Google OAuth
+- Secure session management
+- Password reset functionality
+
+## 📚 Learn More
+
+To learn more about the T3 Stack:
 
 - [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available)
+- [T3 Stack GitHub](https://github.com/t3-oss/create-t3-app)
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## 🚢 Deployment
 
-## How do I deploy this?
+Deploy to your preferred platform:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+- [Vercel](https://create.t3.gg/en/deployment/vercel) (Recommended)
+- [Netlify](https://create.t3.gg/en/deployment/netlify)
+- [Docker](https://create.t3.gg/en/deployment/docker)
+
+---
+
+Built with ❤️ using the T3 Stack

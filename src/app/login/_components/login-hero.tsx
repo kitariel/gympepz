@@ -21,7 +21,7 @@ export function LoginHero() {
             <div className="bg-[#18503c] text-white flex h-8 w-8 items-center justify-center rounded-lg shadow-sm">
               <Dumbbell className="h-5 w-5" />
             </div>
-            <span className="text-lg sm:text-xl font-bold tracking-tight text-white">AliPlace</span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-white">GymPepz</span>
           </div>
           
           {/* Hero Content */}

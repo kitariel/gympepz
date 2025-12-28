@@ -64,13 +64,14 @@ export function LoginForm(props: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const Separator = () => (
-    <div className="relative my-6 flex items-center">
-      <div className="bg-border h-px flex-1" />
-      <span className="text-muted-foreground mx-4 text-xs font-medium tracking-wider uppercase">
-        Or continue with
-      </span>
-      <div className="bg-border h-px flex-1" />
-    </div>
+    // <div className="relative my-6 flex items-center">
+    //   <div className="bg-border h-px flex-1" />
+    //   <span className="text-muted-foreground mx-4 text-xs font-medium tracking-wider uppercase">
+    //     Or continue with
+    //   </span>
+    //   <div className="bg-border h-px flex-1" />
+    // </div>
+    <div></div>
   );
 
   const ProviderButton = ({
@@ -111,7 +112,7 @@ export function LoginForm(props: LoginFormProps) {
       {step === "email" && (
         <div className="space-y-6">
           <div className="space-y-3">
-            <ProviderButton
+            {/* <ProviderButton
               onClick={onGoogleClick}
               icon={
                 <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -135,10 +136,10 @@ export function LoginForm(props: LoginFormProps) {
               }
             >
               Google
-            </ProviderButton>
+            </ProviderButton> */}
 
             {/* Hidden for now as per design, but keeping prop support */}
-            {onContinueWithEmail && (
+            {/* {onContinueWithEmail && (
               <ProviderButton
                 onClick={() => {
                   const el = document.getElementById("email");
@@ -148,7 +149,7 @@ export function LoginForm(props: LoginFormProps) {
               >
                 Continue with Email
               </ProviderButton>
-            )}
+            )} */}
           </div>
 
           <Separator />

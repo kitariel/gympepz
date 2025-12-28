@@ -6,8 +6,8 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 
 export const metadata: Metadata = {
-  title: "Kit Projects",
-  description: "A collection of projects by Kit Mikhael Bagares",
+  title: "GymPepz - Your Fitness Journey Starts Here",
+  description: "Track workouts, analyze progress, and achieve your fitness goals with intelligent training and personalized workout plans.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
