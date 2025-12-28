@@ -1,88 +1,125 @@
 "use client";
 
-import { Dumbbell, LineChart, Sparkles, Target, Trophy, Calendar } from "lucide-react";
+import { Dumbbell, BarChart3, Sparkles, Zap, Trophy, Calendar, LineChart } from "lucide-react";
 
 export function LoginHero() {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl bg-slate-950 text-white">
-      {/* Abstract Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
-      <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/30 blur-3xl" />
-      <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-purple-500/30 blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-3xl" />
+    <div className="relative rounded-xl h-full w-full overflow-hidden bg-gradient-to-br from-[#0a1f18] via-[#0d261d] to-[#0a1f18]">
+      {/* Subtle Background Elements - Matching landing page style */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 transform-gpu blur-3xl opacity-10" aria-hidden="true">
+          <div className="from-[#18503c]/30 to-emerald-500/20 aspect-[1108/632] w-[277px] bg-gradient-to-r" />
+        </div>
+      </div>
 
-      <div className="relative flex h-full flex-col justify-between p-8 sm:p-12">
-        {/* Header Content */}
-        <div className="space-y-6">
+      {/* Mobile-first layout */}
+      <div className="relative flex h-full flex-col justify-between p-4 sm:p-6 md:p-8 lg:p-12">
+        {/* Header Content - Mobile optimized */}
+        <div className="space-y-4 sm:space-y-6">
+          {/* Brand */}
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-white/10 p-2 backdrop-blur-sm">
-              <Dumbbell className="h-6 w-6 text-indigo-400" />
+            <div className="bg-[#18503c] text-white flex h-8 w-8 items-center justify-center rounded-lg shadow-sm">
+              <Dumbbell className="h-5 w-5" />
             </div>
-            <span className="text-xl font-bold tracking-tight">AliPlace</span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-white">AliPlace</span>
           </div>
           
-          <h1 className="max-w-md text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Your personal AI fitness companion.
-          </h1>
-          
-          <p className="max-w-sm text-lg text-slate-300">
-            Build muscle, lose weight, and track your progress with intelligent workout planning and analytics.
-          </p>
-        </div>
-
-        {/* Feature Grid */}
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div className="group rounded-xl bg-white/5 p-4 transition-colors hover:bg-white/10">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/20">
-              <Sparkles className="h-5 w-5 text-indigo-300" />
-            </div>
-            <h3 className="font-semibold text-white">AI Planner</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Get personalized workout plans tailored to your goals and equipment.
-            </p>
-          </div>
-          
-          <div className="group rounded-xl bg-white/5 p-4 transition-colors hover:bg-white/10">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20">
-              <LineChart className="h-5 w-5 text-purple-300" />
-            </div>
-            <h3 className="font-semibold text-white">Analytics</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Visualize your strength gains and consistency over time.
-            </p>
-          </div>
-
-          <div className="group rounded-xl bg-white/5 p-4 transition-colors hover:bg-white/10">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-pink-500/20">
-              <Calendar className="h-5 w-5 text-pink-300" />
-            </div>
-            <h3 className="font-semibold text-white">Scheduling</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Plan your week and stay on track with smart scheduling.
-            </p>
-          </div>
-
-          <div className="group rounded-xl bg-white/5 p-4 transition-colors hover:bg-white/10">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
-              <Trophy className="h-5 w-5 text-amber-300" />
-            </div>
-            <h3 className="font-semibold text-white">Progress</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Hit new PRs and celebrate your fitness milestones.
+          {/* Hero Content */}
+          <div className="space-y-3 sm:space-y-4">
+            <h1 className="from-[#18503c] to-[#18503c]/50 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight bg-gradient-to-r bg-clip-text text-transparent">
+              Master Your Fitness Journey
+            </h1>
+            
+            <p className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-md">
+              Track your workouts, analyze your progress, and achieve your goals with intelligent fitness tracking. Granular tracking for serious athletes.
             </p>
           </div>
         </div>
 
-        {/* Motivational Footer */}
-        <div className="flex items-center gap-4 border-t border-white/10 pt-6">
-          <div className="flex -space-x-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-8 w-8 rounded-full border-2 border-slate-900 bg-slate-700" />
-            ))}
+        {/* Feature Grid - Matching landing page card style, mobile-first */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 md:gap-6">
+          {/* Feature 1 */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-md hover:border-[#18503c]/30">
+            <div className="bg-[#18503c]/10 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
+              <Zap className="text-[#18503c] h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold leading-8 text-white mb-2 sm:mb-3">
+              Active Workout Mode
+            </h3>
+            <p className="text-xs sm:text-sm md:text-base text-slate-400 leading-7 flex-auto">
+              Log every set, rep, and weight in real-time. Granular tracking ensures no detail is missed.
+            </p>
           </div>
-          <p className="text-sm font-medium text-slate-300">
-            Join thousands of users hitting their goals today.
-          </p>
+
+          {/* Feature 2 */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-md hover:border-[#18503c]/30">
+            <div className="bg-[#18503c]/10 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
+              <LineChart className="text-[#18503c] h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold leading-8 text-white mb-2 sm:mb-3">
+              Progress Analytics
+            </h3>
+            <p className="text-xs sm:text-sm md:text-base text-slate-400 leading-7 flex-auto">
+              Visualize strength gains and body composition changes with interactive charts and history.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-md hover:border-[#18503c]/30">
+            <div className="bg-[#18503c]/10 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
+              <Calendar className="text-[#18503c] h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold leading-8 text-white mb-2 sm:mb-3">
+              Smart Scheduling
+            </h3>
+            <p className="text-xs sm:text-sm md:text-base text-slate-400 leading-7 flex-auto">
+              Organize training with custom plans. Never wonder "what am I training today?" again.
+            </p>
+          </div>
+
+          {/* Feature 4 - Only show on larger screens or stack on mobile */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-md hover:border-[#18503c]/30">
+            <div className="bg-[#18503c]/10 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
+              <BarChart3 className="text-[#18503c] h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold leading-8 text-white mb-2 sm:mb-3">
+              Data-Driven Training
+            </h3>
+            <p className="text-xs sm:text-sm md:text-base text-slate-400 leading-7 flex-auto">
+              Track volume, monitor RPE, and optimize your routine for longevity and progress.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer - Mobile responsive */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-white/10 pt-4 sm:pt-6">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {[
+                'bg-[#18503c]',
+                'bg-emerald-600',
+                'bg-teal-500'
+              ].map((bg, i) => (
+                <div
+                  key={i}
+                  className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-2 border-[#0a1f18] ${bg}`}
+                />
+              ))}
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-white">
+                Join thousands of athletes
+              </p>
+              <p className="text-[10px] sm:text-xs text-slate-400">
+                Training smarter every day
+              </p>
+            </div>
+          </div>
+          {/* Hide on very small screens */}
+          <div className="hidden xs:flex items-center gap-2 text-xs text-slate-400">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span>Built for progress</span>
+          </div>
         </div>
       </div>
     </div>
