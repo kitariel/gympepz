@@ -1,6 +1,6 @@
 "use client";
 
-import { Dumbbell, BarChart3, Sparkles, Zap, Trophy, Calendar, LineChart } from "lucide-react";
+import { Dumbbell, BarChart3, Zap, Calendar, LineChart } from "lucide-react";
 
 export function LoginHero() {
   return (
@@ -73,7 +73,7 @@ export function LoginHero() {
               Smart Scheduling
             </h3>
             <p className="text-xs sm:text-sm md:text-base text-slate-400 leading-7 flex-auto">
-              Organize training with custom plans. Never wonder "what am I training today?" again.
+              Organize training with custom plans. Never wonder &quot;what am I training today?&quot; again.
             </p>
           </div>
 

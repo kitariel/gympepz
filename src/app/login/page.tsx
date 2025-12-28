@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
@@ -23,7 +23,7 @@ import { LoginHero } from "./_components/login-hero";
 // UI flow states
 type Step = "email" | "password_login" | "otp" | "password_set";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -76,7 +76,7 @@ export default function LoginPage() {
     if (status === "authenticated" && sessionEmail && email !== sessionEmail) {
       setEmail(sessionEmail);
     }
-  }, [status, sessionEmail]);
+  }, [status, sessionEmail, email]);
 
   // tRPC mutations
   const registerMutation = api.auth.register.useMutation();
@@ -105,7 +105,7 @@ export default function LoginPage() {
       } else {
         setError("Unexpected response. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("Unexpected error. Please try again.");
     } finally {
       setLoading(false);
@@ -345,5 +345,17 @@ export default function LoginPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-dvh items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
