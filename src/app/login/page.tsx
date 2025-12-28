@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LoginHeader } from "@/components/auth/login-header";
 import { useSession } from "next-auth/react";
+import { LoginHero } from "./_components/login-hero";
 
 // UI flow states
 type Step = "email" | "password_login" | "otp" | "password_set";
@@ -81,7 +82,6 @@ export default function LoginPage() {
   const registerMutation = api.auth.register.useMutation();
   const verifyOtpMutation = api.auth.verifyOtp.useMutation();
   const setPasswordMutation = api.auth.setPassword.useMutation();
-  
 
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -214,7 +214,12 @@ export default function LoginPage() {
         password,
       });
       if (res.status === "password_set") {
-        await signIn("credentials", { email: eLower, password, callbackUrl: "/portal/start", redirect: true });
+        await signIn("credentials", {
+          email: eLower,
+          password,
+          callbackUrl: "/portal/start",
+          redirect: true,
+        });
       } else {
         setError("User not found.");
       }
@@ -288,29 +293,29 @@ export default function LoginPage() {
         </SidebarHeader>
         <SidebarContent>
           <div className="px-4 py-2">
-          <LoginForm
-            step={step}
-            email={email}
-            password={password}
-            otp={otp}
-            loading={loading}
-            error={error}
-            fieldError={fieldError}
-            devOtp={devOtp}
-            onGoogleClick={() =>
-              signIn("google", {
-                callbackUrl: "/login?google=1",
-                redirect: true,
-              })
-            }
-            onSubmitEmail={submitEmail}
-            onSubmitPasswordLogin={submitPasswordLogin}
-            onSubmitOtp={submitOtp}
-            onSubmitSetPassword={submitSetPassword}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onOtpChange={setOtp}
-          />
+            <LoginForm
+              step={step}
+              email={email}
+              password={password}
+              otp={otp}
+              loading={loading}
+              error={error}
+              fieldError={fieldError}
+              devOtp={devOtp}
+              onGoogleClick={() =>
+                signIn("google", {
+                  callbackUrl: "/login?google=1",
+                  redirect: true,
+                })
+              }
+              onSubmitEmail={submitEmail}
+              onSubmitPasswordLogin={submitPasswordLogin}
+              onSubmitOtp={submitOtp}
+              onSubmitSetPassword={submitSetPassword}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onOtpChange={setOtp}
+            />
           </div>
         </SidebarContent>
         <SidebarFooter>
@@ -335,8 +340,8 @@ export default function LoginPage() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="hidden md:block">
-        <div className="p-4">
-          <div className="bg-muted/50 rounded-xl p-6">Hello world</div>
+        <div className="flex h-full flex-col">
+          <LoginHero />
         </div>
       </SidebarInset>
     </SidebarProvider>

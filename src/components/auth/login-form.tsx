@@ -1,10 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type LoginStep = "email" | "password_login" | "otp" | "password_set";
 
@@ -50,10 +61,14 @@ export function LoginForm(props: LoginFormProps) {
     onOtpChange,
   } = props;
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const Separator = () => (
-    <div className="relative my-4 flex items-center">
+    <div className="relative my-6 flex items-center">
       <div className="bg-border h-px flex-1" />
-      <span className="text-muted-foreground mx-3 text-xs">OR</span>
+      <span className="text-muted-foreground mx-4 text-xs font-medium tracking-wider uppercase">
+        Or continue with
+      </span>
       <div className="bg-border h-px flex-1" />
     </div>
   );
@@ -70,179 +85,331 @@ export function LoginForm(props: LoginFormProps) {
     <Button
       type="button"
       variant="outline"
-      className="h-12 w-full justify-start gap-3 rounded-xl border-white/10 bg-black/20 text-white hover:bg-white/10 hover:text-white"
+      className="border-input bg-background hover:bg-accent hover:text-accent-foreground relative h-11 w-full justify-center gap-2 rounded-lg font-medium transition-all"
       onClick={onClick}
     >
-      <span className="inline-flex h-6 w-6 items-center justify-center">
+      <span className="absolute left-4 flex h-5 w-5 items-center justify-center">
         {icon}
       </span>
-      <span className="text-sm">{children}</span>
+      <span>{children}</span>
     </Button>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="animate-in fade-in slide-in-from-bottom-4 mx-auto w-full max-w-[400px] space-y-6 duration-500">
       {error && (
-        <Alert variant="destructive">
-          <AlertTitle>There was a problem</AlertTitle>
+        <Alert
+          variant="destructive"
+          className="animate-in fade-in slide-in-from-top-2"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {step === "email" && (
-        <>
+        <div className="space-y-6">
           <div className="space-y-3">
             <ProviderButton
               onClick={onGoogleClick}
               icon={
                 <svg viewBox="0 0 24 24" className="h-5 w-5">
-                  <g>
-                    <path
-                      fill="#EA4335"
-                      d="M12 10h10a10 10 0 10-3.16 7.07l-3.23-2.65A6 6 0 1112 6z"
-                    />
-                    <path
-                      fill="#4285F4"
-                      d="M22 12h-10v4h6a8 8 0 10-2.63 5.66l3.23-2.65A6 6 0 1112 6v4h10z"
-                    />
-                  </g>
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
                 </svg>
               }
             >
               Google
             </ProviderButton>
-            <ProviderButton
-              onClick={
-                onContinueWithEmail ??
-                (() => {
+
+            {/* Hidden for now as per design, but keeping prop support */}
+            {onContinueWithEmail && (
+              <ProviderButton
+                onClick={() => {
                   const el = document.getElementById("email");
                   el?.focus();
-                })
-              }
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="currentColor"
-                >
-                  <path d="M2 6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm2 0l8 6 8-6H4zm16 12V8l-8 6-8-6v10h16z" />
-                </svg>
-              }
-            >
-              Continue with Email
-            </ProviderButton>
+                }}
+                icon={<Mail className="h-4 w-4" />}
+              >
+                Continue with Email
+              </ProviderButton>
+            )}
           </div>
+
           <Separator />
+
           <form onSubmit={onSubmitEmail} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="name@host.com"
-                value={email}
-                onChange={(e) => onEmailChange(e.target.value.trim().toLowerCase())}
-              />
+              <Label htmlFor="email">Email address</Label>
+              <div className="relative">
+                <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="name@example.com"
+                  className="h-11 pl-9"
+                  value={email}
+                  onChange={(e) =>
+                    onEmailChange(e.target.value.trim().toLowerCase())
+                  }
+                />
+              </div>
             </div>
             <Button
               type="submit"
-              className="w-full"
+              className="h-11 w-full"
               disabled={loading || !email.trim()}
             >
-              {loading ? "Checking…" : "Continue"}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </form>
-          <div className="pt-2 text-center text-sm">
+
+          <div className="text-center">
             <a
               href="#"
-              className="font-medium text-fuchsia-500 hover:underline"
+              className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
             >
-              Need help?
+              Trouble signing in?
             </a>
           </div>
-        </>
+        </div>
       )}
 
       {step === "password_login" && (
-        <form onSubmit={onSubmitPasswordLogin} className="space-y-4">
+        <form
+          onSubmit={onSubmitPasswordLogin}
+          className="animate-in fade-in slide-in-from-right-8 space-y-4 duration-300"
+        >
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" value={email} disabled />
+            <div className="relative">
+              <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                type="email"
+                value={email}
+                disabled
+                className="bg-muted/50 h-11 pl-9"
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => onPasswordChange(e.target.value)}
-              aria-invalid={!!fieldError}
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <a
+                href="#"
+                className="text-muted-foreground hover:text-primary text-xs hover:underline"
+              >
+                Forgot password?
+              </a>
+            </div>
+            <div className="relative">
+              <Lock className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                aria-invalid={!!fieldError}
+                className={cn(
+                  "h-11 pr-10 pl-9",
+                  fieldError &&
+                    "border-destructive focus-visible:ring-destructive",
+                )}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute top-0 right-0 h-11 w-10 px-0 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="text-muted-foreground h-4 w-4" />
+                ) : (
+                  <Eye className="text-muted-foreground h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {showPassword ? "Hide password" : "Show password"}
+                </span>
+              </Button>
+            </div>
             {fieldError && (
-              <p className="text-destructive text-sm">{fieldError}</p>
+              <p className="text-destructive mt-1 flex items-center gap-1 text-sm">
+                <AlertCircle className="h-3 w-3" />
+                {fieldError}
+              </p>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+
+          <Button type="submit" className="h-11 w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
           </Button>
         </form>
       )}
 
       {step === "otp" && (
-        <form onSubmit={onSubmitOtp} className="space-y-4">
+        <form
+          onSubmit={onSubmitOtp}
+          className="animate-in fade-in slide-in-from-right-8 space-y-4 duration-300"
+        >
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" value={email} disabled />
+            <div className="relative">
+              <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                type="email"
+                value={email}
+                disabled
+                className="bg-muted/50 h-11 pl-9"
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="otp">One-Time Password (OTP)</Label>
-            <Input
-              id="otp"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              required
-              value={otp}
-              onChange={(e) => onOtpChange(e.target.value)}
-            />
+            <div className="relative">
+              <KeyRound className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                required
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e) => onOtpChange(e.target.value)}
+                className="h-11 pl-9 tracking-widest"
+              />
+            </div>
+            <p className="text-muted-foreground text-xs">
+              We sent a code to your email.
+            </p>
             {devOtp && (
-              <p className="text-muted-foreground text-xs">Dev OTP: {devOtp}</p>
+              <Alert className="bg-muted/50 mt-2 border-dashed py-2">
+                <AlertDescription className="font-mono text-xs">
+                  Dev OTP:{" "}
+                  <span className="font-bold select-all">{devOtp}</span>
+                </AlertDescription>
+              </Alert>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Verifying…" : "Verify OTP"}
+
+          <Button type="submit" className="h-11 w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              "Verify OTP"
+            )}
           </Button>
         </form>
       )}
 
       {step === "password_set" && (
-        <form onSubmit={onSubmitSetPassword} className="space-y-4">
+        <form
+          onSubmit={onSubmitSetPassword}
+          className="animate-in fade-in slide-in-from-right-8 space-y-4 duration-300"
+        >
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" value={email} disabled />
+            <div className="relative">
+              <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                type="email"
+                value={email}
+                disabled
+                className="bg-muted/50 h-11 pl-9"
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="new-password">Create a password</Label>
-            <Input
-              id="new-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => onPasswordChange(e.target.value)}
-            />
+            <div className="relative">
+              <Lock className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+              <Input
+                id="new-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                placeholder="Min. 8 characters"
+                value={password}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                className="h-11 pr-10 pl-9"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute top-0 right-0 h-11 w-10 px-0 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="text-muted-foreground h-4 w-4" />
+                ) : (
+                  <Eye className="text-muted-foreground h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {showPassword ? "Hide password" : "Show password"}
+                </span>
+              </Button>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              This will be used for future logins.
+            </p>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Saving…" : "Save and continue"}
+
+          <Button type="submit" className="h-11 w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save and continue"
+            )}
           </Button>
         </form>
       )}
-
-      {/* profile_setup step removed */}
     </div>
   );
 }
