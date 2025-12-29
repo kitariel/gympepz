@@ -166,10 +166,14 @@ function SortableDayCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 flex-col border-0 shadow-lg transition-all hover:shadow-xl",
-        isDragging && "ring-primary z-50 rotate-1 opacity-60 ring-2 scale-95",
-        isCurrentDay && "ring-primary/60 bg-primary/5 ring-2 shadow-xl border-primary/20",
-        `bg-gradient-to-br ${dayGradient} backdrop-blur-sm`,
+        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 flex-col",
+        "border border-border/50 rounded-xl overflow-hidden",
+        "shadow-md hover:shadow-2xl transition-all duration-300 ease-out",
+        "bg-gradient-to-br backdrop-blur-md",
+        `bg-gradient-to-br ${dayGradient}`,
+        "hover:scale-[1.02] hover:-translate-y-1",
+        isDragging && "ring-2 ring-primary/60 z-50 rotate-1 opacity-70 scale-95 shadow-2xl",
+        isCurrentDay && "ring-2 ring-primary/40 shadow-xl border-primary/30 bg-primary/5",
       )}
       onClick={(e) => {
         // Only open drawer if click was not on interactive elements
@@ -185,8 +189,10 @@ function SortableDayCard({
       }}
     >
       <CardHeader className={cn(
-        "flex-shrink-0 border-b-2 px-5 py-4 bg-card/50 backdrop-blur-sm",
-        isCurrentDay && "bg-primary/10 border-primary/30"
+        "flex-shrink-0 border-b px-5 py-4 transition-colors duration-200",
+        "bg-gradient-to-b from-card/80 via-card/60 to-transparent backdrop-blur-md",
+        "border-border/30",
+        isCurrentDay && "bg-gradient-to-b from-primary/15 via-primary/10 to-transparent border-primary/40"
       )}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -209,19 +215,19 @@ function SortableDayCard({
               {...attributes}
               {...listeners}
               data-drag-handle
-              className="hover:bg-muted/70 cursor-grab touch-none rounded-md p-1.5 opacity-0 transition-all group-hover:opacity-100 active:cursor-grabbing active:scale-110"
+              className="hover:bg-muted/60 cursor-grab touch-none rounded-lg p-1.5 opacity-0 transition-all duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing active:scale-110 active:bg-muted/80"
               onClick={(e) => e.stopPropagation()}
             >
-              <GripVertical className="text-muted-foreground h-4 w-4" />
+              <GripVertical className="text-muted-foreground/70 h-4 w-4 transition-colors group-hover:text-foreground" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 transition-all group-hover:opacity-100 hover:bg-muted"
+                  className="h-8 w-8 opacity-0 transition-all duration-200 ease-out group-hover:opacity-100 hover:bg-muted/80 rounded-lg"
                 >
-                  <MoreVertical className="text-muted-foreground h-4 w-4" />
+                  <MoreVertical className="text-muted-foreground/70 h-4 w-4 transition-colors hover:text-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px]">
@@ -419,15 +425,16 @@ function EmptyDaySlot({
     <Card
       ref={setNodeRef}
       className={cn(
-        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 cursor-pointer flex-col border-2 border-dashed transition-all hover:shadow-xl",
-        "border-muted-foreground/30 bg-gradient-to-br from-muted/20 via-muted/10 to-muted/5 hover:border-primary/60 hover:bg-primary/10 hover:from-primary/10 hover:via-primary/5 hover:to-primary/5",
+        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 cursor-pointer flex-col border transition-all hover:shadow-xl",
+        "border-border/40 bg-gradient-to-br from-muted/30 via-muted/20 to-muted/10 hover:border-primary/50 hover:bg-primary/5 hover:from-primary/10 hover:via-primary/5 hover:to-primary/5",
         isOver && "border-primary bg-primary/20 ring-4 ring-primary/20 shadow-2xl scale-[1.02]",
-        isCurrentDay && "border-primary/70 bg-primary/15 ring-2 ring-primary/30",
+        isCurrentDay && "border-primary/50 bg-primary/10 ring-2 ring-primary/20",
       )}
       onClick={() => onAddDay(slotIndex, dayName)}
     >
       <CardHeader className={cn(
-        "flex-shrink-0 border-b-2 border-dashed px-5 py-4 bg-card/50 backdrop-blur-sm",
+        "flex-shrink-0 border-b px-5 py-4 bg-card/50 backdrop-blur-sm",
+        "border-border/40",
         isCurrentDay && "bg-primary/10 border-primary/30"
       )}>
         <div className="flex items-center gap-2.5">
