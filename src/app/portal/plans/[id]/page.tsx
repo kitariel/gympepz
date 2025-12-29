@@ -2,8 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import { api } from "@/trpc/react";
-import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   ArrowLeft,
@@ -89,11 +88,9 @@ export default function PlanDetailPage({
   const delItem = api.plan.deleteItem.useMutation();
   const deleteDay = api.plan.deleteDay.useMutation();
   const updateDay = api.plan.updateDay.useMutation();
-  const updateDayOrder = api.plan.updateDayOrder.useMutation();
   const updateDaysOrder = api.plan.updateDaysOrder.useMutation();
   const duplicateDay = api.plan.duplicateDay.useMutation();
   const copyExercises = api.plan.copyExercises.useMutation();
-  const reorderDays = api.plan.reorderDays.useMutation();
   const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
@@ -153,7 +150,7 @@ export default function PlanDetailPage({
     } else {
       setLocalDays(Array(7).fill(null));
     }
-  }, [plan.data?.days]);
+  }, [p?.days]);
 
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
@@ -379,7 +376,7 @@ export default function PlanDetailPage({
           <div className="min-w-0 flex-1 space-y-2">
             <div>
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-                {p?.name || "Untitled Plan"}
+                {p?.name ?? "Untitled Plan"}
               </h1>
               <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
                 Build and organize your weekly workout schedule
