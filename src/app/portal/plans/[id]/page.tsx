@@ -7,13 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -23,26 +21,17 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
   ArrowLeft,
   Plus,
   Trash2,
-  GripVertical,
   Dumbbell,
   Save,
   Eye,
   Calendar,
   Pencil,
   Copy,
-  MoreVertical,
-  ChevronRight,
 } from "lucide-react";
+import { WeeklyScheduleBoard } from "./_components/weekly-schedule-board";
 
 interface Exercise {
   id: string;
@@ -73,330 +62,7 @@ interface Plan {
   days: PlanDay[];
 }
 
-// Sortable Day Card Component
-function SortableDayCard({
-  dayData,
-  dayName,
-  slotIndex,
-  onEditDay,
-  onSaveDayTitle,
-  onCancelEdit,
-  onDeleteDay,
-  onDuplicateDay,
-  onOpenCopyDialog,
-  onOpenDrawer,
-  editingDayId,
-  editingDayTitle,
-  onEditingDayTitleChange,
-  updateDay,
-  p,
-  isCurrentDay = false,
-}: {
-  dayData: PlanDay;
-  dayName: string;
-  slotIndex: number;
-  onEditDay: (dayId: string) => void;
-  onSaveDayTitle: (dayId: string) => void;
-  onCancelEdit: () => void;
-  onDeleteDay: (dayId: string) => void;
-  onDuplicateDay: (dayId: string) => void;
-  onOpenCopyDialog: (dayId: string) => void;
-  onOpenDrawer: (dayId: string) => void;
-  editingDayId: string | null;
-  editingDayTitle: string;
-  onEditingDayTitleChange: (title: string) => void;
-  updateDay: { isPending: boolean };
-  p: Plan | null | undefined;
-  isCurrentDay?: boolean;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: dayData.id,
-    disabled: false,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const totalSets = (dayData.items ?? []).reduce(
-    (sum: number, item) => sum + (item.sets ?? 0),
-    0,
-  );
-
-  return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group ring-border hover:ring-primary/20 bg-card flex h-full min-h-[180px] cursor-pointer flex-col border-0 shadow-sm ring-1 transition-all hover:shadow-md",
-        isDragging && "ring-primary z-50 rotate-2 opacity-50 ring-2",
-        isCurrentDay && "ring-primary/60 bg-primary/5 ring-2",
-      )}
-      onClick={(e) => {
-        // Only open drawer if click was not on interactive elements
-        const target = e.target as HTMLElement;
-        if (
-          !target.closest("[data-drag-handle]") &&
-          !target.closest("button") &&
-          !target.closest('[role="menuitem"]') &&
-          !isDragging
-        ) {
-          onOpenDrawer(dayData.id);
-        }
-      }}
-    >
-      <CardHeader className="space-y-1 px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase",
-                isCurrentDay && "text-primary font-bold",
-              )}
-            >
-              {dayName}
-            </span>
-            {isCurrentDay && (
-              <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">
-                Today
-              </Badge>
-            )}
-          </div>
-          <div
-            {...attributes}
-            {...listeners}
-            data-drag-handle
-            className="hover:bg-muted -mt-2 -mr-2 shrink-0 cursor-grab touch-none rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <GripVertical className="text-muted-foreground h-4 w-4" />
-          </div>
-        </div>
-
-        {editingDayId === dayData.id ? (
-          <div className="flex flex-col gap-2 pt-1">
-            <Input
-              value={editingDayTitle}
-              onChange={(e) => onEditingDayTitleChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onSaveDayTitle(dayData.id);
-                } else if (e.key === "Escape") {
-                  onCancelEdit();
-                }
-              }}
-              className="h-8 text-sm font-semibold"
-              autoFocus
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => onSaveDayTitle(dayData.id)}
-                disabled={updateDay.isPending ?? !editingDayTitle.trim()}
-              >
-                Save
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={onCancelEdit}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="group/title flex items-start justify-between gap-2">
-            <CardTitle className="line-clamp-2 text-base leading-tight font-bold">
-              {dayData.title}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="-mr-1 h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover/title:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditDay(dayData.id);
-              }}
-            >
-              <Pencil className="text-muted-foreground h-3 w-3" />
-            </Button>
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent className="flex flex-1 flex-col gap-4 px-4 pb-4">
-        {/* Exercise Preview */}
-        <div className="min-h-[3rem] flex-1 space-y-1.5">
-          {(dayData.items ?? []).length > 0 ? (
-            <>
-              {(dayData.items ?? []).slice(0, 3).map((item) => (
-                <div
-                  key={item.id}
-                  className="text-muted-foreground flex items-center gap-2 text-sm"
-                >
-                  <div className="bg-primary/40 h-1.5 w-1.5 shrink-0 rounded-full" />
-                  <span className="truncate">
-                    {item.exercise?.name ?? "Exercise"}
-                  </span>
-                  {item.sets && (
-                    <span className="text-muted-foreground/50 ml-auto shrink-0 text-[10px]">
-                      {item.sets} sets
-                    </span>
-                  )}
-                </div>
-              ))}
-              {(dayData.items?.length ?? 0) > 3 && (
-                <p className="text-muted-foreground/60 pt-0.5 pl-3.5 text-xs">
-                  + {(dayData.items?.length ?? 0) - 3} more
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="text-muted-foreground/40 flex h-full flex-col items-center justify-center py-2 text-xs italic">
-              No exercises added
-            </div>
-          )}
-        </div>
-
-        <Separator className="bg-border/50" />
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-0.5">
-          <div className="flex items-center gap-3">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <Dumbbell className="h-3.5 w-3.5" />
-              <span>{dayData.items?.length ?? 0}</span>
-            </div>
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <span className="text-muted-foreground/60 text-[10px] tracking-wider uppercase">
-                Sets
-              </span>
-              <span>{totalSets}</span>
-            </div>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="-mr-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <MoreVertical className="text-muted-foreground h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[160px]">
-              <DropdownMenuItem onClick={() => onDuplicateDay(dayData.id)}>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onOpenCopyDialog(dayData.id)}>
-                <Copy className="mr-2 h-4 w-4" />
-                Copy To...
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDeleteDay(dayData.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Empty Slot Component (Droppable)
-function EmptyDaySlot({
-  dayName,
-  slotIndex,
-  onAddDay,
-  isCurrentDay = false,
-}: {
-  dayName: string;
-  slotIndex: number;
-  onAddDay: (slot: number) => void;
-  isCurrentDay?: boolean;
-}) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: slotIndex.toString(),
-  });
-
-  return (
-    <Card
-      ref={setNodeRef}
-      className={cn(
-        "group border-muted-foreground/10 bg-muted/5 hover:border-primary/40 hover:bg-primary/5 flex h-full min-h-[180px] cursor-pointer flex-col border-2 border-dashed transition-all",
-        isOver && "border-primary bg-primary/10",
-        isCurrentDay && "border-primary/50 bg-primary/10",
-      )}
-      onClick={() => onAddDay(slotIndex)}
-    >
-      <CardHeader className="px-4 pt-4 pb-2">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "text-muted-foreground/50 group-hover:text-primary/60 text-[10px] font-semibold tracking-wider uppercase transition-colors",
-              isCurrentDay && "text-primary font-bold",
-            )}
-          >
-            {dayName}
-          </span>
-          {isCurrentDay && (
-            <Badge variant="secondary" className="px-1.5 py-0 text-[9px]">
-              Today
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 pb-8">
-        <div className="bg-muted-foreground/5 group-hover:bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
-          <Plus className="text-muted-foreground/40 group-hover:text-primary h-5 w-5 transition-colors" />
-        </div>
-        <div className="text-center">
-          <p className="text-muted-foreground/60 group-hover:text-primary/80 text-sm font-medium transition-colors">
-            {isOver ? "Drop Day Here" : "Add Workout"}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-import {
-  DndContext,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  useDroppable,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  arrayMove,
-  horizontalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { cn } from "@/lib/utils";
+import type { DragEndEvent } from "@dnd-kit/core";
 
 export default function PlanDetailPage({
   params,
@@ -489,16 +155,6 @@ export default function PlanDetailPage({
     }
   }, [plan.data?.days]);
 
-  // Drag and drop sensors with activation distance to prevent accidental drags
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px of movement before drag starts
-      },
-    }),
-    useSensor(KeyboardSensor),
-  );
-
   const exercises = api.exercise.list.useQuery(
     { q: searchQuery, take: 20 },
     { enabled: isAddExerciseDialogOpen },
@@ -516,16 +172,18 @@ export default function PlanDetailPage({
     await plan.refetch();
   };
 
-  const handleAddDay = async (targetSlot?: number) => {
+  const handleAddDay = async (targetSlot?: number, dayName?: string) => {
     if (!newDayTitle && !targetSlot) {
       setIsAddDayDialogOpen(true);
       return;
     }
 
     const order = targetSlot ?? p?.days?.length ?? 0;
+    const title = newDayTitle || (dayName ? `${dayName} Workout` : `Day ${order + 1}`);
+    
     await addDay.mutateAsync({
       planId: id,
-      title: newDayTitle || `Day ${order + 1}`,
+      title,
       order,
     });
     setNewDayTitle("");
@@ -688,10 +346,15 @@ export default function PlanDetailPage({
 
   if (plan.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Dumbbell className="text-muted-foreground mx-auto mb-3 h-10 w-10 animate-pulse" />
-          <p className="text-muted-foreground text-sm">Loading plan...</p>
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto animate-pulse">
+            <Dumbbell className="text-primary h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-base font-semibold text-foreground">Loading workout plan...</p>
+            <p className="text-muted-foreground text-sm">Preparing your schedule</p>
+          </div>
         </div>
       </div>
     );
@@ -701,198 +364,184 @@ export default function PlanDetailPage({
     p?.days?.reduce((sum: number, d) => sum + (d.items?.length ?? 0), 0) ?? 0;
 
   return (
-    <div className="flex-1 space-y-3 p-4 pt-4 sm:space-y-4 sm:p-6">
-      {/* Responsive Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <div className="flex-1 space-y-6 overflow-x-hidden p-4 pt-4 sm:space-y-6 sm:p-6">
+      {/* Premium Header Design */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4 flex-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 sm:h-8 sm:w-8"
+            className="h-10 w-10 shrink-0 mt-1 hover:bg-muted/80 transition-colors"
             onClick={() => router.back()}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
-              Edit Plan
-            </h2>
-            <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block sm:text-sm">
-              Customize your workout program
-            </p>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                {p?.name || "Untitled Plan"}
+              </h1>
+              <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
+                Build and organize your weekly workout schedule
+              </p>
+            </div>
+            {/* Quick Stats */}
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                  <Calendar className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-foreground">{p?.days?.length ?? 0}</div>
+                  <div className="text-xs text-muted-foreground">Workout Days</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <Dumbbell className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <div className="font-bold text-foreground">{totalExercises}</div>
+                  <div className="text-xs text-muted-foreground">Total Exercises</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <Button
-          size="sm"
-          onClick={() => router.push(`/portal/log`)}
-          className="h-9 w-full gap-2 sm:h-8 sm:w-auto"
-        >
-          <Eye className="h-4 w-4" />
-          <span className="hidden sm:inline">Preview</span>
-          <span className="sm:hidden">View Logs</span>
-        </Button>
+        <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push(`/portal/log`)}
+            className="h-9 gap-2 shrink-0"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">View Logs</span>
+            <span className="sm:hidden">Logs</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Plan Name - Responsive */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-3 sm:px-4">
-          <CardTitle className="text-sm font-semibold">Plan Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 px-4 pb-4 sm:px-4">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              placeholder="Plan name"
-              value={planName}
-              onChange={(e) => setPlanName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  void handleSaveName();
-                }
-              }}
-              className="h-10 flex-1 sm:h-9"
-            />
+      {/* Plan Name Editor - Floating Card */}
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Plan Name
+              </label>
+              <Input
+                placeholder="e.g., PPL Split, Upper Lower, Full Body"
+                value={planName}
+                onChange={(e) => setPlanName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    void handleSaveName();
+                  }
+                }}
+                className="h-12 text-base font-semibold border-2 focus:border-primary transition-colors"
+              />
+            </div>
             <Button
-              size="sm"
+              size="default"
               onClick={handleSaveName}
-              disabled={updateMeta.isPending || !planName}
-              className="h-10 w-full sm:h-9 sm:w-auto"
+              disabled={updateMeta.isPending || !planName || planName === p?.name}
+              className="h-12 gap-2 px-6 shrink-0 font-medium"
             >
-              <Save className="mr-1.5 h-4 w-4 sm:h-3.5 sm:w-3.5" />
-              {updateMeta.isPending ? "Saving..." : "Save"}
+              <Save className="h-4 w-4" />
+              {updateMeta.isPending ? "Saving..." : "Save Changes"}
             </Button>
-          </div>
-          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs sm:gap-3">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" />
-              {p?.days?.length ?? 0} {p?.days?.length === 1 ? "day" : "days"}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span>
-              {totalExercises} {totalExercises === 1 ? "exercise" : "exercises"}
-            </span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Weekly Workout Days */}
-      <div className="space-y-3 sm:space-y-3 md:space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 md:gap-0">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold sm:text-base md:text-lg">
+      {/* Weekly Schedule - Enhanced Header */}
+      <div className="space-y-5 w-full max-w-full">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Weekly Schedule
-            </h3>
-            <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block sm:text-xs md:text-sm">
-              Drag and drop workout days to rearrange. Click empty days to add
-              workouts.
+            </h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Drag days to reorder • Click empty slots to add workouts • Scroll horizontally to view all days
             </p>
           </div>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
+        {/* Weekly Schedule Board - Isolated Component */}
+        <WeeklyScheduleBoard
+          localDays={localDays}
+          currentDayOfWeek={currentDayOfWeek}
           onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={localDays
-              .filter((day) => day !== null)
-              .map((day) => day?.id)}
-            strategy={horizontalListSortingStrategy}
-            disabled={false}
-          >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
-              {[
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-              ].map((dayName, slotIndex) => {
-                const dayData = localDays[slotIndex];
-                const isCurrentDay = slotIndex === currentDayOfWeek;
+          onAddDay={(slot, dayName) => {
+            setNewDayTitle(`${dayName} Workout`);
+            void handleAddDay(slot, dayName);
+          }}
+          onEditDay={(dayId) => {
+            const day = p?.days?.find((d) => d.id === dayId);
+            if (day) handleStartEditDay(dayId, day.title);
+          }}
+          onSaveDayTitle={handleSaveDayTitle}
+          onCancelEdit={handleCancelEditDay}
+          onDeleteDay={handleDeleteDay}
+          onDuplicateDay={handleDuplicateDay}
+          onOpenCopyDialog={handleOpenCopyDialog}
+          onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
+          editingDayId={editingDayId}
+          editingDayTitle={editingDayTitle}
+          onEditingDayTitleChange={setEditingDayTitle}
+          updateDay={updateDay}
+          plan={p}
+        />
 
-                if (!dayData) {
-                  return (
-                    <EmptyDaySlot
-                      key={slotIndex}
-                      dayName={dayName}
-                      slotIndex={slotIndex}
-                      onAddDay={(slot) => {
-                        setNewDayTitle(`${dayName} Workout`);
-                        void handleAddDay(slot);
-                      }}
-                      isCurrentDay={isCurrentDay}
-                    />
-                  );
-                }
-
-                return (
-                  <SortableDayCard
-                    key={dayData.id}
-                    dayData={dayData}
-                    dayName={dayName}
-                    slotIndex={slotIndex}
-                    onEditDay={(dayId) =>
-                      handleStartEditDay(dayId, dayData.title)
-                    }
-                    onSaveDayTitle={(dayId) => handleSaveDayTitle(dayId)}
-                    onCancelEdit={handleCancelEditDay}
-                    onDeleteDay={handleDeleteDay}
-                    onDuplicateDay={handleDuplicateDay}
-                    onOpenCopyDialog={handleOpenCopyDialog}
-                    onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
-                    editingDayId={editingDayId}
-                    editingDayTitle={editingDayTitle}
-                    onEditingDayTitleChange={setEditingDayTitle}
-                    updateDay={updateDay}
-                    p={p}
-                    isCurrentDay={isCurrentDay}
-                  />
-                );
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
-
-        {/* Add Day Dialog */}
+        {/* Add Day Dialog - Enhanced */}
         <Dialog open={isAddDayDialogOpen} onOpenChange={setIsAddDayDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">
-                Add New Workout Day
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto">
+                <Plus className="h-6 w-6 text-primary" />
+              </div>
+              <DialogTitle className="text-2xl font-bold text-center">
+                Create New Workout Day
               </DialogTitle>
-              <p className="text-muted-foreground mt-2 text-sm">
-                A workout day is a collection of exercises you&apos;ll do
-                together in one session.
+              <p className="text-muted-foreground text-center text-sm">
+                Add a new day to your weekly training schedule. You can add exercises to this day after creating it.
               </p>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Day Name</label>
+            <div className="space-y-5 pt-2">
+              <div className="space-y-2.5">
+                <label className="text-sm font-semibold text-foreground">
+                  Day Name
+                </label>
                 <Input
-                  placeholder="e.g., Monday - Push Day, Leg Day, Upper Body"
+                  placeholder="e.g., Push Day, Leg Day, Upper Body, Monday Workout"
                   value={newDayTitle}
                   onChange={(e) => setNewDayTitle(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && newDayTitle.trim()) {
                       void handleAddDay();
                     }
                   }}
-                  className="h-10 sm:h-9"
+                  className="h-12 text-base border-2 focus:border-primary transition-colors"
+                  autoFocus
                 />
-                <p className="text-muted-foreground text-xs">
-                  Tip: Use descriptive names like &quot;Push Day&quot;,
-                  &quot;Pull Day&quot;, or day of the week.
-                </p>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border/50">
+                  <div className="h-5 w-5 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                    <span className="text-[10px] font-bold text-primary">💡</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <strong>Tip:</strong> Use descriptive names like &quot;Push Day&quot;,
+                    &quot;Pull Day&quot;, or include the day of week (e.g., &quot;Monday - Chest & Triceps&quot;).
+                  </p>
+                </div>
               </div>
               <Button
-                className="h-10 w-full sm:h-9"
+                className="h-12 w-full gap-2 font-semibold text-base"
                 onClick={() => handleAddDay()}
-                disabled={!newDayTitle || addDay.isPending}
+                disabled={!newDayTitle.trim() || addDay.isPending}
               >
-                {addDay.isPending ? "Adding..." : "Create Workout Day"}
+                <Plus className="h-5 w-5" />
+                {addDay.isPending ? "Creating..." : "Create Workout Day"}
               </Button>
             </div>
           </DialogContent>
@@ -915,41 +564,41 @@ export default function PlanDetailPage({
                   side="bottom"
                   className="flex max-h-[95vh] w-full flex-col overflow-y-auto p-0 sm:max-h-[92vh] md:max-h-[85vh]"
                 >
-                  <SheetHeader className="bg-background sticky top-0 z-10 border-b px-6 pt-6 pb-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
+                  <SheetHeader className="bg-background sticky top-0 z-10 border-b px-6 pt-6 pb-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1 space-y-3">
                         {editingDayId === selectedDay.id ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             <Input
                               value={editingDayTitle}
                               onChange={(e) =>
                                 setEditingDayTitle(e.target.value)
                               }
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") {
+                                if (e.key === "Enter" && editingDayTitle.trim()) {
                                   void handleSaveDayTitle(selectedDay.id);
                                 } else if (e.key === "Escape") {
                                   handleCancelEditDay();
                                 }
                               }}
-                              className="h-9 flex-1 text-base font-semibold"
+                              className="h-11 flex-1 text-lg font-bold border-2 focus:border-primary"
                               autoFocus
                             />
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 shrink-0"
+                              size="sm"
+                              className="h-11 gap-2 shrink-0"
                               onClick={() => handleSaveDayTitle(selectedDay.id)}
                               disabled={
                                 updateDay.isPending || !editingDayTitle.trim()
                               }
                             >
                               <Save className="h-4 w-4" />
+                              Save
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 shrink-0"
+                              className="h-11 w-11 shrink-0"
                               onClick={handleCancelEditDay}
                             >
                               ×
@@ -957,34 +606,47 @@ export default function PlanDetailPage({
                           </div>
                         ) : (
                           <>
-                            <SheetTitle className="text-xl sm:text-2xl">
-                              {selectedDay.title}
-                            </SheetTitle>
-                            <SheetDescription className="mt-2">
-                              {selectedDay.items?.length ?? 0}{" "}
-                              {selectedDay.items?.length === 1
-                                ? "exercise"
-                                : "exercises"}
-                              {(selectedDay.items ?? []).length > 0 && (
-                                <span className="ml-2">
-                                  •{" "}
-                                  {selectedDay.items.reduce(
-                                    (sum: number, item: { sets?: number }) =>
-                                      sum + (item.sets! ?? 0),
-                                    0,
-                                  )}{" "}
-                                  total sets
-                                </span>
-                              )}
-                            </SheetDescription>
+                            <div>
+                              <SheetTitle className="text-2xl font-bold sm:text-3xl mb-2">
+                                {selectedDay.title}
+                              </SheetTitle>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Dumbbell className="h-4 w-4" />
+                                  <span className="font-semibold text-foreground">
+                                    {selectedDay.items?.length ?? 0}
+                                  </span>
+                                  <span>
+                                    {selectedDay.items?.length === 1
+                                      ? "exercise"
+                                      : "exercises"}
+                                  </span>
+                                </div>
+                                {(selectedDay.items ?? []).length > 0 && (
+                                  <>
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <div className="flex items-center gap-2">
+                                      <span>
+                                        {selectedDay.items.reduce(
+                                          (sum: number, item: { sets?: number }) =>
+                                            sum + (item.sets! ?? 0),
+                                          0,
+                                        )}
+                                      </span>
+                                      <span>total sets</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           </>
                         )}
                       </div>
                       {editingDayId !== selectedDay.id && (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="h-9 w-9 shrink-0"
+                          className="h-10 w-10 shrink-0"
                           onClick={() =>
                             handleStartEditDay(
                               selectedDay.id,
@@ -998,45 +660,50 @@ export default function PlanDetailPage({
                     </div>
                   </SheetHeader>
 
-                  <div className="flex-1 space-y-4 overflow-y-auto px-6 pt-6 pb-6">
-                    {/* Add Exercise Button */}
+                  <div className="flex-1 space-y-5 overflow-y-auto px-6 pt-6 pb-6">
+                    {/* Add Exercise Button - Enhanced */}
                     <Button
-                      className="h-11 w-full gap-2"
+                      className="h-12 w-full gap-2 font-semibold text-base shadow-sm hover:shadow-md transition-shadow"
                       onClick={() => {
                         setTargetDayId(selectedDay.id);
                         setIsAddExerciseDialogOpen(true);
                       }}
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Exercise
+                      <Plus className="h-5 w-5" />
+                      Add Exercise to Workout
                     </Button>
 
-                    {/* Exercise List */}
+                    {/* Exercise List - Enhanced */}
                     {(selectedDay.items ?? []).length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {(selectedDay.items ?? []).map(
                           (item, itemIndex: number) => (
-                            <Card key={itemIndex} className="border shadow-sm">
-                              <CardContent className="space-y-4 p-5 sm:p-4">
+                            <Card key={itemIndex} className="group border-2 shadow-sm hover:shadow-md transition-all hover:border-primary/30 bg-card">
+                              <CardContent className="p-5 sm:p-6">
                                 {/* Exercise Header */}
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0 flex-1">
-                                    <h4 className="mb-2 text-base font-semibold">
-                                      {item.exercise?.name ?? item.exerciseId}
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
+                                <div className="flex items-start justify-between gap-4 mb-4">
+                                  <div className="min-w-0 flex-1 space-y-3">
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+                                        {itemIndex + 1}
+                                      </div>
+                                      <h4 className="text-lg font-bold leading-tight">
+                                        {item.exercise?.name ?? item.exerciseId}
+                                      </h4>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 pl-11">
                                       {item.exercise?.muscleGroup && (
                                         <Badge
                                           variant="outline"
-                                          className="text-xs"
+                                          className="text-xs px-3 py-1 font-medium border-primary/20"
                                         >
                                           {item.exercise.muscleGroup}
                                         </Badge>
                                       )}
                                       {item.exercise?.equipment && (
                                         <Badge
-                                          variant="outline"
-                                          className="text-xs"
+                                          variant="secondary"
+                                          className="text-xs px-3 py-1 font-medium"
                                         >
                                           {item.exercise.equipment}
                                         </Badge>
@@ -1046,22 +713,23 @@ export default function PlanDetailPage({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9 shrink-0"
+                                    className="h-9 w-9 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
                                     onClick={() => handleDeleteItem(item.id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
 
-                                {/* Sets/Reps/Weight */}
-                                <div className="grid grid-cols-3 gap-3">
-                                  <div className="space-y-1.5">
-                                    <label className="text-muted-foreground text-xs font-medium">
+                                {/* Sets/Reps/Weight - Enhanced Grid */}
+                                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                                  <div className="space-y-2">
+                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                                       Sets
                                     </label>
                                     <Input
                                       type="number"
-                                      className="h-10 text-base"
+                                      min="1"
+                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
                                       value={item.sets ?? 3}
                                       onChange={(e) =>
                                         handleUpdateItem(
@@ -1073,13 +741,14 @@ export default function PlanDetailPage({
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-muted-foreground text-xs font-medium">
+                                  <div className="space-y-2">
+                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                                       Reps
                                     </label>
                                     <Input
                                       type="number"
-                                      className="h-10 text-base"
+                                      min="1"
+                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
                                       value={item.reps ?? 10}
                                       onChange={(e) =>
                                         handleUpdateItem(
@@ -1091,13 +760,15 @@ export default function PlanDetailPage({
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-muted-foreground text-xs font-medium">
+                                  <div className="space-y-2">
+                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                                       Weight (kg)
                                     </label>
                                     <Input
                                       type="number"
-                                      className="h-10 text-base"
+                                      min="0"
+                                      step="0.5"
+                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
                                       value={item.weight ?? ""}
                                       placeholder="0"
                                       onChange={(e) =>
@@ -1117,26 +788,30 @@ export default function PlanDetailPage({
                         )}
                       </div>
                     ) : (
-                      <div className="px-4 py-12 text-center">
-                        <Dumbbell className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
-                        <h3 className="mb-2 text-lg font-semibold">
-                          No exercises yet
-                        </h3>
-                        <p className="text-muted-foreground mb-6 text-sm">
-                          Add your first exercise to this workout day
-                        </p>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setTargetDayId(selectedDay.id);
-                            setIsAddExerciseDialogOpen(true);
-                          }}
-                          className="h-11"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Exercise
-                        </Button>
-                      </div>
+                      <Card className="border-2 border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50 mb-6">
+                            <Dumbbell className="h-10 w-10 text-muted-foreground/50" />
+                          </div>
+                          <h3 className="mb-2 text-xl font-bold">
+                            No exercises added yet
+                          </h3>
+                          <p className="text-muted-foreground mb-8 text-sm max-w-md">
+                            Start building your workout by adding exercises to this day. You can set sets, reps, and weight for each exercise.
+                          </p>
+                          <Button
+                            size="lg"
+                            onClick={() => {
+                              setTargetDayId(selectedDay.id);
+                              setIsAddExerciseDialogOpen(true);
+                            }}
+                            className="h-12 gap-2 px-6 font-semibold"
+                          >
+                            <Plus className="h-5 w-5" />
+                            Add Your First Exercise
+                          </Button>
+                        </CardContent>
+                      </Card>
                     )}
                   </div>
                 </SheetContent>
@@ -1145,113 +820,166 @@ export default function PlanDetailPage({
           })()}
       </div>
 
-      {/* Add Exercise Dialog - Responsive */}
+      {/* Add Exercise Dialog - Enhanced */}
       <Dialog
         open={isAddExerciseDialogOpen}
         onOpenChange={setIsAddExerciseDialogOpen}
       >
-        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col sm:max-h-[85vh]">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="text-lg sm:text-xl">
-              Add Exercise to Workout Day
+        <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col sm:max-h-[85vh]">
+          <DialogHeader className="flex-shrink-0 space-y-3 pb-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto">
+              <Dumbbell className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Add Exercise to Workout
             </DialogTitle>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Search and select exercises to add to this workout session.
+            <p className="text-muted-foreground text-center text-sm">
+              Search and select exercises from your library to add to this workout day
             </p>
           </DialogHeader>
-          <div className="flex min-h-0 flex-1 flex-col space-y-4 pt-4">
-            <Input
-              placeholder="Search exercises..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 flex-shrink-0 sm:h-9"
-            />
-            <div className="max-h-[50vh] flex-1 space-y-2 overflow-y-auto sm:max-h-[400px]">
-              {exercises.data?.map((ex) => (
+          <div className="flex min-h-0 flex-1 flex-col space-y-5 pt-2">
+            <div className="relative">
+              <Input
+                placeholder="Search exercises by name, muscle group, or equipment..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 text-base border-2 focus:border-primary transition-colors pr-10"
+                autoFocus
+              />
+              {searchQuery && (
                 <Button
-                  key={ex.id}
-                  variant="outline"
-                  className="h-auto w-full justify-start py-3 sm:py-2.5"
-                  onClick={() => handleAddExercise(ex.id)}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10"
+                  onClick={() => setSearchQuery("")}
                 >
-                  <div className="flex w-full items-start gap-2.5 text-left sm:gap-2">
-                    <Dumbbell className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium sm:text-xs">
-                        {ex.name}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5 sm:mt-1">
-                        <Badge
-                          variant="outline"
-                          className="px-2 py-0.5 text-[10px] sm:px-1.5 sm:py-0 sm:text-[9px]"
-                        >
-                          {ex.muscleGroup}
-                        </Badge>
-                        {ex.equipment && (
-                          <Badge
-                            variant="outline"
-                            className="px-2 py-0.5 text-[10px] sm:px-1.5 sm:py-0 sm:text-[9px]"
-                          >
-                            {ex.equipment}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  ×
                 </Button>
-              ))}
-              {searchQuery && exercises.data?.length === 0 && (
-                <p className="text-muted-foreground py-6 text-center text-xs sm:py-4 sm:text-sm">
-                  No exercises found.
-                </p>
+              )}
+            </div>
+            <div className="max-h-[50vh] flex-1 space-y-2 overflow-y-auto sm:max-h-[450px] scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+              {exercises.data && exercises.data.length > 0 ? (
+                exercises.data.map((ex) => (
+                  <Card
+                    key={ex.id}
+                    className="cursor-pointer border-2 transition-all hover:border-primary/50 hover:shadow-md group"
+                    onClick={() => handleAddExercise(ex.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex w-full items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                          <Dumbbell className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <h4 className="text-base font-semibold leading-tight group-hover:text-primary transition-colors">
+                            {ex.name}
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-2.5 py-1 font-medium border-primary/20"
+                            >
+                              {ex.muscleGroup}
+                            </Badge>
+                            {ex.equipment && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs px-2.5 py-1 font-medium"
+                              >
+                                {ex.equipment}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Plus className="h-5 w-5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 mt-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : searchQuery ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Dumbbell className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-base font-semibold mb-1">No exercises found</p>
+                  <p className="text-muted-foreground text-sm">
+                    Try a different search term or check your exercise library
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Dumbbell className="h-12 w-12 text-muted-foreground/30 mb-4 animate-pulse" />
+                  <p className="text-muted-foreground text-sm">Start typing to search exercises...</p>
+                </div>
               )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Copy Exercises Dialog - Responsive */}
+      {/* Copy Exercises Dialog - Enhanced */}
       <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">
-              Copy Exercises To...
+        <DialogContent className="max-w-lg">
+          <DialogHeader className="space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto">
+              <Copy className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Copy Exercises
             </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <p className="text-muted-foreground text-sm">
-              Select a day to copy exercises to:
+            <p className="text-muted-foreground text-center text-sm">
+              Select a workout day to copy exercises to
             </p>
-            <div className="max-h-[50vh] space-y-2 overflow-y-auto sm:max-h-[300px]">
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="max-h-[50vh] space-y-2 overflow-y-auto sm:max-h-[400px] scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
               {(p?.days ?? [])
                 .filter((d) => d.id !== copyFromDayId)
                 .map((day) => (
-                  <Button
+                  <Card
                     key={day.id}
-                    variant="outline"
-                    className="h-auto w-full justify-start py-3 sm:py-2.5"
-                    onClick={() => handleCopyExercises(day.id)}
-                    disabled={copyExercises.isPending}
+                    className="cursor-pointer border-2 transition-all hover:border-primary/50 hover:shadow-md group"
+                    onClick={() => !copyExercises.isPending && handleCopyExercises(day.id)}
                   >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="min-w-0 flex-1 text-left">
-                        <p className="truncate text-sm font-medium">
-                          {day.title}
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 text-xs">
-                          {day.items?.length ?? 0}{" "}
-                          {day.items?.length === 1 ? "exercise" : "exercises"}
-                        </p>
+                    <CardContent className="p-4">
+                      <div className="flex w-full items-center justify-between">
+                        <div className="min-w-0 flex-1 text-left space-y-1">
+                          <p className="truncate text-base font-semibold group-hover:text-primary transition-colors">
+                            {day.title}
+                          </p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                              <Dumbbell className="h-3.5 w-3.5" />
+                              {day.items?.length ?? 0}{" "}
+                              {day.items?.length === 1 ? "exercise" : "exercises"}
+                            </span>
+                            {day.items && day.items.length > 0 && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  {day.items.reduce(
+                                    (sum: number, item: { sets?: number }) =>
+                                      sum + (item.sets ?? 0),
+                                    0,
+                                  )}{" "}
+                                  sets
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <Copy className="ml-4 h-5 w-5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                       </div>
-                      <Copy className="ml-2 h-4 w-4 shrink-0" />
-                    </div>
-                  </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               {(p?.days ?? []).filter((d: PlanDay) => d.id !== copyFromDayId)
                 .length === 0 && (
-                <p className="text-muted-foreground py-6 text-center text-xs sm:py-4 sm:text-sm">
-                  No other days available.
-                </p>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-base font-semibold mb-1">No other days available</p>
+                  <p className="text-muted-foreground text-sm">
+                    Create more workout days to copy exercises between them
+                  </p>
+                </div>
               )}
             </div>
           </div>

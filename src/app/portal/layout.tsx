@@ -21,11 +21,20 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <AuthSessionProvider session={session}>
       <SidebarProvider>
-        <AppSidebar enableEditing={false} />
-        <SidebarInset className="border-none! ring-0 shadow-slate-200!">
+        {/* Left Sidebar - Navigation */}
+        <AppSidebar enableEditing={false} width="16rem" />
+        
+        {/* Main Content Area - Takes remaining space */}
+        <SidebarInset className="border-none! ring-0 shadow-slate-200! flex-1 min-w-0 max-w-full">
           <PortalHeader />
-          <div className="flex flex-1 flex-col p-0">{children}</div>
+          <div className="flex flex-1 flex-col overflow-hidden w-full max-w-full">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full min-w-0">
+              {children}
+            </div>
+          </div>
         </SidebarInset>
+        
+        {/* Right Sidebar - Profile & Stats */}
         <ProfileSidebar side="right" width="20rem" />
       </SidebarProvider>
     </AuthSessionProvider>

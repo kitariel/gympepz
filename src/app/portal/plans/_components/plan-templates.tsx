@@ -100,45 +100,69 @@ export function PlanTemplates({ onSelectTemplate }: PlanTemplatesProps) {
         {TEMPLATES.map((template) => {
           const Icon = template.icon;
           const iconBg = getIconColor(template.id);
+          
+          // Gradient for each template
+          const getTemplateGradient = (templateId: string) => {
+            const gradients: Record<string, string> = {
+              "ppl": "from-blue-500 via-cyan-500 to-teal-500",
+              "upper-lower": "from-purple-500 via-pink-500 to-rose-500",
+              "full-body": "from-orange-500 via-amber-500 to-yellow-500",
+              "bro-split": "from-emerald-500 via-teal-500 to-cyan-500",
+            };
+            return gradients[templateId] ?? "from-gray-500 via-gray-600 to-gray-700";
+          };
+
+          const gradient = getTemplateGradient(template.id);
+
           return (
             <Card 
               key={template.id} 
-              className="group hover:shadow-md transition-all duration-200 border-2 border-transparent hover:border-primary/30 cursor-pointer"
+              className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer"
               onClick={() => onSelectTemplate(template)}
             >
-              <CardHeader className="px-5 pt-5 pb-4">
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl ${iconBg} group-hover:scale-110 transition-transform duration-200 shrink-0`}>
-                    <Icon className="h-6 w-6" />
+              {/* Image/Header Section */}
+              <div className="relative aspect-[3/2] w-full overflow-hidden">
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90`} />
+                
+                {/* Icon Badge */}
+                <div className="absolute left-4 top-4 z-10">
+                  <div className={`p-3 rounded-xl ${iconBg} shadow-lg backdrop-blur-sm bg-white/20`}>
+                    <Icon className="h-6 w-6 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg font-semibold mb-1.5">{template.name}</CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">
+                </div>
+
+                {/* Template Info Overlay */}
+                <div className="absolute inset-0 flex items-end">
+                  <div className="w-full bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5">
+                    <CardTitle className="text-white font-bold text-xl mb-1.5 drop-shadow-lg">
+                      {template.name}
+                    </CardTitle>
+                    <CardDescription className="text-white/90 text-sm leading-relaxed drop-shadow">
                       {template.description}
                     </CardDescription>
                   </div>
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="px-5 pb-5 space-y-4">
+              <CardContent className="px-5 pb-5 pt-5 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge 
                     variant="outline" 
-                    className={`text-xs px-2.5 py-1 border ${getLevelColor(template.level)} font-medium`}
+                    className={`text-xs px-3 py-1 border ${getLevelColor(template.level)} font-medium`}
                   >
                     {template.level}
                   </Badge>
-                  <Badge variant="outline" className="text-xs px-2.5 py-1 font-medium">
+                  <Badge variant="outline" className="text-xs px-3 py-1 font-medium">
                     <Calendar className="h-3 w-3 mr-1.5" />
                     {template.daysCount} {template.daysCount === 1 ? 'day' : 'days'}
                   </Badge>
-                  <Badge variant="secondary" className="text-xs px-2.5 py-1 font-medium">
+                  <Badge variant="secondary" className="text-xs px-3 py-1 font-medium">
                     {template.focus}
                   </Badge>
                 </div>
 
                 <Button
-                  className="w-full h-10 text-sm font-semibold group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  className="w-full h-11 text-sm font-semibold group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200 shadow-sm"
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
