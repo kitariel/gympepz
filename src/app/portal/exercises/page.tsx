@@ -104,83 +104,33 @@ export default function ExercisesPage() {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-6 pt-4">
-      {/* Compact Header */}
+    <div className="flex-1 space-y-6 p-6 pt-4">
+      {/* Simple Header with Filter */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Exercise Library
+          <h2 className="text-3xl font-bold tracking-tight">
+            {filteredExercises.length} exercises for you
           </h2>
-          <p className="text-muted-foreground mt-0.5 text-sm">
-            Browse and discover exercises for your workouts
-          </p>
         </div>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Exercise
+        <Button variant="outline" size="sm" className="gap-2">
+          Most Popular
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
         </Button>
       </div>
 
-      {/* Compact Stats */}
-      <div className="grid gap-3 md:grid-cols-4">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
-            <CardTitle className="text-xs font-medium">Total</CardTitle>
-            <Dumbbell className="text-muted-foreground h-3.5 w-3.5" />
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">{totalCount}</div>
-            <p className="text-muted-foreground mt-0.5 text-[10px]">
-              {exercises.length < totalCount ? `showing ${exercises.length} of ${totalCount}` : 'exercises'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
-            <CardTitle className="text-xs font-medium">Favorites</CardTitle>
-            <Heart className="text-muted-foreground h-3.5 w-3.5" />
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">{favorites.size}</div>
-            <p className="text-muted-foreground mt-0.5 text-[10px]">saved</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
-            <CardTitle className="text-xs font-medium">Muscle Groups</CardTitle>
-            <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-xl font-bold">
-              {Object.keys(exercisesByMuscle).length}
-            </div>
-            <p className="text-muted-foreground mt-0.5 text-[10px]">
-              categories
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 pt-4 pb-2">
-            <CardTitle className="text-xs font-medium">Top Group</CardTitle>
-            <Library className="text-muted-foreground h-3.5 w-3.5" />
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="truncate text-xl font-bold">
-              {Object.entries(exercisesByMuscle).sort(
-                ([, a], [, b]) => b - a,
-              )[0]?.[0] ?? "N/A"}
-            </div>
-            <p className="text-muted-foreground mt-0.5 text-[10px]">
-              most common
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
+      {/* Filters - Minimized */}
       <ExerciseFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -194,116 +144,45 @@ export default function ExercisesPage() {
         activeFiltersCount={activeFiltersCount}
       />
 
-      {/* Tabs */}
-      <Tabs
-        value={selectedTab}
-        onValueChange={setSelectedTab}
-        className="space-y-4"
-      >
-        <TabsList className="h-9">
-          <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm">
-            <Dumbbell className="h-3.5 w-3.5" />
-            All ({exercises.length})
-          </TabsTrigger>
-          <TabsTrigger value="favorites" className="gap-1.5 text-xs sm:text-sm">
-            <Heart className="h-3.5 w-3.5" />
-            Favorites ({favorites.size})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-4 space-y-4">
-          {filteredExercises.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredExercises.map((exercise) => (
-                <ExerciseCard
-                  key={exercise.id}
-                  id={exercise.id}
-                  name={exercise.name}
-                  muscleGroup={exercise.muscleGroup}
-                  equipment={exercise.equipment ?? undefined}
-                  difficulty={exercise.difficulty ?? undefined}
-                  category={exercise.category ?? undefined}
-                  imageUrl={exercise.imageUrl ?? undefined}
-                  isFavorite={favorites.has(exercise.id)}
-                  onToggleFavorite={() => handleToggleFavorite(exercise.id)}
-                  onViewDetails={() => handleViewDetails(exercise)}
-                  onAddToPlan={() => {
-                    setSelectedExercise(exercise);
-                    setIsAddToPlanDialogOpen(true);
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card className="border-0 shadow-sm">
-              <CardContent className="flex flex-col items-center justify-center py-10">
-                <Dumbbell className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
-                <h3 className="mb-1 text-base font-semibold">
-                  No exercises found
-                </h3>
-                <p className="text-muted-foreground mb-3 text-center text-xs">
-                  Try adjusting your filters or search query
-                </p>
-                {activeFiltersCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleClearFilters}
-                  >
-                    Clear Filters
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="favorites" className="mt-4 space-y-4">
-          {filteredExercises.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredExercises.map((exercise) => (
-                <ExerciseCard
-                  key={exercise.id}
-                  id={exercise.id}
-                  name={exercise.name}
-                  muscleGroup={exercise.muscleGroup}
-                  equipment={exercise.equipment ?? undefined}
-                  difficulty={exercise.difficulty ?? undefined}
-                  category={exercise.category ?? undefined}
-                  imageUrl={exercise.imageUrl ?? undefined}
-                  isFavorite={true}
-                  onToggleFavorite={() => handleToggleFavorite(exercise.id)}
-                  onViewDetails={() => handleViewDetails(exercise)}
-                  onAddToPlan={() => {
-                    setSelectedExercise(exercise);
-                    setIsAddToPlanDialogOpen(true);
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card className="border-0 shadow-sm">
-              <CardContent className="flex flex-col items-center justify-center py-10">
-                <Heart className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
-                <h3 className="mb-1 text-base font-semibold">
-                  No favorites yet
-                </h3>
-                <p className="text-muted-foreground mb-3 text-center text-xs">
-                  Start adding exercises to your favorites by clicking the heart
-                  icon
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedTab("all")}
-                >
-                  Browse Exercises
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Exercise Grid */}
+      {filteredExercises.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredExercises.map((exercise) => (
+            <ExerciseCard
+              key={exercise.id}
+              id={exercise.id}
+              name={exercise.name}
+              muscleGroup={exercise.muscleGroup}
+              equipment={exercise.equipment ?? undefined}
+              difficulty={exercise.difficulty ?? undefined}
+              category={exercise.category ?? undefined}
+              imageUrl={exercise.imageUrl ?? undefined}
+              isFavorite={favorites.has(exercise.id)}
+              onToggleFavorite={() => handleToggleFavorite(exercise.id)}
+              onViewDetails={() => handleViewDetails(exercise)}
+              onAddToPlan={() => {
+                setSelectedExercise(exercise);
+                setIsAddToPlanDialogOpen(true);
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <Dumbbell className="text-muted-foreground mb-3 h-10 w-10 opacity-50" />
+            <h3 className="mb-1 text-base font-semibold">No exercises found</h3>
+            <p className="text-muted-foreground mb-3 text-center text-xs">
+              Try adjusting your filters or search query
+            </p>
+            {activeFiltersCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detail Modal */}
       <ExerciseDetailModal
