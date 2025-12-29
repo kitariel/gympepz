@@ -5,659 +5,611 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FAQSection } from "./_components/faq-section";
 import {
-  ArrowRight,
-  BarChart3,
-  Calendar,
   Dumbbell,
-  LineChart,
-  Zap,
-  Sparkles,
-  Target,
-  Award,
-  TrendingUp,
-  UserPlus,
-  FileText,
   CheckCircle2,
-  Lock,
-  Play,
+  Star,
+  ArrowRight,
+  Target,
+  Calendar,
+  TrendingUp,
+  Award,
+  Clock,
+  BarChart3,
+  Users,
+  Zap,
+  Heart,
+  Sparkles,
+  LineChart,
+  Brain,
 } from "lucide-react";
-import {
-  FadeIn,
-  ScaleIn,
-  StaggerContainer,
-  StaggerItem,
-} from "@/components/animations";
 
 export default async function Home() {
   const session = await auth();
 
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
-      {/* Navigation - Enhanced */}
-      <header className="border-border/40 bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur-xl shadow-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-8">
-          <Link href="/" className="group flex items-center gap-2.5 text-xl font-bold tracking-tighter transition-opacity hover:opacity-80">
-            <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-              <Dumbbell className="h-5 w-5" />
-            </div>
-            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">GymPepz</span>
+      {/* Navigation - Clean Design */}
+      <header className="bg-background border-b border-border/40 sticky top-0 z-50 w-full">
+        <div className="container mx-auto flex h-20 items-center justify-between px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <span className="text-foreground">GymPepz</span>
           </Link>
-          <nav className="flex items-center gap-3">
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link href="#home" className="text-foreground hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link href="#about" className="text-muted-foreground hover:text-foreground transition-colors">
+              About us
+            </Link>
+            <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+              How It Works
+            </Link>
+            <Link href="#trainers" className="text-muted-foreground hover:text-foreground transition-colors">
+              Trainers
+            </Link>
+            <Link href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
+              Contact us
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
             {session ? (
               <Link href="/portal">
-                <Button className="shadow-lg shadow-primary/20">Go to Portal</Button>
+                <Button size="lg" className="rounded-full px-8">
+                  Go to Portal
+                </Button>
               </Link>
             ) : (
-              <div className="flex items-center gap-2">
+              <>
                 <Link href="/login">
-                  <Button variant="ghost" className="hover:bg-primary/5">Sign In</Button>
+                  <Button variant="ghost" className="hidden sm:inline-flex">
+                    Log In
+                  </Button>
                 </Link>
                 <Link href="/login">
-                  <Button className="shadow-lg shadow-primary/20">Get Started</Button>
+                  <Button className="rounded-full px-6 sm:px-8">
+                    Sign Up
+                  </Button>
                 </Link>
-              </div>
+              </>
             )}
-          </nav>
+          </div>
         </div>
       </header>
 
       <main className="flex-1">
-        {/* Hero Section - Premium Design */}
-        <section className="relative overflow-hidden pt-20 pb-24 sm:pt-32 sm:pb-32 lg:pb-40">
-          <div className="container mx-auto px-4 sm:px-8">
-            <div className="mx-auto max-w-5xl text-center">
-              <FadeIn delay={0.1}>
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary backdrop-blur-sm">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>AI-Powered Fitness Platform</span>
-                </div>
-              </FadeIn>
-              <FadeIn delay={0.2}>
-                <h1 className="bg-gradient-to-br from-foreground via-foreground to-foreground/40 bg-clip-text pb-2 text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl md:text-7xl lg:text-8xl">
-                  Transform Your Training with{" "}
-                  <span className="bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
-                    AI-Powered
-                  </span>{" "}
-                  Workout Plans
-                </h1>
-              </FadeIn>
-              <FadeIn delay={0.3}>
-                <p className="text-muted-foreground mx-auto mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl">
-                  Track every set, analyze your progress, and achieve your goals with intelligent workout planning designed for serious athletes.
-                </p>
-              </FadeIn>
-              <FadeIn delay={0.5}>
-                <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link href={session ? "/portal" : "/login"}>
-                    <Button size="lg" className="group h-14 px-10 text-lg font-semibold w-full sm:w-auto shadow-2xl shadow-primary/30 transition-all hover:shadow-primary/40 hover:scale-105">
-                      Start Training Free
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
-                  <Link href="#features">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="h-14 px-10 text-lg font-semibold w-full sm:w-auto border-2 hover:bg-primary/5 hover:border-primary/50 transition-all hover:scale-105"
-                    >
-                      See How It Works
-                    </Button>
-                  </Link>
-                </div>
-              </FadeIn>
-              <FadeIn delay={0.7}>
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm font-medium">
-                  <div className="flex items-center gap-2.5 rounded-full bg-muted/50 px-4 py-2 backdrop-blur-sm">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-foreground">100% Free</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 rounded-full bg-muted/50 px-4 py-2 backdrop-blur-sm">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-foreground">No Credit Card</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 rounded-full bg-muted/50 px-4 py-2 backdrop-blur-sm">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    <span className="text-foreground">Privacy First</span>
-                  </div>
-                </div>
-              </FadeIn>
+        {/* Hero Section */}
+        <section id="home" className="relative bg-gradient-to-b from-background to-muted/20 pt-20 pb-16 sm:pt-28 sm:pb-24">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-4xl mx-auto mb-16">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+                🏋️ Discover The Future Of Fitness{" "}
+                <span className="text-primary">💪</span> With AI-Powered Training Plans
+                <span className="text-primary">😊</span>
+              </h1>
+              <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto mb-10 leading-relaxed">
+                Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Perfect Match Based On Your Unique Preferences And Requirements.
+              </p>
+              <Link href={session ? "/portal" : "/login"}>
+                <Button size="lg" className="rounded-full h-14 px-10 text-base font-semibold shadow-lg">
+                  Get Started
+                </Button>
+              </Link>
             </div>
-          </div>
 
-          {/* Enhanced Decorative Elements */}
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <ScaleIn delay={0.2} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform-gpu">
-              <div className="h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary/20 via-primary/10 to-transparent blur-3xl opacity-30" />
-            </ScaleIn>
-            <ScaleIn delay={0.3} className="absolute top-1/4 right-1/4 transform-gpu">
-              <div className="h-[400px] w-[400px] rounded-full bg-gradient-to-br from-secondary/15 to-transparent blur-3xl opacity-25" />
-            </ScaleIn>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.05),rgba(255,255,255,0))]" />
-          </div>
-        </section>
-
-        {/* Features Section - Premium Cards */}
-        <section id="features" className="relative bg-gradient-to-b from-muted/30 to-background py-24 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-8">
-            <FadeIn>
-              <div className="mx-auto max-w-3xl text-center">
-                <Badge variant="outline" className="mb-4 px-4 py-1.5 text-sm font-semibold">
-                  <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                  Everything you need
-                </Badge>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  Built for{" "}
-                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    Progressive Overload
-                  </span>
-                </h2>
-                <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed">
-                  Stop guessing. Start tracking. Our tools help you visualize your improvements and plan your next move.
-                </p>
+            {/* Hero Images Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
+              {/* Image placeholders with different colors */}
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 1
+                </div>
               </div>
-            </FadeIn>
-            <div className="mx-auto mt-20 max-w-2xl sm:mt-24 lg:max-w-none">
-              <StaggerContainer className="grid max-w-xl grid-cols-1 gap-8 sm:grid-cols-2 lg:max-w-none lg:grid-cols-3">
-                {/* Feature 1: AI Workout Planner */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <Sparkles className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      AI Workout Planner
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Get personalized workout plans tailored to your goals, experience, and equipment.
-                    </p>
-                  </Card>
-                </StaggerItem>
-
-                {/* Feature 2: Granular Tracking */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <Dumbbell className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      Granular Tracking
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Log every set, rep, and weight. Track RPE, rest times, and volume for complete analysis.
-                    </p>
-                  </Card>
-                </StaggerItem>
-
-                {/* Feature 3: Progress Analytics */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <LineChart className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      Progress Analytics
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Visualize your strength gains with interactive charts. See volume trends, PRs, and body composition changes.
-                    </p>
-                  </Card>
-                </StaggerItem>
-
-                {/* Feature 4: Weekly Planning */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <Calendar className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      Weekly Planning
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Organize your training with drag-and-drop weekly schedules. Never wonder what to train.
-                    </p>
-                  </Card>
-                </StaggerItem>
-
-                {/* Feature 5: Exercise Library */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <Target className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      Exercise Library
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Access 500+ exercises with instructions, muscle groups, and equipment filters.
-                    </p>
-                  </Card>
-                </StaggerItem>
-
-                {/* Feature 6: Smart Insights */}
-                <StaggerItem className="group relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <Card className="relative bg-card/80 backdrop-blur-sm flex flex-col rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10 transition-transform group-hover:scale-110">
-                      <Award className="text-primary h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl leading-8 font-bold">
-                      Smart Insights
-                    </h3>
-                    <p className="text-muted-foreground mt-4 flex-auto text-base leading-relaxed">
-                      Automatic PR detection, streak tracking, and personalized recommendations.
-                    </p>
-                  </Card>
-                </StaggerItem>
-              </StaggerContainer>
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 2
+                </div>
+              </div>
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 3
+                </div>
+              </div>
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 4
+                </div>
+              </div>
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-purple-400 to-purple-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 5
+                </div>
+              </div>
+              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-pink-400 to-pink-500 overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
+                  Fitness Image 6
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* How It Works Section - Enhanced */}
-        <section className="relative py-24 sm:py-32 overflow-hidden">
-          <div className="container mx-auto px-4 sm:px-8">
-            <FadeIn>
-              <div className="mx-auto max-w-3xl text-center">
-                <Badge variant="outline" className="mb-4 px-4 py-1.5 text-sm font-semibold">
-                  <Zap className="mr-1.5 h-3.5 w-3.5" />
-                  Simple Process
-                </Badge>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
+        {/* About Us Section */}
+        <section id="about" className="py-20 sm:py-28 bg-background">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="space-y-6">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
+                  About Us
+                </h2>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Perfect Match Based On Your Unique Preferences And Requirements.
+                </p>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Perfect Match Based On Your Unique Preferences And Requirements And Interested Pool Of Trainers.
+                </p>
+                <Button size="lg" className="rounded-full h-12 px-8 mt-4">
+                  Read More
+                </Button>
+              </div>
+              <div className="relative">
+                <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-500 overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center text-white font-semibold text-xl">
+                    About Us Image
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="relative order-2 lg:order-1">
+                <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500 overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center text-white font-semibold text-xl">
+                    How It Works Image
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-8 order-1 lg:order-2">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
                   How It Works
                 </h2>
-                <p className="text-muted-foreground mt-6 text-lg leading-relaxed">
-                  Get started in three simple steps
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose Our Platform Ensures That You Have Access To A Diverse Pool.
                 </p>
-              </div>
-            </FadeIn>
-            <StaggerContainer className="relative mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-12 sm:grid-cols-3">
-              {/* Connecting Lines - Hidden on mobile */}
-              <div className="absolute top-24 left-0 right-0 hidden sm:block" aria-hidden="true">
-                <div className="mx-auto flex max-w-4xl items-center justify-center gap-8">
-                  <div className="h-0.5 w-full bg-gradient-to-r from-primary/50 to-primary/20" />
-                  <div className="h-0.5 w-full bg-gradient-to-r from-primary/20 to-primary/50" />
+
+                {/* Steps */}
+                <div className="space-y-6 pt-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-lg">
+                      1
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl mb-2">Tell Us About Yourself</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Platform Ensures That You.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-lg">
+                      2
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl mb-2">Get Your Personalized AI Workout Plan</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Platform Ensures That You.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-lg">
+                      3
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl mb-2">Connect With A Personal Trainer</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Our Platform Ensures That You Have Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Platform Ensures That You.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Step 1 */}
-              <StaggerItem className="relative z-10">
-                <Card className="border-2 p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-3xl font-bold text-primary-foreground shadow-xl shadow-primary/20">
-                    1
-                  </div>
-                  <div className="mb-5 flex justify-center">
-                    <div className="rounded-2xl bg-primary/10 p-4">
-                      <UserPlus className="text-primary h-8 w-8" />
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3">Sign Up</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Quick registration with email or Google. No credit card required.
-                  </p>
-                </Card>
-              </StaggerItem>
-
-              {/* Step 2 */}
-              <StaggerItem className="relative z-10">
-                <Card className="border-2 p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-3xl font-bold text-primary-foreground shadow-xl shadow-primary/20">
-                    2
-                  </div>
-                  <div className="mb-5 flex justify-center">
-                    <div className="rounded-2xl bg-primary/10 p-4">
-                      <FileText className="text-primary h-8 w-8" />
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3">Create Your Plan</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Use our AI planner or build your workout manually. Customize to your goals.
-                  </p>
-                </Card>
-              </StaggerItem>
-
-              {/* Step 3 */}
-              <StaggerItem className="relative z-10">
-                <Card className="border-2 p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-3xl font-bold text-primary-foreground shadow-xl shadow-primary/20">
-                    3
-                  </div>
-                  <div className="mb-5 flex justify-center">
-                    <div className="rounded-2xl bg-primary/10 p-4">
-                      <TrendingUp className="text-primary h-8 w-8" />
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3">Track & Improve</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Log your workouts and watch your progress. See gains over time.
-                  </p>
-                </Card>
-              </StaggerItem>
-            </StaggerContainer>
+            </div>
           </div>
         </section>
 
-        {/* Screenshots/Demo Section - Enhanced */}
-        <section className="relative bg-gradient-to-b from-muted/30 to-background py-24 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-8">
-            <FadeIn>
-              <div className="mx-auto max-w-3xl text-center">
-                <Badge variant="outline" className="mb-4 px-4 py-1.5 text-sm font-semibold">
-                  <Play className="mr-1.5 h-3.5 w-3.5" />
-                  Preview
-                </Badge>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-                  See GymPepz in Action
-                </h2>
-                <p className="text-muted-foreground mt-6 text-lg leading-relaxed">
-                  Experience the power of data-driven training
-                </p>
-              </div>
-            </FadeIn>
-            <StaggerContainer className="mx-auto mt-20 grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Dashboard Preview */}
-              <StaggerItem className="group">
-                <Card className="overflow-hidden border-2 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                  <CardContent className="p-0">
-                    <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-8">
-                      <div className="aspect-video bg-gradient-to-br from-background to-background/80 rounded-xl flex items-center justify-center border-2 border-border/50 backdrop-blur-sm shadow-inner transition-all duration-300 group-hover:border-primary/30">
-                        <div className="text-center">
-                          <div className="mb-3 flex justify-center">
-                            <div className="rounded-xl bg-primary/10 p-4 shadow-lg transition-transform duration-300 group-hover:scale-110">
-                              <BarChart3 className="mx-auto h-10 w-10 text-primary" />
-                            </div>
-                          </div>
-                          <span className="text-foreground font-semibold text-sm">Dashboard View</span>
-                          <p className="text-muted-foreground text-xs mt-1">Track your progress</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </StaggerItem>
+        {/* Our Special Trainer Section */}
+        <section id="trainers" className="py-20 sm:py-28 bg-background">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                Our Special Trainer For You
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Your Fitness Can Change Your Life Today Or Tomorrow, Working Out Plans, And More Suitable Price, And More Adapter There When Your Plans Change.
+              </p>
+            </div>
 
-              {/* Weekly Schedule Preview */}
-              <StaggerItem className="group">
-                <Card className="overflow-hidden border-2 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                  <CardContent className="p-0">
-                    <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-8">
-                      <div className="aspect-video bg-gradient-to-br from-background to-background/80 rounded-xl flex items-center justify-center border-2 border-border/50 backdrop-blur-sm shadow-inner transition-all duration-300 group-hover:border-primary/30">
-                        <div className="text-center">
-                          <div className="mb-3 flex justify-center">
-                            <div className="rounded-xl bg-primary/10 p-4 shadow-lg transition-transform duration-300 group-hover:scale-110">
-                              <Calendar className="mx-auto h-10 w-10 text-primary" />
-                            </div>
-                          </div>
-                          <span className="text-foreground font-semibold text-sm">Weekly Schedule</span>
-                          <p className="text-muted-foreground text-xs mt-1">Plan your training</p>
-                        </div>
-                      </div>
+            {/* Trainer Cards */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-12">
+              {[
+                { name: "Alex Jones", role: "Fitness Expert", rating: 4.5 },
+                { name: "James Clark", role: "Yoga Instructor", rating: 4.8 },
+                { name: "Maria Doe", role: "Nutrition Coach", rating: 4.9 },
+                { name: "Michael White", role: "Strength Coach", rating: 4.7 },
+                { name: "Sarah Kim", role: "Cardio Specialist", rating: 4.6 },
+                { name: "David Kumar", role: "CrossFit Trainer", rating: 4.8 },
+              ].map((trainer, idx) => (
+                <Card key={idx} className="border-2 hover:shadow-xl transition-all">
+                  <CardContent className="p-6 text-center space-y-4">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 mx-auto flex items-center justify-center text-2xl font-bold">
+                      {trainer.name.split(" ").map(n => n[0]).join("")}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">{trainer.name}</h3>
+                      <p className="text-sm text-muted-foreground">{trainer.role}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">{trainer.rating}</span>
                     </div>
                   </CardContent>
                 </Card>
-              </StaggerItem>
+              ))}
+            </div>
 
-              {/* Analytics Preview */}
-              <StaggerItem className="group">
-                <Card className="overflow-hidden border-2 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50">
-                  <CardContent className="p-0">
-                    <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-8">
-                      <div className="aspect-video bg-gradient-to-br from-background to-background/80 rounded-xl flex items-center justify-center border-2 border-border/50 backdrop-blur-sm shadow-inner transition-all duration-300 group-hover:border-primary/30">
-                        <div className="text-center">
-                          <div className="mb-3 flex justify-center">
-                            <div className="rounded-xl bg-primary/10 p-4 shadow-lg transition-transform duration-300 group-hover:scale-110">
-                              <LineChart className="mx-auto h-10 w-10 text-primary" />
-                            </div>
-                          </div>
-                          <span className="text-foreground font-semibold text-sm">Progress Charts</span>
-                          <p className="text-muted-foreground text-xs mt-1">Visualize gains</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </StaggerItem>
-            </StaggerContainer>
+            <div className="text-center">
+              <Button size="lg" className="rounded-full h-12 px-10">
+                See All
+              </Button>
+            </div>
           </div>
         </section>
 
-        {/* Social Proof Section - Premium */}
-        <section className="relative py-24 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-8">
-            <FadeIn>
-              <div className="mx-auto max-w-3xl text-center">
-                <Badge variant="outline" className="mb-4 px-4 py-1.5 text-sm font-semibold">
-                  <Award className="mr-1.5 h-3.5 w-3.5" />
-                  Trusted by Athletes
-                </Badge>
-                <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-                  Loved by Athletes{" "}
-                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    Worldwide
-                  </span>
-                </h2>
-                <p className="text-muted-foreground mt-6 text-lg leading-relaxed">
-                  Join thousands of athletes achieving their fitness goals
-                </p>
+        {/* Benefits Section */}
+        <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/20 to-background relative overflow-hidden">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                Benefits For Every Body
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                By Strategically These Benefits, You Can Maximize Your Workout Effectiveness & Achieve Your Goals.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Personalized Plans</span>
               </div>
-            </FadeIn>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">High-Quality Trainers</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Advanced AI Technology</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">HIIT Instructions</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Track Workout Time</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Control Rest Time Easily</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Progress Monitoring</span>
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                <span className="font-semibold">Pre-Designed Workout Plans</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-            {/* Stats - Enhanced */}
-            <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
-              <FadeIn delay={0.1}>
-                <Card className="border-2 p-8 text-center shadow-lg">
-                  <div className="mb-2 text-5xl font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">1,000+</div>
-                  <div className="text-foreground font-semibold">Active Users</div>
-                  <p className="text-muted-foreground text-sm mt-1">Growing daily</p>
-                </Card>
-              </FadeIn>
-              <FadeIn delay={0.2}>
-                <Card className="border-2 p-8 text-center shadow-lg">
-                  <div className="mb-2 text-5xl font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">500+</div>
-                  <div className="text-foreground font-semibold">Exercises</div>
-                  <p className="text-muted-foreground text-sm mt-1">Fully documented</p>
-                </Card>
-              </FadeIn>
-              <FadeIn delay={0.3}>
-                <Card className="border-2 p-8 text-center shadow-lg">
-                  <div className="mb-2 text-5xl font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">100%</div>
-                  <div className="text-foreground font-semibold">Free Forever</div>
-                  <p className="text-muted-foreground text-sm mt-1">No hidden fees</p>
-                </Card>
-              </FadeIn>
+        {/* Testimonials Section */}
+        <section className="py-20 sm:py-28 bg-background">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                What Our Customer Says
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                By Strategically These Benefits, You Can Maximize That Effectiveness, & Achieve Your Goals.
+              </p>
             </div>
 
-            {/* Feature Badges */}
-            <div className="mx-auto mt-12 flex flex-wrap items-center justify-center gap-4">
-              <Badge variant="outline" className="px-5 py-2.5 text-sm font-semibold border-2 hover:bg-primary/5 transition-colors">
-                <Sparkles className="mr-2 h-4 w-4" />
-                AI-Powered
-              </Badge>
-              <Badge variant="outline" className="px-5 py-2.5 text-sm font-semibold border-2 hover:bg-primary/5 transition-colors">
-                <Lock className="mr-2 h-4 w-4" />
-                Privacy-Focused
-              </Badge>
-              <Badge variant="outline" className="px-5 py-2.5 text-sm font-semibold border-2 hover:bg-primary/5 transition-colors">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                100% Free
-              </Badge>
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {[1, 2, 3].map((idx) => (
+                <Card key={idx} className="border-2">
+                  <CardContent className="p-8 space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/30 to-primary/60 flex items-center justify-center font-bold text-lg">
+                        AJ
+                      </div>
+                      <div>
+                        <h4 className="font-bold">Alex Jordan</h4>
+                        <p className="text-sm text-muted-foreground">Fitness Enthusiast</p>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">
+                      It Is A Diverse Pool Of Highly Qualified Trainers, To A Diverse Pool Of Highly Qualified Trainers, Our Platform Ensures That You Have Access To A Diverse Pool.
+                    </p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Key Features Section */}
+        <section className="py-20 sm:py-28 bg-muted/20">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary backdrop-blur-sm mb-6">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Powerful Features</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                Everything You Need to Excel
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Advanced tools and AI-powered features to take your training to the next level.
+              </p>
             </div>
 
-            {/* Testimonials - Enhanced */}
-            <StaggerContainer className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-8 sm:grid-cols-3">
-              <StaggerItem className="group">
-                <Card className="relative border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50 h-full">
-                  <div className="absolute top-6 right-6 text-6xl text-primary/10 font-serif">&quot;</div>
-                  <p className="text-foreground/80 mb-6 text-base leading-relaxed relative z-10">
-                    Finally, a tracker that understands progressive overload. My strength gains are visible and motivating!
-                  </p>
-                  <div className="flex items-center gap-4 mt-auto">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg shadow-lg">
-                      A
-                    </div>
-                    <div>
-                      <div className="font-bold text-foreground">Alex</div>
-                      <div className="text-muted-foreground text-sm">Bodybuilder</div>
-                    </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Brain className="h-7 w-7 text-primary" />
                   </div>
-                </Card>
-              </StaggerItem>
+                  <h3 className="text-xl font-bold">AI Workout Planner</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Get personalized workout plans generated by AI based on your goals, experience, and available equipment.
+                  </p>
+                </CardContent>
+              </Card>
 
-              <StaggerItem className="group">
-                <Card className="relative border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50 h-full">
-                  <div className="absolute top-6 right-6 text-6xl text-primary/10 font-serif">&quot;</div>
-                  <p className="text-foreground/80 mb-6 text-base leading-relaxed relative z-10">
-                    The AI planner created the perfect 4-day split for my goals. Game changer!
-                  </p>
-                  <div className="flex items-center gap-4 mt-auto">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg shadow-lg">
-                      S
-                    </div>
-                    <div>
-                      <div className="font-bold text-foreground">Sarah</div>
-                      <div className="text-muted-foreground text-sm">Athlete</div>
-                    </div>
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <BarChart3 className="h-7 w-7 text-primary" />
                   </div>
-                </Card>
-              </StaggerItem>
+                  <h3 className="text-xl font-bold">Progress Analytics</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Track your strength gains, volume progression, and workout consistency with detailed charts and insights.
+                  </p>
+                </CardContent>
+              </Card>
 
-              <StaggerItem className="group">
-                <Card className="relative border-2 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50 h-full">
-                  <div className="absolute top-6 right-6 text-6xl text-primary/10 font-serif">&quot;</div>
-                  <p className="text-foreground/80 mb-6 text-base leading-relaxed relative z-10">
-                    Best workout tracking app I&apos;ve used. The analytics help me optimize my training.
-                  </p>
-                  <div className="flex items-center gap-4 mt-auto">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg shadow-lg">
-                      M
-                    </div>
-                    <div>
-                      <div className="font-bold text-foreground">Mike</div>
-                      <div className="text-muted-foreground text-sm">Trainer</div>
-                    </div>
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Dumbbell className="h-7 w-7 text-primary" />
                   </div>
-                </Card>
-              </StaggerItem>
-            </StaggerContainer>
+                  <h3 className="text-xl font-bold">Exercise Library</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Access hundreds of exercises with detailed instructions, muscle groups, and equipment requirements.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Calendar className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Weekly Scheduling</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Plan your entire week with an intuitive drag-and-drop interface. Organize workouts by day with ease.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <LineChart className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Workout Logging</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Log every set, rep, and weight with our streamlined workout logger. Track rest times and performance.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Target className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Goal Setting</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Set specific fitness goals and track your progress towards them with intelligent recommendations.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="bg-muted/50 py-24 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-8">
-            <FadeIn>
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Frequently Asked Questions
-                </h2>
-                <p className="text-muted-foreground mt-6 text-lg leading-8">
-                  Everything you need to know about GymPepz
-                </p>
-              </div>
-            </FadeIn>
+        <section className="py-20 sm:py-28 bg-background">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Got questions? We&apos;ve got answers. Find everything you need to know about GymPepz.
+              </p>
+            </div>
             <FAQSection />
           </div>
         </section>
 
-        {/* Final CTA Section - Premium */}
-        <section className="relative py-20 sm:py-28 overflow-hidden">
-          <div className="container mx-auto px-4 sm:px-8">
-            <ScaleIn>
-              <div className="relative isolate overflow-hidden px-8 py-28 text-center shadow-2xl sm:rounded-[2rem] bg-gradient-to-br from-primary via-primary to-primary/90">
-                {/* Decorative Elements */}
-                <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
-                <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-30" aria-hidden="true">
-                  <div className="aspect-[1108/632] w-[69.25rem] bg-gradient-to-br from-primary-foreground to-white" />
-                </div>
-                <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12 blur-3xl opacity-30" aria-hidden="true">
-                  <div className="aspect-[1108/632] w-[69.25rem] bg-gradient-to-tr from-primary-foreground to-white" />
-                </div>
-                
-                <div className="relative z-10">
-                  <h2 className="text-primary-foreground mx-auto max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                    Ready to transform your physique?
-                  </h2>
-                  <p className="text-primary-foreground/90 mx-auto mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl">
-                    Join thousands of athletes tracking their progress with GymPepz. Start your free account today.
-                  </p>
-                  <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/login">
-                      <Button variant="secondary" size="lg" className="group h-14 px-10 text-lg font-semibold w-full sm:w-auto shadow-2xl transition-all hover:scale-105">
-                        Get Started for Free
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </Link>
-                    <Link href="#features">
-                      <Button variant="outline" size="lg" className="h-14 px-10 text-lg font-semibold w-full sm:w-auto border-2 border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all hover:scale-105">
-                        Learn More
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-primary-foreground/80">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>No credit card required</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Free forever</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Privacy-focused</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Contact / Ask Question Section */}
+        <section id="contact" className="py-20 sm:py-28 bg-muted/20">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                  Have Questions? We&apos;re Here to Help
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Get in touch with our team or ask anything about your fitness journey.
+                </p>
               </div>
-            </ScaleIn>
+
+              <Card className="border-2">
+                <CardContent className="p-8 sm:p-12">
+                  <form className="space-y-6">
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold">Your Name</label>
+                        <input
+                          type="text"
+                          placeholder="John Doe"
+                          className="w-full h-12 px-4 rounded-lg border-2 border-border bg-background focus:outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold">Your Email</label>
+                        <input
+                          type="email"
+                          placeholder="john@example.com"
+                          className="w-full h-12 px-4 rounded-lg border-2 border-border bg-background focus:outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold">Subject</label>
+                      <input
+                        type="text"
+                        placeholder="What's your question about?"
+                        className="w-full h-12 px-4 rounded-lg border-2 border-border bg-background focus:outline-none focus:border-primary transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold">Your Message</label>
+                      <textarea
+                        rows={6}
+                        placeholder="Tell us more about your question or feedback..."
+                        className="w-full px-4 py-3 rounded-lg border-2 border-border bg-background focus:outline-none focus:border-primary transition-colors resize-none"
+                      />
+                    </div>
+                    <Button size="lg" className="w-full sm:w-auto rounded-full h-12 px-10">
+                      Send Message
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Newsletter Section */}
+        <section className="py-20 sm:py-28 bg-gradient-to-b from-background to-muted/10">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="max-w-2xl mx-auto text-center space-y-8">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
+                  Subscribe Our Newsletter<br />For Daily Update
+                </h2>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <input
+                  type="email"
+                  placeholder="Your Email Address Here"
+                  className="flex-1 h-12 px-6 rounded-full border-2 border-border bg-background focus:outline-none focus:border-primary"
+                />
+                <Button size="lg" className="rounded-full h-12 px-8 sm:px-10">
+                  Subscribe
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-20 sm:py-28 bg-foreground text-background">
+          <div className="container mx-auto px-6 lg:px-8 text-center">
+            <div className="max-w-3xl mx-auto space-y-8">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
+                Ready To Get Started?
+              </h2>
+              <p className="text-background/80 text-lg leading-relaxed">
+                Our Platform Ensures That You About Access To A Diverse Pool Of Highly Qualified Trainers, Allowing You To Choose The Perfect Match On Your Unique Preferences.
+              </p>
+              <Link href={session ? "/portal" : "/login"}>
+                <Button size="lg" variant="secondary" className="rounded-full h-14 px-10 text-base font-semibold">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
-      {/* Footer - Enhanced */}
-      <footer className="bg-gradient-to-t from-muted/50 to-background border-t border-border/50 py-16">
-        <div className="container mx-auto px-4 sm:px-8">
-          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-            <Link href="/" className="group flex items-center gap-3">
-              <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex h-10 w-10 items-center justify-center rounded-xl shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-                <Dumbbell className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-foreground text-base font-bold">GymPepz</p>
-                <p className="text-muted-foreground text-xs">
-                  Built with ❤️ for fitness enthusiasts
-                </p>
-              </div>
-            </Link>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <Link
-                href="#"
-                className="text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
-              >
-                Contact
-              </Link>
+      {/* Footer */}
+      <footer className="bg-background border-t border-border/40 py-12">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <h3 className="text-2xl font-bold mb-4">GymPepz</h3>
+              <p className="text-muted-foreground text-sm">
+                AI-Powered fitness platform for serious athletes.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="#about" className="hover:text-foreground transition-colors">About</Link></li>
+                <li><Link href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</Link></li>
+                <li><Link href="#trainers" className="hover:text-foreground transition-colors">Trainers</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">FAQ</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Support</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              </ul>
             </div>
           </div>
-          <div className="mt-8 border-t border-border/50 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} GymPepz. All rights reserved.
-            </p>
+          <div className="border-t border-border/40 pt-8 text-center text-sm text-muted-foreground">
+            <p>© 2025. All Rights Reserved</p>
           </div>
         </div>
       </footer>

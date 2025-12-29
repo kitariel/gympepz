@@ -564,11 +564,11 @@ export default function PlanDetailPage({
                   side="bottom"
                   className="flex max-h-[95vh] w-full flex-col overflow-y-auto p-0 sm:max-h-[92vh] md:max-h-[85vh]"
                 >
-                  <SheetHeader className="bg-background sticky top-0 z-10 border-b px-6 pt-6 pb-5 shadow-sm">
+                  <SheetHeader className="bg-gradient-to-b from-muted/40 via-muted/20 to-background sticky top-0 z-10 border-b border-border/50 px-6 pt-7 pb-6 shadow-lg backdrop-blur-sm">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1 space-y-3">
+                      <div className="min-w-0 flex-1 space-y-4">
                         {editingDayId === selectedDay.id ? (
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                             <Input
                               value={editingDayTitle}
                               onChange={(e) =>
@@ -581,61 +581,63 @@ export default function PlanDetailPage({
                                   handleCancelEditDay();
                                 }
                               }}
-                              className="h-11 flex-1 text-lg font-bold border-2 focus:border-primary"
+                              className="h-12 flex-1 text-lg font-bold border-2 focus:border-primary rounded-xl shadow-sm transition-all"
                               autoFocus
+                              placeholder="Enter day title..."
                             />
-                            <Button
-                              size="sm"
-                              className="h-11 gap-2 shrink-0"
-                              onClick={() => handleSaveDayTitle(selectedDay.id)}
-                              disabled={
-                                updateDay.isPending || !editingDayTitle.trim()
-                              }
-                            >
-                              <Save className="h-4 w-4" />
-                              Save
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-11 w-11 shrink-0"
-                              onClick={handleCancelEditDay}
-                            >
-                              ×
-                            </Button>
+                            <div className="flex gap-2 shrink-0">
+                              <Button
+                                size="sm"
+                                className="h-12 gap-2 px-6 font-semibold shadow-lg shadow-primary/20 rounded-xl"
+                                onClick={() => handleSaveDayTitle(selectedDay.id)}
+                                disabled={
+                                  updateDay.isPending || !editingDayTitle.trim()
+                                }
+                              >
+                                <Save className="h-4 w-4" />
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-12 w-12 shrink-0 rounded-xl"
+                                onClick={handleCancelEditDay}
+                              >
+                                <span className="text-2xl leading-none">×</span>
+                              </Button>
+                            </div>
                           </div>
                         ) : (
                           <>
-                            <div>
-                              <SheetTitle className="text-2xl font-bold sm:text-3xl mb-2">
+                            <div className="space-y-4">
+                              <SheetTitle className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                                 {selectedDay.title}
                               </SheetTitle>
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <Dumbbell className="h-4 w-4" />
-                                  <span className="font-semibold text-foreground">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 shadow-sm">
+                                  <Dumbbell className="h-4 w-4 text-primary" />
+                                  <span className="font-extrabold text-primary text-sm">
                                     {selectedDay.items?.length ?? 0}
                                   </span>
-                                  <span>
+                                  <span className="text-sm text-foreground/70 font-semibold">
                                     {selectedDay.items?.length === 1
                                       ? "exercise"
                                       : "exercises"}
                                   </span>
                                 </div>
                                 {(selectedDay.items ?? []).length > 0 && (
-                                  <>
-                                    <span className="text-muted-foreground/50">•</span>
-                                    <div className="flex items-center gap-2">
-                                      <span>
-                                        {selectedDay.items.reduce(
-                                          (sum: number, item: { sets?: number }) =>
-                                            sum + (item.sets! ?? 0),
-                                          0,
-                                        )}
-                                      </span>
-                                      <span>total sets</span>
-                                    </div>
-                                  </>
+                                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-muted/60 backdrop-blur-sm shadow-sm">
+                                    <span className="font-extrabold text-foreground text-sm">
+                                      {selectedDay.items.reduce(
+                                        (sum: number, item: { sets?: number }) =>
+                                          sum + (item.sets! ?? 0),
+                                        0,
+                                      )}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground font-semibold">
+                                      total sets
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -646,7 +648,7 @@ export default function PlanDetailPage({
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-10 w-10 shrink-0"
+                          className="h-12 w-12 shrink-0 rounded-xl hover:bg-primary/5 hover:border-primary/50 transition-all shadow-sm"
                           onClick={() =>
                             handleStartEditDay(
                               selectedDay.id,
@@ -660,42 +662,45 @@ export default function PlanDetailPage({
                     </div>
                   </SheetHeader>
 
-                  <div className="flex-1 space-y-5 overflow-y-auto px-6 pt-6 pb-6">
-                    {/* Add Exercise Button - Enhanced */}
+                  <div className="flex-1 space-y-6 overflow-y-auto px-6 pt-7 pb-8">
+                    {/* Add Exercise Button - Premium */}
                     <Button
-                      className="h-12 w-full gap-2 font-semibold text-base shadow-sm hover:shadow-md transition-shadow"
+                      className="group h-14 w-full gap-3 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-[1.02]"
                       onClick={() => {
                         setTargetDayId(selectedDay.id);
                         setIsAddExerciseDialogOpen(true);
                       }}
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
                       Add Exercise to Workout
                     </Button>
 
-                    {/* Exercise List - Enhanced */}
+                    {/* Exercise List - Premium Cards */}
                     {(selectedDay.items ?? []).length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {(selectedDay.items ?? []).map(
                           (item, itemIndex: number) => (
-                            <Card key={itemIndex} className="group border-2 shadow-sm hover:shadow-md transition-all hover:border-primary/30 bg-card">
-                              <CardContent className="p-5 sm:p-6">
+                            <Card key={itemIndex} className="group relative border-2 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-primary/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+                              {/* Subtle gradient overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                              
+                              <CardContent className="relative p-6 sm:p-7 space-y-5">
                                 {/* Exercise Header */}
-                                <div className="flex items-start justify-between gap-4 mb-4">
-                                  <div className="min-w-0 flex-1 space-y-3">
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="min-w-0 flex-1 space-y-4">
+                                    <div className="flex items-center gap-3.5">
+                                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-base font-extrabold text-primary border border-primary/20 shadow-sm">
                                         {itemIndex + 1}
                                       </div>
-                                      <h4 className="text-lg font-bold leading-tight">
+                                      <h4 className="text-xl font-extrabold leading-tight tracking-tight">
                                         {item.exercise?.name ?? item.exerciseId}
                                       </h4>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 pl-11">
+                                    <div className="flex flex-wrap gap-2.5 pl-[52px]">
                                       {item.exercise?.muscleGroup && (
                                         <Badge
                                           variant="outline"
-                                          className="text-xs px-3 py-1 font-medium border-primary/20"
+                                          className="text-xs px-3.5 py-1.5 font-semibold border-2 border-primary/30 rounded-full"
                                         >
                                           {item.exercise.muscleGroup}
                                         </Badge>
@@ -703,7 +708,7 @@ export default function PlanDetailPage({
                                       {item.exercise?.equipment && (
                                         <Badge
                                           variant="secondary"
-                                          className="text-xs px-3 py-1 font-medium"
+                                          className="text-xs px-3.5 py-1.5 font-semibold rounded-full"
                                         >
                                           {item.exercise.equipment}
                                         </Badge>
@@ -713,23 +718,23 @@ export default function PlanDetailPage({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    className="h-10 w-10 shrink-0 opacity-0 transition-all duration-200 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl"
                                     onClick={() => handleDeleteItem(item.id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
 
-                                {/* Sets/Reps/Weight - Enhanced Grid */}
-                                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                                  <div className="space-y-2">
-                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                {/* Sets/Reps/Weight - Premium Grid */}
+                                <div className="grid grid-cols-3 gap-4 pt-5 border-t-2 border-border/50">
+                                  <div className="space-y-2.5">
+                                    <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
                                       Sets
                                     </label>
                                     <Input
                                       type="number"
                                       min="1"
-                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
+                                      className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
                                       value={item.sets ?? 3}
                                       onChange={(e) =>
                                         handleUpdateItem(
@@ -741,14 +746,14 @@ export default function PlanDetailPage({
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
-                                  <div className="space-y-2">
-                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                  <div className="space-y-2.5">
+                                    <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
                                       Reps
                                     </label>
                                     <Input
                                       type="number"
                                       min="1"
-                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
+                                      className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
                                       value={item.reps ?? 10}
                                       onChange={(e) =>
                                         handleUpdateItem(
@@ -760,15 +765,15 @@ export default function PlanDetailPage({
                                       onBlur={() => plan.refetch()}
                                     />
                                   </div>
-                                  <div className="space-y-2">
-                                    <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                  <div className="space-y-2.5">
+                                    <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
                                       Weight (kg)
                                     </label>
                                     <Input
                                       type="number"
                                       min="0"
                                       step="0.5"
-                                      className="h-12 text-lg font-bold text-center border-2 focus:border-primary transition-colors"
+                                      className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
                                       value={item.weight ?? ""}
                                       placeholder="0"
                                       onChange={(e) =>
@@ -788,15 +793,18 @@ export default function PlanDetailPage({
                         )}
                       </div>
                     ) : (
-                      <Card className="border-2 border-dashed">
-                        <CardContent className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50 mb-6">
-                            <Dumbbell className="h-10 w-10 text-muted-foreground/50" />
+                      <Card className="border-2 bg-gradient-to-br from-muted/30 to-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
+                        <CardContent className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                          <div className="relative mb-8">
+                            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-2xl" />
+                            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-muted/80 to-muted/60 shadow-xl">
+                              <Dumbbell className="h-12 w-12 text-muted-foreground" />
+                            </div>
                           </div>
-                          <h3 className="mb-2 text-xl font-bold">
+                          <h3 className="mb-3 text-2xl font-extrabold tracking-tight">
                             No exercises added yet
                           </h3>
-                          <p className="text-muted-foreground mb-8 text-sm max-w-md">
+                          <p className="text-muted-foreground mb-10 text-base max-w-md leading-relaxed">
                             Start building your workout by adding exercises to this day. You can set sets, reps, and weight for each exercise.
                           </p>
                           <Button
@@ -805,9 +813,9 @@ export default function PlanDetailPage({
                               setTargetDayId(selectedDay.id);
                               setIsAddExerciseDialogOpen(true);
                             }}
-                            className="h-12 gap-2 px-6 font-semibold"
+                            className="group h-14 gap-3 px-8 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-105"
                           >
-                            <Plus className="h-5 w-5" />
+                            <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
                             Add Your First Exercise
                           </Button>
                         </CardContent>

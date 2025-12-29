@@ -19,6 +19,7 @@ import {
   MoreVertical,
   Plus,
   Trash2,
+  ArrowRight,
 } from "lucide-react";
 import {
   DndContext,
@@ -144,36 +145,19 @@ function SortableDayCard({
     0,
   );
 
-  // Generate gradient for day card
-  const getDayGradient = (dayId: string) => {
-    const gradients = [
-      "from-orange-500/20 via-amber-500/10 to-yellow-500/5",
-      "from-blue-500/20 via-cyan-500/10 to-teal-500/5",
-      "from-purple-500/20 via-pink-500/10 to-rose-500/5",
-      "from-emerald-500/20 via-teal-500/10 to-cyan-500/5",
-      "from-indigo-500/20 via-purple-500/10 to-pink-500/5",
-      "from-red-500/20 via-orange-500/10 to-amber-500/5",
-      "from-violet-500/20 via-purple-500/10 to-fuchsia-500/5",
-    ];
-    const hash = dayId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return gradients[hash % gradients.length];
-  };
-
-  const dayGradient = getDayGradient(dayData.id);
-
   return (
     <Card
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 flex-col",
-        "border border-border/50 rounded-xl overflow-hidden",
-        "shadow-md hover:shadow-2xl transition-all duration-300 ease-out",
-        "bg-gradient-to-br backdrop-blur-md",
-        `bg-gradient-to-br ${dayGradient}`,
-        "hover:scale-[1.02] hover:-translate-y-1",
-        isDragging && "ring-2 ring-primary/60 z-50 rotate-1 opacity-70 scale-95 shadow-2xl",
-        isCurrentDay && "ring-2 ring-primary/40 shadow-xl border-primary/30 bg-primary/5",
+        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 flex-col",
+        "border rounded-3xl overflow-hidden cursor-pointer",
+        "bg-card",
+        "shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300",
+        "hover:border-border",
+        "border-border/40",
+        isDragging && "ring-2 ring-primary/40 z-50 rotate-1 opacity-50 scale-95 shadow-[0_12px_32px_rgba(0,0,0,0.12)]",
+        isCurrentDay && "border-primary/40 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-primary/20",
       )}
       onClick={(e) => {
         // Only open drawer if click was not on interactive elements
@@ -189,23 +173,22 @@ function SortableDayCard({
       }}
     >
       <CardHeader className={cn(
-        "flex-shrink-0 border-b px-5 py-4 transition-colors duration-200",
-        "bg-gradient-to-b from-card/80 via-card/60 to-transparent backdrop-blur-md",
-        "border-border/30",
-        isCurrentDay && "bg-gradient-to-b from-primary/15 via-primary/10 to-transparent border-primary/40"
+        "flex-shrink-0 px-6 pt-5 pb-4 transition-colors duration-200",
+        "bg-card",
+        isCurrentDay && "bg-primary/[0.02]"
       )}>
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <span
               className={cn(
-                "text-muted-foreground/80 text-[11px] font-extrabold tracking-widest uppercase whitespace-nowrap",
-                isCurrentDay && "text-primary font-extrabold",
+                "text-muted-foreground/70 text-[11px] font-semibold tracking-wide uppercase whitespace-nowrap",
+                isCurrentDay && "text-primary",
               )}
             >
               {dayName}
             </span>
             {isCurrentDay && (
-              <Badge variant="default" className="px-2 py-0.5 text-[10px] bg-primary text-primary-foreground border-0 shrink-0 shadow-sm">
+              <Badge variant="default" className="px-2 py-0.5 text-[9px] font-semibold bg-primary text-primary-foreground border-0 shrink-0 rounded-md shadow-sm">
                 Today
               </Badge>
             )}
@@ -215,34 +198,34 @@ function SortableDayCard({
               {...attributes}
               {...listeners}
               data-drag-handle
-              className="hover:bg-muted/60 cursor-grab touch-none rounded-lg p-1.5 opacity-0 transition-all duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing active:scale-110 active:bg-muted/80"
+              className="hover:bg-muted cursor-grab touch-none rounded-md p-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 active:cursor-grabbing"
               onClick={(e) => e.stopPropagation()}
             >
-              <GripVertical className="text-muted-foreground/70 h-4 w-4 transition-colors group-hover:text-foreground" />
+              <GripVertical className="text-muted-foreground h-4 w-4" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 transition-all duration-200 ease-out group-hover:opacity-100 hover:bg-muted/80 rounded-lg"
+                  className="h-8 w-8 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-muted rounded-md"
                 >
-                  <MoreVertical className="text-muted-foreground/70 h-4 w-4 transition-colors hover:text-foreground" />
+                  <MoreVertical className="text-muted-foreground h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[180px]">
-                <DropdownMenuItem onClick={() => onDuplicateDay(dayData.id)}>
+              <DropdownMenuContent align="end" className="min-w-[180px] rounded-xl shadow-lg border">
+                <DropdownMenuItem onClick={() => onDuplicateDay(dayData.id)} className="rounded-lg">
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicate Day
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onOpenCopyDialog(dayData.id)}>
+                <DropdownMenuItem onClick={() => onOpenCopyDialog(dayData.id)} className="rounded-lg">
                   <Copy className="mr-2 h-4 w-4" />
                   Copy Exercises To...
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDeleteDay(dayData.id)}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10 rounded-lg"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Day
@@ -254,7 +237,7 @@ function SortableDayCard({
 
         {/* Day Title - Editable */}
         {editingDayId === dayData.id ? (
-          <div className="flex flex-col gap-3 mt-1">
+          <div className="flex flex-col gap-3 mt-2">
             <Input
               value={editingDayTitle}
               onChange={(e) => onEditingDayTitleChange(e.target.value)}
@@ -265,14 +248,14 @@ function SortableDayCard({
                   onCancelEdit();
                 }
               }}
-              className="h-10 text-sm font-bold border-2 focus:border-primary transition-colors"
+              className="h-11 text-base font-bold border focus:border-primary transition-colors rounded-xl shadow-sm"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
             <div className="flex gap-2">
               <Button
                 size="sm"
-                className="h-8 px-3 text-xs font-semibold"
+                className="h-9 px-4 text-xs font-semibold rounded-lg"
                 onClick={() => onSaveDayTitle(dayData.id)}
                 disabled={updateDay.isPending ?? !editingDayTitle.trim()}
               >
@@ -281,7 +264,7 @@ function SortableDayCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 text-xs"
+                className="h-9 px-4 text-xs font-semibold rounded-lg"
                 onClick={onCancelEdit}
               >
                 Cancel
@@ -289,9 +272,9 @@ function SortableDayCard({
             </div>
           </div>
         ) : (
-          <div className="group/title flex items-start justify-between gap-2 mt-1">
+          <div className="group/title flex items-start justify-between gap-2 mt-2">
             <CardTitle 
-              className="line-clamp-2 text-lg leading-snug font-bold cursor-pointer hover:text-primary transition-colors"
+              className="line-clamp-2 text-[22px] leading-tight font-bold cursor-pointer hover:text-foreground/80 transition-colors tracking-tight"
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenDrawer(dayData.id);
@@ -302,93 +285,105 @@ function SortableDayCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 opacity-0 transition-all group-hover/title:opacity-100 hover:bg-muted"
+              className="h-8 w-8 shrink-0 opacity-0 transition-all group-hover/title:opacity-100 hover:bg-muted/50 rounded-lg"
               onClick={(e) => {
                 e.stopPropagation();
                 onEditDay(dayData.id);
               }}
             >
-              <Pencil className="text-muted-foreground h-4 w-4" />
+              <Pencil className="text-muted-foreground h-3.5 w-3.5" />
             </Button>
           </div>
         )}
 
-        {/* Stats Badge - Enhanced */}
-        <div className="flex items-center gap-3 mt-3 pt-2 border-t">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Dumbbell className="h-3.5 w-3.5 text-primary" />
-            <span className="font-bold text-foreground">{dayData.items?.length ?? 0}</span>
-            <span>exercises</span>
+        {/* Stats - Clean Design */}
+        <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-foreground tabular-nums">{dayData.items?.length ?? 0}</span>
+            <span className="text-xs text-muted-foreground font-medium">exercises</span>
           </div>
-          <div className="h-3 w-px bg-border" />
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="font-bold text-foreground">{totalSets}</span>
-            <span>sets</span>
+          <div className="h-4 w-px bg-border/30" />
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-foreground tabular-nums">{totalSets}</span>
+            <span className="text-xs text-muted-foreground font-medium">sets</span>
           </div>
         </div>
       </CardHeader>
 
-      {/* Scrollable Exercise List - Enhanced Jira Style */}
-      <CardContent className="flex-1 overflow-y-auto px-4 py-4 min-h-0 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-        <div className="space-y-3">
+      {/* Scrollable Exercise List - Clean Card Style */}
+      <CardContent className="flex-1 overflow-y-auto px-5 py-3 min-h-0 scrollbar-thin scrollbar-thumb-muted-foreground/10 scrollbar-track-transparent">
+        <div className="space-y-2.5">
           {(dayData.items ?? []).length > 0 ? (
             (dayData.items ?? []).map((item, idx) => (
               <Card
                 key={item.id}
-                className="group/item cursor-pointer border-2 shadow-sm hover:shadow-lg transition-all hover:border-primary/50 bg-card/90 backdrop-blur-sm hover:bg-card"
+                className="group/item cursor-pointer border-0 shadow-md hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenDrawer(dayData.id);
                 }}
               >
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary border border-primary/20">
-                          {idx + 1}
-                        </div>
-                        <h4 className="text-sm font-bold leading-tight line-clamp-2 group-hover/item:text-primary transition-colors">
-                          {item.exercise?.name ?? "Exercise"}
-                        </h4>
-                      </div>
+                <CardContent className="p-4">
+                  {/* Exercise Name and Muscle Group */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-bold leading-tight line-clamp-2 mb-1 text-foreground">
+                        {item.exercise?.name ?? "Exercise"}
+                      </h4>
                       {item.exercise?.muscleGroup && (
-                        <Badge variant="outline" className="text-[10px] px-2.5 py-1 h-6 w-fit font-medium border-primary/20">
+                        <p className="text-xs text-muted-foreground font-medium">
                           {item.exercise.muscleGroup}
-                        </Badge>
+                        </p>
                       )}
                     </div>
+                    <div className="flex items-center gap-1 shrink-0 text-muted-foreground/40 group-hover/item:text-muted-foreground/60 transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs font-medium pt-2.5 border-t-2 border-border/50">
+                  
+                  {/* Metrics with Labels */}
+                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-foreground font-bold">
-                        {item.sets}×{item.reps ?? 0}
+                      <span className="text-lg font-bold text-foreground tabular-nums">
+                        {item.sets}
                       </span>
-                      <span className="text-muted-foreground/60">sets×reps</span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        sets
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg font-bold text-foreground tabular-nums">
+                        {item.reps ?? 0}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        reps
+                      </span>
                     </div>
                     {item.weight && (
-                      <>
-                        <span className="text-muted-foreground/30">•</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-foreground font-bold">{item.weight}</span>
-                          <span className="text-muted-foreground/60">kg</span>
-                        </div>
-                      </>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-lg font-bold text-foreground tabular-nums">
+                          {item.weight}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          kg
+                        </span>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
             ))
           ) : (
-            <div className="text-muted-foreground/50 flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/30 mb-4">
-                <Dumbbell className="h-8 w-8 opacity-40" />
+            <div className="text-muted-foreground flex flex-col items-center justify-center py-20 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-muted/30 mb-5">
+                <Dumbbell className="h-9 w-9 text-muted-foreground/40" />
               </div>
-              <span className="text-sm font-medium mb-3">No exercises yet</span>
+              <span className="text-sm font-semibold mb-2 text-foreground/80">No exercises yet</span>
+              <p className="text-xs text-muted-foreground mb-5 max-w-[200px]">Add exercises to start building this workout</p>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-xs gap-2 font-medium"
+                className="h-9 text-xs gap-2 font-semibold rounded-full shadow-sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenDrawer(dayData.id);
@@ -425,55 +420,56 @@ function EmptyDaySlot({
     <Card
       ref={setNodeRef}
       className={cn(
-        "group flex h-[calc(100vh-280px)] min-h-[520px] max-h-[700px] w-[340px] shrink-0 cursor-pointer flex-col border transition-all hover:shadow-xl",
-        "border-border/40 bg-gradient-to-br from-muted/30 via-muted/20 to-muted/10 hover:border-primary/50 hover:bg-primary/5 hover:from-primary/10 hover:via-primary/5 hover:to-primary/5",
-        isOver && "border-primary bg-primary/20 ring-4 ring-primary/20 shadow-2xl scale-[1.02]",
-        isCurrentDay && "border-primary/50 bg-primary/10 ring-2 ring-primary/20",
+        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 cursor-pointer flex-col border-2 border-dashed rounded-3xl transition-all",
+        "border-border/40 bg-muted/10 hover:bg-muted/20 hover:border-border/60",
+        "shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]",
+        isOver && "border-primary/50 bg-primary/5 shadow-[0_8px_24px_rgba(0,0,0,0.08)] scale-[1.01]",
+        isCurrentDay && "border-primary/50 bg-primary/[0.02]",
       )}
       onClick={() => onAddDay(slotIndex, dayName)}
     >
       <CardHeader className={cn(
-        "flex-shrink-0 border-b px-5 py-4 bg-card/50 backdrop-blur-sm",
-        "border-border/40",
-        isCurrentDay && "bg-primary/10 border-primary/30"
+        "flex-shrink-0 px-6 pt-5 pb-4",
+        isCurrentDay && "bg-primary/[0.02]"
       )}>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <span
             className={cn(
-              "text-muted-foreground/60 group-hover:text-primary/80 text-[11px] font-extrabold tracking-widest uppercase transition-colors whitespace-nowrap",
-              isCurrentDay && "text-primary font-extrabold",
+              "text-muted-foreground/70 text-[11px] font-semibold tracking-wide uppercase transition-colors whitespace-nowrap",
+              "group-hover:text-muted-foreground",
+              isCurrentDay && "text-primary",
             )}
           >
             {dayName}
           </span>
           {isCurrentDay && (
-            <Badge variant="default" className="px-2 py-0.5 text-[10px] bg-primary text-primary-foreground border-0 shrink-0 shadow-sm">
+            <Badge variant="default" className="px-2 py-0.5 text-[9px] font-semibold bg-primary text-primary-foreground border-0 shrink-0 rounded-md shadow-sm">
               Today
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col items-center justify-center gap-5 px-4 py-10">
+      <CardContent className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-10">
         <div className={cn(
-          "flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 shadow-lg",
-          "bg-muted-foreground/15 group-hover:bg-primary/25 group-hover:scale-110 group-hover:shadow-xl",
-          isOver && "bg-primary/30 scale-125"
+          "flex h-20 w-20 items-center justify-center rounded-2xl transition-all duration-300",
+          "bg-muted/40 group-hover:bg-muted/60",
+          isOver && "bg-primary/10 scale-105"
         )}>
           <Plus className={cn(
             "h-8 w-8 transition-colors",
-            "text-muted-foreground/60 group-hover:text-primary",
+            "text-muted-foreground/60 group-hover:text-muted-foreground",
             isOver && "text-primary"
           )} />
         </div>
         <div className="text-center space-y-2">
           <p className={cn(
             "text-sm font-bold transition-colors",
-            "text-muted-foreground/70 group-hover:text-primary/90",
-            isOver && "text-primary font-extrabold"
+            "text-foreground/70 group-hover:text-foreground",
+            isOver && "text-primary"
           )}>
             {isOver ? "Drop Day Here" : "Add Workout Day"}
           </p>
-          <p className="text-muted-foreground/60 text-xs">Click to create a new workout</p>
+          <p className="text-muted-foreground/60 text-xs font-medium">Click to create a new workout</p>
         </div>
       </CardContent>
     </Card>
