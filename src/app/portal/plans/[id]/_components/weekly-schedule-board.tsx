@@ -150,14 +150,13 @@ function SortableDayCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 flex-col",
-        "border rounded-3xl overflow-hidden cursor-pointer",
-        "bg-card",
-        "shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300",
-        "hover:border-border",
-        "border-border/40",
-        isDragging && "ring-2 ring-primary/40 z-50 rotate-1 opacity-50 scale-95 shadow-[0_12px_32px_rgba(0,0,0,0.12)]",
-        isCurrentDay && "border-primary/40 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-primary/20",
+        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 flex-col relative",
+        "!border-y-0 !border-t-0 !border-b-0 border-l-2 border-r-2 rounded-none overflow-hidden cursor-pointer bg-card/50 backdrop-blur-sm",
+        "transition-all duration-300",
+        "border-l-border/90 border-r-border/90 hover:border-l-border/60 hover:border-r-border/60 hover:bg-card",
+        isDragging && "ring-2 ring-primary/40 z-50 rotate-1 opacity-50 scale-95",
+        isCurrentDay && "!border-l-primary/50 !border-r-primary/50 bg-primary/5 ring-1 ring-primary/20",
+        '!shadow-none'
       )}
       onClick={(e) => {
         // Only open drawer if click was not on interactive elements
@@ -273,7 +272,7 @@ function SortableDayCard({
           </div>
         ) : (
           <div className="group/title flex items-start justify-between gap-2 mt-2">
-            <CardTitle 
+            <CardTitle
               className="line-clamp-2 text-[22px] leading-tight font-bold cursor-pointer hover:text-foreground/80 transition-colors tracking-tight"
               onClick={(e) => {
                 e.stopPropagation();
@@ -310,20 +309,21 @@ function SortableDayCard({
         </div>
       </CardHeader>
 
-      {/* Scrollable Exercise List - Clean Card Style */}
+      {/* Scrollable Exercise List - Connected Card Style */}
       <CardContent className="flex-1 overflow-y-auto px-5 py-3 min-h-0 scrollbar-thin scrollbar-thumb-muted-foreground/10 scrollbar-track-transparent">
         <div className="space-y-2.5">
           {(dayData.items ?? []).length > 0 ? (
             (dayData.items ?? []).map((item, idx) => (
-              <Card
+              <div
                 key={item.id}
-                className="group/item cursor-pointer border-0 shadow-md hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-200"
+                className="group/item cursor-pointer border-0 bg-card rounded-t-2xl transition-all duration-200 relative hover:bg-muted/30"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenDrawer(dayData.id);
                 }}
               >
-                <CardContent className="p-4">
+                {/* Card Content */}
+                <div className="p-4 pb-6">
                   {/* Exercise Name and Muscle Group */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
@@ -340,7 +340,7 @@ function SortableDayCard({
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
-                  
+
                   {/* Metrics with Labels */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
@@ -370,8 +370,11 @@ function SortableDayCard({
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Bottom connection bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
+              </div>
             ))
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-20 text-center">
@@ -396,6 +399,7 @@ function SortableDayCard({
           )}
         </div>
       </CardContent>
+
     </Card>
   );
 }
@@ -420,11 +424,10 @@ function EmptyDaySlot({
     <Card
       ref={setNodeRef}
       className={cn(
-        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 cursor-pointer flex-col border-2 border-dashed rounded-3xl transition-all",
-        "border-border/40 bg-muted/10 hover:bg-muted/20 hover:border-border/60",
-        "shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]",
-        isOver && "border-primary/50 bg-primary/5 shadow-[0_8px_24px_rgba(0,0,0,0.08)] scale-[1.01]",
-        isCurrentDay && "border-primary/50 bg-primary/[0.02]",
+        "group flex h-[calc(100vh-265px)] min-h-[515px] max-h-[685px] w-[340px] shrink-0 cursor-pointer flex-col !border-y-0 !border-t-0 !border-b-0 border-l-2 border-r-2 border-dashed rounded-none transition-all relative",
+        "border-l-border/30 border-r-border/30 bg-muted/10 hover:bg-muted/20 hover:border-l-border/50 hover:border-r-border/50",
+        isOver && "!border-l-primary/50 !border-r-primary/50 bg-primary/5 border-solid scale-[1.01]",
+        isCurrentDay && "!border-l-primary/50 !border-r-primary/50 bg-primary/[0.02]",
       )}
       onClick={() => onAddDay(slotIndex, dayName)}
     >
@@ -472,6 +475,7 @@ function EmptyDaySlot({
           <p className="text-muted-foreground/60 text-xs font-medium">Click to create a new workout</p>
         </div>
       </CardContent>
+
     </Card>
   );
 }
@@ -509,7 +513,7 @@ export function WeeklyScheduleBoard({
       {/* Enhanced Fade gradients for scroll indicators */}
       <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-12 bg-gradient-to-r from-background via-background/80 to-transparent" />
       <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-12 bg-gradient-to-l from-background via-background/80 to-transparent" />
-      
+
       <div className="overflow-x-auto overflow-y-visible pb-5 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 px-4 sm:px-6">
         <DndContext
           sensors={sensors}
