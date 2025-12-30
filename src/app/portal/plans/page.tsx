@@ -13,8 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PlanCard } from "./_components/plan-card";
 import { PlanTemplates } from "./_components/plan-templates";
 import { Plus, Dumbbell, Star, Folder, Sparkles } from "lucide-react";
@@ -28,6 +31,8 @@ export default function PlansPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newPlanName, setNewPlanName] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
+  const [showRestDayDialog, setShowRestDayDialog] = useState(false);
+  const [selectedPlanForStart, setSelectedPlanForStart] = useState<string | null>(null);
 
   const list = api.plan.listByUser.useQuery({ userId }, { enabled: !!userId });
   const create = api.plan.create.useMutation();
@@ -43,6 +48,14 @@ export default function PlansPage() {
     }
     return plans;
   }, [plans, selectedTab]);
+
+  // Get today's workout to check if it has exercises
+  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId },
+    { enabled: !!userId && !!activePlan },
+  );
+  
+  const toggleRestDay = api.plan.toggleRestDay.useMutation();
 
   const stats = useMemo(() => {
     return {
@@ -183,9 +196,57 @@ export default function PlansPage() {
     await list.refetch();
   };
 
-  const handleStartWorkout = (planId: string) => {
+  const handleStartWorkout = async (planId: string) => {
+    // Check if this plan is the active plan
+    const isActivePlan = activePlan?.id === planId;
+    
+    if (isActivePlan) {
+      // Check if today is a rest day first
+      if (todaysWorkout.data?.todayWorkout?.isRestDay) {
+        // It's a rest day - show rest day message
+        setSelectedPlanForStart(planId);
+        setShowRestDayDialog(true);
+        return;
+      }
+      
+      // Check if today's workout has exercises
+      const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
+                          todaysWorkout.data.todayWorkout.exercises.length > 0;
+      
+      if (!hasExercises && todaysWorkout.data?.todayWorkout) {
+        // No exercises - show rest day dialog
+        setSelectedPlanForStart(planId);
+        setShowRestDayDialog(true);
+        return;
+      }
+    }
+    
     // Navigate to quick start workout
     router.push(`/portal/log?quickStart=${planId}`);
+  };
+
+  const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
+    setShowRestDayDialog(false);
+    
+    if (action === 'skip') {
+      // User confirms it's a rest day
+      setSelectedPlanForStart(null);
+      return;
+    } else if (action === 'mark') {
+      // User wants to mark today as rest day
+      if (todaysWorkout.data?.todayWorkout?.id) {
+        await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
+        await todaysWorkout.refetch();
+      }
+      setSelectedPlanForStart(null);
+      return;
+    } else {
+      // User wants to add exercises - redirect to plan editor
+      if (selectedPlanForStart) {
+        router.push(`/portal/plans/${selectedPlanForStart}`);
+        setSelectedPlanForStart(null);
+      }
+    }
   };
 
   return (
@@ -460,6 +521,70 @@ export default function PlansPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Rest Day / No Exercises Dialog */}
+      <Dialog open={showRestDayDialog} onOpenChange={setShowRestDayDialog}>
+        <DialogContent>
+          <DialogHeader>
+            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
+              <>
+                <DialogTitle>It&apos;s Your Rest Day Today</DialogTitle>
+                <DialogDescription className="pt-2">
+                  {todaysWorkout.data.todayWorkout.title
+                    ? `Today is scheduled as a rest day for "${todaysWorkout.data.todayWorkout.title}". Take time to recover and let your muscles heal.`
+                    : "Today is scheduled as a rest day. Take time to recover and let your muscles heal."}
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <DialogTitle>No Exercises for Today&apos;s Workout</DialogTitle>
+                <DialogDescription className="pt-2">
+                  {todaysWorkout.data?.todayWorkout?.title
+                    ? `Today's workout "${todaysWorkout.data.todayWorkout.title}" doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?`
+                    : "Today's workout doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?"}
+                </DialogDescription>
+              </>
+            )}
+          </DialogHeader>
+
+          <DialogFooter className="flex-col gap-2 mt-4">
+            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
+              <Button
+                variant="default"
+                onClick={() => handleRestDayChoice('skip')}
+                className="w-full"
+              >
+                Got It
+              </Button>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleRestDayChoice('skip')}
+                    className="flex-1"
+                  >
+                    Skip for Now
+                  </Button>
+                  <Button
+                    onClick={() => handleRestDayChoice('add')}
+                    className="flex-1"
+                  >
+                    Add Exercises
+                  </Button>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleRestDayChoice('mark')}
+                  className="w-full"
+                >
+                  Mark Today as Rest Day
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

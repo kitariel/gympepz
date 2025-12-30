@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Settings, Check, Circle } from "lucide-react";
+import { Flame, Settings, Check, Circle, Moon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -20,6 +20,8 @@ interface DayProgress {
   isToday: boolean;
   isMissed: boolean;
   date: Date;
+  isRestDay?: boolean;
+  isInProgress?: boolean;
 }
 
 interface ProfileHeaderProps {
@@ -111,16 +113,26 @@ export function ProfileHeader({
                       <div
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full border transition-all",
-                          day.hasWorkout
-                            ? "bg-primary border-primary text-primary-foreground shadow-sm"
-                            : day.isToday
-                              ? "border-primary bg-primary/5 text-primary border-dashed"
-                              : day.isMissed
-                                ? "bg-muted text-muted-foreground/50 border-transparent"
-                                : "bg-muted/50 text-muted-foreground/30 border-transparent",
+                          day.isRestDay
+                            ? day.isPast || day.isToday
+                              ? "bg-primary/80 border-primary/80 text-primary-foreground shadow-sm"
+                              : "bg-primary/40 border-primary/60 text-primary/80 shadow-sm"
+                            : day.isInProgress
+                              ? "bg-amber-500 border-amber-500 text-white shadow-sm animate-pulse"
+                              : day.hasWorkout
+                                ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                                : day.isToday
+                                  ? "border-primary bg-primary/5 text-primary border-dashed"
+                                  : day.isMissed
+                                    ? "bg-muted text-muted-foreground/50 border-transparent"
+                                    : "bg-muted/50 text-muted-foreground/30 border-transparent",
                         )}
                       >
-                        {day.hasWorkout ? (
+                        {day.isRestDay ? (
+                          <Moon className="h-3.5 w-3.5 fill-current" />
+                        ) : day.isInProgress ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : day.hasWorkout ? (
                           <Check className="h-4 w-4" />
                         ) : day.isToday ? (
                           <Circle className="h-3 w-3 fill-current opacity-50" />
@@ -135,13 +147,19 @@ export function ProfileHeader({
                   <TooltipContent side="bottom" className="text-xs">
                     <p>{day.day}</p>
                     <p className="text-muted-foreground font-normal">
-                      {day.hasWorkout
-                        ? "Completed"
-                        : day.isToday
-                          ? "Today"
-                          : day.isPast
-                            ? "Rest"
-                            : "Upcoming"}
+                      {day.isRestDay
+                        ? day.isPast || day.isToday
+                          ? "Rest Day ✓"
+                          : "Rest Day (Scheduled)"
+                        : day.isInProgress
+                          ? "In Progress"
+                          : day.hasWorkout
+                            ? "Workout Completed"
+                            : day.isToday
+                              ? "Today"
+                              : day.isPast
+                                ? "Missed"
+                                : "Upcoming"}
                     </p>
                   </TooltipContent>
                 </Tooltip>

@@ -91,6 +91,7 @@ export default function PlanDetailPage({
   const updateDaysOrder = api.plan.updateDaysOrder.useMutation();
   const duplicateDay = api.plan.duplicateDay.useMutation();
   const copyExercises = api.plan.copyExercises.useMutation();
+  const toggleRestDay = api.plan.toggleRestDay.useMutation();
   const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
@@ -484,6 +485,10 @@ export default function PlanDetailPage({
           onDuplicateDay={handleDuplicateDay}
           onOpenCopyDialog={handleOpenCopyDialog}
           onOpenDrawer={(dayId) => setSelectedDayId(dayId)}
+          onToggleRestDay={async (dayId) => {
+            await toggleRestDay.mutateAsync({ id: dayId });
+            await plan.refetch();
+          }}
           editingDayId={editingDayId}
           editingDayTitle={editingDayTitle}
           onEditingDayTitleChange={setEditingDayTitle}

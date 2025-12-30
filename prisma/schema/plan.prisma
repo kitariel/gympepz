@@ -11,10 +11,11 @@ model Plan {
 }
 
 model PlanDay {
-  id     String @id @default(cuid())
-  planId String
-  title  String
-  order  Int
+  id        String  @id @default(cuid())
+  planId    String
+  title     String
+  order     Int
+  isRestDay Boolean @default(false)
 
   plan  Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
   items PlanExercise[]

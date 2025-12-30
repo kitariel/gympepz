@@ -20,6 +20,8 @@ import {
   Plus,
   Trash2,
   ArrowRight,
+  Moon,
+  X,
 } from "lucide-react";
 import {
   DndContext,
@@ -60,6 +62,7 @@ interface PlanDay {
   title: string;
   order: number;
   items: PlanExercise[];
+  isRestDay?: boolean;
 }
 
 interface Plan {
@@ -80,6 +83,7 @@ interface WeeklyScheduleBoardProps {
   onDuplicateDay: (dayId: string) => void;
   onOpenCopyDialog: (dayId: string) => void;
   onOpenDrawer: (dayId: string) => void;
+  onToggleRestDay: (dayId: string) => void;
   editingDayId: string | null;
   editingDayTitle: string;
   onEditingDayTitleChange: (title: string) => void;
@@ -99,6 +103,7 @@ function SortableDayCard({
   onDuplicateDay,
   onOpenCopyDialog,
   onOpenDrawer,
+  onToggleRestDay,
   editingDayId,
   editingDayTitle,
   onEditingDayTitleChange,
@@ -116,6 +121,7 @@ function SortableDayCard({
   onDuplicateDay: (dayId: string) => void;
   onOpenCopyDialog: (dayId: string) => void;
   onOpenDrawer: (dayId: string) => void;
+  onToggleRestDay: (dayId: string) => void;
   editingDayId: string | null;
   editingDayTitle: string;
   onEditingDayTitleChange: (title: string) => void;
@@ -191,6 +197,12 @@ function SortableDayCard({
                 Today
               </Badge>
             )}
+            {dayData.isRestDay && (
+              <Badge variant="secondary" className="px-2 py-0.5 text-[9px] font-semibold bg-muted/80 text-muted-foreground border-0 shrink-0 rounded-md shadow-sm flex items-center gap-1">
+                <Moon className="h-2.5 w-2.5" />
+                Rest Day
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <div
@@ -213,6 +225,25 @@ function SortableDayCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px] rounded-xl shadow-lg border">
+                <DropdownMenuItem 
+                  onClick={() => {
+                    onToggleRestDay(dayData.id);
+                  }} 
+                  className="rounded-lg"
+                >
+                  {dayData.isRestDay ? (
+                    <>
+                      <X className="mr-2 h-4 w-4" />
+                      Remove Rest Day
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="mr-2 h-4 w-4" />
+                      Mark as Rest Day
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onDuplicateDay(dayData.id)} className="rounded-lg">
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicate Day
@@ -312,7 +343,29 @@ function SortableDayCard({
       {/* Scrollable Exercise List - Connected Card Style */}
       <CardContent className="flex-1 overflow-y-auto px-5 py-3 min-h-0 scrollbar-thin scrollbar-thumb-muted-foreground/10 scrollbar-track-transparent">
         <div className="space-y-2.5">
-          {(dayData.items ?? []).length > 0 ? (
+          {dayData.isRestDay ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-primary/10 mb-5 border-2 border-primary/20">
+                <Moon className="h-12 w-12 text-primary/70" />
+              </div>
+              <span className="text-base font-bold mb-2 text-foreground">Rest Day</span>
+              <p className="text-xs text-muted-foreground mb-6 max-w-[220px]">
+                Take time to recover and let your muscles heal
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-xs gap-2 font-semibold rounded-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleRestDay(dayData.id);
+                }}
+              >
+                <X className="h-4 w-4" />
+                Remove Rest Day
+              </Button>
+            </div>
+          ) : (dayData.items ?? []).length > 0 ? (
             (dayData.items ?? []).map((item, idx) => (
               <div
                 key={item.id}
@@ -377,24 +430,40 @@ function SortableDayCard({
               </div>
             ))
           ) : (
-            <div className="text-muted-foreground flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-muted-foreground flex flex-col items-center justify-center py-16 text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-muted/30 mb-5">
                 <Dumbbell className="h-9 w-9 text-muted-foreground/40" />
               </div>
               <span className="text-sm font-semibold mb-2 text-foreground/80">No exercises yet</span>
-              <p className="text-xs text-muted-foreground mb-5 max-w-[200px]">Add exercises to start building this workout</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-xs gap-2 font-semibold rounded-full shadow-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenDrawer(dayData.id);
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                Add Exercise
-              </Button>
+              <p className="text-xs text-muted-foreground mb-5 max-w-[220px]">
+                Is this a rest day or would you like to add exercises?
+              </p>
+              <div className="flex flex-col gap-2 w-full px-6">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-9 text-xs gap-2 font-semibold rounded-lg shadow-sm w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenDrawer(dayData.id);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Exercise
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-xs gap-2 font-semibold rounded-lg w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleRestDay(dayData.id);
+                  }}
+                >
+                  <Moon className="h-4 w-4" />
+                  Mark as Rest Day
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -492,6 +561,7 @@ export function WeeklyScheduleBoard({
   onDuplicateDay,
   onOpenCopyDialog,
   onOpenDrawer,
+  onToggleRestDay,
   editingDayId,
   editingDayTitle,
   onEditingDayTitleChange,
@@ -579,6 +649,7 @@ export function WeeklyScheduleBoard({
                     onDuplicateDay={onDuplicateDay}
                     onOpenCopyDialog={onOpenCopyDialog}
                     onOpenDrawer={onOpenDrawer}
+                    onToggleRestDay={onToggleRestDay}
                     editingDayId={editingDayId}
                     editingDayTitle={editingDayTitle}
                     onEditingDayTitleChange={onEditingDayTitleChange}

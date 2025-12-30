@@ -66,6 +66,14 @@ export default function ProfileSidebar(props: Props) {
     },
     { enabled: !!userId },
   );
+  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
+  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
 
   // Computed values
   const user = userQuery.data;
@@ -83,19 +91,51 @@ export default function ProfileSidebar(props: Props) {
 
   const activePlan = plansQuery.data?.find((p) => p.isActive);
 
-  // Calculate this week's progress
+  // Calculate this week's progress - aligned with active plan
   const thisWeekProgress = useMemo(() => {
     const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    const workoutDates = calendarQuery.data?.map((w) => new Date(w.date)) ?? [];
+    // Start week on Sunday (0) to match plan day orders (0-6)
+    const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday = 0
+    const workoutDates = calendarQuery.data?.map((w) => ({
+      date: new Date(w.date),
+      completed: w.completed ?? true,
+      planDayId: w.planDayId,
+    })) ?? [];
+    
+    // Get active plan days - order 0-6 maps to Sunday-Saturday
+    const activePlanDays = activePlan?.days ?? [];
+    
+    // Create a map of order -> planDay for quick lookup
+    const planDayByOrder = new Map(activePlanDays.map(d => [d.order, d]));
+    
+    // Get today's plan day from the API
+    const todayPlanDay = todaysWorkout.data?.todayWorkout;
+    
+    // Check if there's an active workout
+    const hasActiveWorkout = !!activeWorkout.data && !activeWorkout.data.completed;
+    const activeWorkoutPlanDayId = activeWorkout.data?.planDayId;
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      const hasWorkout = workoutDates.some((workoutDate) =>
-        isSameDay(workoutDate, date),
-      );
-      const isPast = date < today && !isSameDay(date, today);
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      
+      // Find the plan day for this day of week (order matches dayOfWeek: 0-6)
+      const planDayForThisDay = planDayByOrder.get(dayOfWeek);
+      const isRestDay = planDayForThisDay?.isRestDay ?? false;
+      
+      // Find matching workout for this date
+      const workoutForDate = workoutDates.find((w) => isSameDay(w.date, date));
+      const hasWorkout = !!workoutForDate && workoutForDate.completed;
+      
+      // Check if this is today and has an active workout for today's plan day
       const isToday = isSameDay(date, today);
+      const isInProgress = isToday && 
+                          hasActiveWorkout && 
+                          todayPlanDay &&
+                          planDayForThisDay?.id === todayPlanDay.id &&
+                          activeWorkoutPlanDayId === todayPlanDay.id;
+      
+      const isPast = date < today && !isToday;
 
       return {
         day: format(date, "EEE"),
@@ -103,10 +143,14 @@ export default function ProfileSidebar(props: Props) {
         hasWorkout,
         isPast,
         isToday,
-        isMissed: isPast && !hasWorkout,
+        // Only show missed if past, no workout, not rest day, and has a plan day assigned
+        isMissed: isPast && !hasWorkout && !isRestDay && !!planDayForThisDay,
+        // Show rest day if it's a rest day in the plan (past, today, or future)
+        isRestDay: isRestDay && !hasWorkout && !isInProgress,
+        isInProgress: !!isInProgress,
       };
     });
-  }, [calendarQuery.data]);
+  }, [calendarQuery.data, activePlan?.days, activeWorkout.data, todaysWorkout.data]);
 
   const hasWorkouts =
     recentWorkouts.data?.items && recentWorkouts.data.items.length > 0;

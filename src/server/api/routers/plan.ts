@@ -61,7 +61,7 @@ export const planRouter = createTRPCRouter({
         include: { 
           _count: { select: { days: true } },
           days: {
-            select: { id: true, title: true, order: true }
+            select: { id: true, title: true, order: true, isRestDay: true }
           }
         },
       });
@@ -153,6 +153,7 @@ export const planRouter = createTRPCRouter({
               id: todayDay.id,
               title: todayDay.title,
               order: todayDay.order,
+              isRestDay: todayDay.isRestDay ?? false,
               exercises: todayDay.items.map((item) => ({
                 id: item.id,
                 exerciseId: item.exerciseId,
@@ -285,6 +286,27 @@ export const planRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await ctx.db.planDay.delete({ where: { id: input.id } });
       return { ok: true };
+    }),
+  toggleRestDay: publicProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      // Get current state
+      const day = await ctx.db.planDay.findUnique({
+        where: { id: input.id },
+        select: { isRestDay: true },
+      });
+
+      if (!day) {
+        throw new Error("Day not found");
+      }
+
+      // Toggle the rest day status
+      await ctx.db.planDay.update({
+        where: { id: input.id },
+        data: { isRestDay: !day.isRestDay },
+      });
+
+      return { ok: true, isRestDay: !day.isRestDay };
     }),
   duplicateDay: publicProcedure
     .input(z.object({ dayId: z.string().min(1), planId: z.string().min(1) }))
