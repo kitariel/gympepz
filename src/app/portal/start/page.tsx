@@ -24,6 +24,14 @@ import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { QuickPlanWizard } from "./_components/quick-plan-wizard";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function StartWorkoutPage() {
   const { data: session } = useSession();
@@ -32,6 +40,7 @@ export default function StartWorkoutPage() {
   const [showPlanChoices, setShowPlanChoices] = useState(false);
   const [showQuickWizard, setShowQuickWizard] = useState(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 
   // Get today's workout
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
@@ -49,15 +58,57 @@ export default function StartWorkoutPage() {
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
 
+  const toggleRestDay = api.plan.toggleRestDay.useMutation();
+
   const handleStartWorkout = () => {
     if (!userId) return;
 
+    // Check if today is a rest day
+    if (todaysWorkout.data?.todayWorkout?.isRestDay) {
+      // It's a rest day - show rest day message
+      setShowRestDayDialog(true);
+      return;
+    }
+
+    // Check if today's workout has exercises
+    const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
+                        todaysWorkout.data.todayWorkout.exercises.length > 0;
+    
+    if (!hasExercises && todaysWorkout.data?.todayWorkout) {
+      // No exercises - show rest day dialog
+      setShowRestDayDialog(true);
+      return;
+    }
+
+    // Check if there's a recent completed workout
     if (recentWorkoutCheck.data?.hasRecentWorkout) {
       setShowWarningDialog(true);
       return;
     }
 
     quickStart.mutate({ userId });
+  };
+
+  const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
+    setShowRestDayDialog(false);
+    
+    if (action === 'skip') {
+      // User confirms it's a rest day - just close the dialog
+      return;
+    } else if (action === 'mark') {
+      // User wants to mark today as rest day
+      if (todaysWorkout.data?.todayWorkout?.id) {
+        await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
+        await todaysWorkout.refetch();
+      }
+      return;
+    } else {
+      // User wants to add exercises - redirect to plan editor
+      const { hasPlan, plan } = todaysWorkout.data ?? {};
+      if (plan) {
+        router.push(`/portal/plans/${plan.id}`);
+      }
+    }
   };
 
   const handleConfirmStart = () => {
@@ -314,13 +365,27 @@ export default function StartWorkoutPage() {
               <Button
                 size="lg"
                 onClick={handleStartWorkout}
-                disabled={quickStart.isPending}
-                className="h-12 w-full bg-gradient-to-br from-teal-600 to-teal-700 text-base font-semibold text-white hover:from-teal-700 hover:to-teal-800"
+                disabled={
+                  quickStart.isPending ||
+                  todaysWorkout.data?.todayWorkout?.isRestDay ||
+                  (todaysWorkout.data?.todayWorkout?.exercises?.length ?? 0) === 0
+                }
+                className="h-12 w-full bg-gradient-to-br from-teal-600 to-teal-700 text-base font-semibold text-white hover:from-teal-700 hover:to-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {quickStart.isPending ? (
                   <>
                     <Dumbbell className="mr-2 h-5 w-5 animate-spin" />
                     Starting...
+                  </>
+                ) : todaysWorkout.data?.todayWorkout?.isRestDay ? (
+                  <>
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Rest Day
+                  </>
+                ) : (todaysWorkout.data?.todayWorkout?.exercises?.length ?? 0) === 0 ? (
+                  <>
+                    <Target className="mr-2 h-5 w-5" />
+                    No Exercises Scheduled
                   </>
                 ) : (
                   <>
@@ -365,6 +430,70 @@ export default function StartWorkoutPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Rest Day / No Exercises Dialog */}
+      <Dialog open={showRestDayDialog} onOpenChange={setShowRestDayDialog}>
+        <DialogContent>
+          <DialogHeader>
+            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
+              <>
+                <DialogTitle>It&apos;s Your Rest Day Today</DialogTitle>
+                <DialogDescription className="pt-2">
+                  {todaysWorkout.data.todayWorkout.title
+                    ? `Today is scheduled as a rest day for "${todaysWorkout.data.todayWorkout.title}". Take time to recover and let your muscles heal.`
+                    : "Today is scheduled as a rest day. Take time to recover and let your muscles heal."}
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <DialogTitle>No Exercises for Today&apos;s Workout</DialogTitle>
+                <DialogDescription className="pt-2">
+                  {todaysWorkout.data?.todayWorkout?.title
+                    ? `Today's workout "${todaysWorkout.data.todayWorkout.title}" doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?`
+                    : "Today's workout doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?"}
+                </DialogDescription>
+              </>
+            )}
+          </DialogHeader>
+
+          <DialogFooter className="flex-col gap-2 mt-4">
+            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
+              <Button
+                variant="default"
+                onClick={() => handleRestDayChoice('skip')}
+                className="w-full"
+              >
+                Got It
+              </Button>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleRestDayChoice('skip')}
+                    className="flex-1"
+                  >
+                    Skip for Now
+                  </Button>
+                  <Button
+                    onClick={() => handleRestDayChoice('add')}
+                    className="flex-1"
+                  >
+                    Add Exercises
+                  </Button>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleRestDayChoice('mark')}
+                  className="w-full"
+                >
+                  Mark Today as Rest Day
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Rest Warning Dialog */}
       <WorkoutRestWarning
