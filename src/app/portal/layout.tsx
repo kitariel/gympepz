@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import ProfileSidebar from "@/components/sidebar/profile-sidebar";
+import ProfileSidebar, { ProfileSidebarProvider } from "@/components/sidebar/profile-sidebar";
 import { PortalHeader } from "@/components/portal-header";
 import {
   SidebarInset,
@@ -21,21 +21,24 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <AuthSessionProvider session={session}>
       <SidebarProvider>
-        {/* Left Sidebar - Navigation */}
-        <AppSidebar enableEditing={false} width="16rem" />
-        
-        {/* Main Content Area - Takes remaining space */}
-        <SidebarInset className="border-none! ring-0 shadow-slate-200! flex-1 min-w-0 max-w-full">
-          <PortalHeader />
-          <div className="flex flex-1 flex-col overflow-hidden w-full max-w-full">
-            <div className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full min-w-0">
-              {children}
+        <ProfileSidebarProvider>
+          {/* Left Sidebar - Navigation */}
+          <AppSidebar enableEditing={false} width="16rem" />
+          
+          {/* Main Content Area - Takes remaining space */}
+          <SidebarInset className="border-none! ring-0 shadow-slate-200! flex-1 min-w-0 max-w-full">
+            <PortalHeader />
+            <div className="flex flex-1 flex-col overflow-hidden w-full max-w-full">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full min-w-0">
+                {children}
+              </div>
             </div>
-          </div>
-        </SidebarInset>
-        
-        {/* Right Sidebar - Profile & Stats */}
-        <ProfileSidebar side="right" width="20rem" />
+          </SidebarInset>
+          
+          {/* Right Sidebar - Profile & Stats */}
+          {/* Automatically handles mobile as Sheet, visible on tablet/desktop */}
+          <ProfileSidebar side="right" width="20rem" />
+        </ProfileSidebarProvider>
       </SidebarProvider>
     </AuthSessionProvider>
   );

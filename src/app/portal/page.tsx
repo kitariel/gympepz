@@ -80,7 +80,11 @@ export default function PortalPage() {
   }, []);
   const analytics = api.workoutLog.getAnalytics.useQuery(
     { userId, startDate: weekAgo },
-    { enabled: !!userId },
+    { 
+      enabled: !!userId, 
+      refetchInterval: 20000, // Refetch every 20 seconds
+      refetchOnWindowFocus: false, // Prevent refetch on window focus
+    },
   );
   const recentLogs = api.workoutLog.list.useQuery(
     { userId, limit: 5 },

@@ -89,25 +89,25 @@ export function PlanCard({
         
         {/* Active Badge */}
         {isActive && (
-          <div className="absolute left-4 top-4 z-10">
-            <Badge className="bg-white/95 text-primary backdrop-blur-sm shadow-sm">
-              <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+          <div className="absolute left-3 sm:left-4 top-3 sm:top-4 z-10">
+            <Badge className="bg-white/95 text-primary backdrop-blur-sm shadow-sm text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
+              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 fill-yellow-400 text-yellow-400" />
               Active
             </Badge>
           </div>
         )}
 
         {/* Menu Button */}
-        <div className="absolute right-3 top-3 z-10">
+        <div className="absolute right-2 sm:right-3 top-2 sm:top-3 z-10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 bg-white/90 backdrop-blur-sm hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-7 w-7 sm:h-8 sm:w-8 bg-white/90 backdrop-blur-sm hover:bg-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreVertical className="h-4 w-4 text-gray-700" />
+                <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-700" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -146,8 +146,8 @@ export function PlanCard({
 
         {/* Plan Name Overlay */}
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full bg-gradient-to-t from-black/60 via-black/20 to-transparent p-5">
-            <h3 className="text-white font-bold text-lg leading-tight drop-shadow-lg">
+          <div className="w-full bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 sm:p-5">
+            <h3 className="text-white font-bold text-base sm:text-lg leading-tight drop-shadow-lg line-clamp-2">
               {name}
             </h3>
           </div>
@@ -155,30 +155,30 @@ export function PlanCard({
       </div>
 
       {/* Content Section */}
-      <CardHeader className="pb-3 px-5 pt-4">
-        <div className="flex items-center gap-4 text-sm">
+      <CardHeader className="pb-3 px-4 sm:px-5 pt-4">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="font-medium">{daysCount}</span>
-            <span className="text-xs">days</span>
+            <span className="text-[10px] sm:text-xs">days</span>
           </div>
           {exercisesCount !== undefined && (
             <>
               <div className="h-4 w-px bg-border" />
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <TrendingUp className="h-4 w-4" />
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="font-medium">{exercisesCount}</span>
-                <span className="text-xs">exercises</span>
+                <span className="text-[10px] sm:text-xs">exercises</span>
               </div>
             </>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">
           Updated {format(new Date(updatedAt), "MMM d, yyyy")}
         </p>
       </CardHeader>
 
-      <CardFooter className="pt-0 pb-5 px-5 gap-2">
+      <CardFooter className="pt-0 pb-4 sm:pb-5 px-4 sm:px-5 gap-2">
         {!isActive && onSetActive ? (
           <>
             <Tooltip>

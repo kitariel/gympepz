@@ -250,36 +250,37 @@ export default function PlansPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6 pt-4">
-      {/* Enhanced Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex-1 space-y-4 p-3 sm:space-y-6 sm:p-4 md:p-6 md:pt-4">
+      {/* Enhanced Header - Responsive */}
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Workout Plans</h2>
-          <p className="text-muted-foreground text-sm">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Workout Plans</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm">
             Manage your workout programs and training splits
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push("/portal/ai-planner")}
-            className="gap-2 h-9"
+            className="gap-2 h-9 text-xs sm:text-sm flex-1 sm:flex-initial min-w-[120px] sm:min-w-0"
           >
-            <Sparkles className="h-4 w-4" />
-            AI Generator
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">AI Generator</span>
+            <span className="xs:hidden">AI</span>
           </Button>
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 h-9">
-                <Plus className="h-4 w-4" />
+              <Button size="sm" className="gap-2 h-9 text-xs sm:text-sm flex-1 sm:flex-initial min-w-[120px] sm:min-w-0">
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 New Plan
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Create New Plan</DialogTitle>
               </DialogHeader>
@@ -359,18 +360,18 @@ export default function PlansPage() {
         </div>
       </div>
 
-      {/* Enhanced Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Enhanced Stats - Responsive Grid */}
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow overflow-hidden group">
-          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 p-4">
+          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 p-3 sm:p-4">
             <CardContent className="px-0 pt-0 pb-0">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-muted-foreground text-xs font-medium">Total Plans</p>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
+                  <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">Total Plans</p>
                 </div>
-                <div className="bg-blue-500/20 rounded-xl p-3 group-hover:scale-110 transition-transform">
-                  <Folder className="text-blue-600 h-5 w-5 dark:text-blue-400" />
+                <div className="bg-blue-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">
+                  <Folder className="text-blue-600 h-4 w-4 sm:h-5 sm:w-5 dark:text-blue-400" />
                 </div>
               </div>
             </CardContent>
@@ -378,15 +379,15 @@ export default function PlansPage() {
         </Card>
 
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow overflow-hidden group">
-          <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-4">
+          <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-3 sm:p-4">
             <CardContent className="px-0 pt-0 pb-0">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                  <p className="text-muted-foreground text-xs font-medium">Active Plans</p>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.active}</p>
+                  <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">Active Plans</p>
                 </div>
-                <div className="bg-amber-500/20 rounded-xl p-3 group-hover:scale-110 transition-transform">
-                  <Star className="text-amber-600 h-5 w-5 fill-amber-400 dark:text-amber-400" />
+                <div className="bg-amber-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">
+                  <Star className="text-amber-600 h-4 w-4 sm:h-5 sm:w-5 fill-amber-400 dark:text-amber-400" />
                 </div>
               </div>
             </CardContent>
@@ -394,15 +395,15 @@ export default function PlansPage() {
         </Card>
 
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow overflow-hidden group">
-          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4">
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-3 sm:p-4">
             <CardContent className="px-0 pt-0 pb-0">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.totalDays}</p>
-                  <p className="text-muted-foreground text-xs font-medium">Total Days</p>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalDays}</p>
+                  <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">Total Days</p>
                 </div>
-                <div className="bg-purple-500/20 rounded-xl p-3 group-hover:scale-110 transition-transform">
-                  <Dumbbell className="text-purple-600 h-5 w-5 dark:text-purple-400" />
+                <div className="bg-purple-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">
+                  <Dumbbell className="text-purple-600 h-4 w-4 sm:h-5 sm:w-5 dark:text-purple-400" />
                 </div>
               </div>
             </CardContent>
@@ -416,20 +417,24 @@ export default function PlansPage() {
         onValueChange={setSelectedTab}
         className="space-y-4"
       >
-        <TabsList className="h-9">
-          <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm">
+        <TabsList className="h-9 sm:h-10 w-full sm:w-auto">
+          <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm flex-1 sm:flex-initial px-3 sm:px-4">
             <Folder className="h-3.5 w-3.5" />
-            All ({plans.length})
+            <span className="hidden xs:inline">All</span>
+            <span className="xs:hidden">All</span>
+            <span className="hidden sm:inline"> ({plans.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="active" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="active" className="gap-1.5 text-xs sm:text-sm flex-1 sm:flex-initial px-3 sm:px-4">
             <Star className="h-3.5 w-3.5" />
-            Active ({stats.active})
+            <span className="hidden xs:inline">Active</span>
+            <span className="xs:hidden">Active</span>
+            <span className="hidden sm:inline"> ({stats.active})</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4 space-y-4">
           {filteredPlans.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredPlans.map((plan) => (
                 <PlanCard
                   key={plan.id}
@@ -482,7 +487,7 @@ export default function PlansPage() {
 
         <TabsContent value="active" className="mt-4 space-y-4">
           {filteredPlans.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredPlans.map((plan) => (
                 <PlanCard
                   key={plan.id}
@@ -500,19 +505,19 @@ export default function PlansPage() {
             </div>
           ) : (
             <Card className="border-0 shadow-md">
-              <CardContent className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="bg-amber-500/10 rounded-full p-4 mb-4">
-                  <Star className="text-amber-600 h-12 w-12 opacity-60 dark:text-amber-400" />
+              <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+                <div className="bg-amber-500/10 rounded-full p-3 sm:p-4 mb-3 sm:mb-4">
+                  <Star className="text-amber-600 h-10 w-10 sm:h-12 sm:w-12 opacity-60 dark:text-amber-400" />
                 </div>
-                <h3 className="mb-2 text-lg font-bold">No active plan</h3>
-                <p className="text-muted-foreground mb-6 text-center text-sm max-w-md">
+                <h3 className="mb-2 text-base sm:text-lg font-bold">No active plan</h3>
+                <p className="text-muted-foreground mb-4 sm:mb-6 text-center text-xs sm:text-sm max-w-md">
                   Set a plan as active to start tracking your workouts
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedTab("all")}
-                  className="h-10"
+                  className="h-10 text-xs sm:text-sm w-full sm:w-auto"
                 >
                   View All Plans
                 </Button>

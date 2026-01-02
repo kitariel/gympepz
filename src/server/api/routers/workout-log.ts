@@ -622,4 +622,26 @@ export const workoutLogRouter = createTRPCRouter({
         },
       });
     }),
+
+  // Get active (incomplete) workout for user
+  getActiveWorkout: publicProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.workoutLog.findFirst({
+        where: {
+          userId: input.userId,
+          completed: false,
+        },
+        include: {
+          planDay: {
+            select: {
+              id: true,
+              title: true,
+              order: true,
+            },
+          },
+        },
+        orderBy: { date: "desc" },
+      });
+    }),
 });

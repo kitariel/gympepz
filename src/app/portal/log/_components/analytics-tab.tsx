@@ -36,10 +36,16 @@ const COLORS = [
 ];
 
 export function AnalyticsTab({ userId }: AnalyticsTabProps) {
-  const analytics = api.workoutLog.getAnalytics.useQuery({
-    userId,
-    period: "month",
-  });
+  const analytics = api.workoutLog.getAnalytics.useQuery(
+    {
+      userId,
+      period: "month",
+    },
+    { 
+      refetchInterval: 20000, // Refetch every 20 seconds
+      refetchOnWindowFocus: false, // Prevent refetch on window focus
+    },
+  );
 
   const prs = api.progress.getPRs.useQuery({ userId, limit: 10 });
 

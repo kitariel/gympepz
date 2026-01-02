@@ -49,6 +49,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { User } from "lucide-react";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -64,6 +67,8 @@ export function PortalHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const isMobile = useIsMobile();
+  const { setOpen: setProfileSidebarOpen } = useProfileSidebar();
 
   const email = session?.user?.email ?? "";
   const userQuery = api.user.getByEmail.useQuery(
@@ -277,6 +282,19 @@ export function PortalHeader() {
         >
           <Sparkles className="h-4 w-4" />
         </Button>
+
+        {/* Profile Sidebar Button - Mobile/Tablet */}
+        {isMobile && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            title="Profile & Stats"
+            onClick={() => setProfileSidebarOpen(true)}
+          >
+            <User className="h-4 w-4" />
+          </Button>
+        )}
 
         {/* Notifications */}
         <Button
