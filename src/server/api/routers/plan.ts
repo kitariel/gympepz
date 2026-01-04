@@ -57,11 +57,12 @@ export const planRouter = createTRPCRouter({
           order: d.order,
           day: d.order >= 0 && d.order < 7 ? dayNames[d.order] : null,
           items: {
-            create: d.items.map((i) => ({
+            create: d.items.map((i, itemIndex) => ({
               exerciseId: i.exerciseId,
               sets: i.sets,
               reps: i.reps,
               weight: i.weight ?? null,
+              order: itemIndex,
             })),
           },
         }))
@@ -119,7 +120,17 @@ export const planRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.plan.findUnique({
         where: { id: input.id },
-        include: { days: { include: { items: { include: { exercise: true } } }, orderBy: { order: "asc" } } },
+        include: { 
+          days: { 
+            include: { 
+              items: { 
+                include: { exercise: true },
+                orderBy: { order: "asc" }
+              } 
+            }, 
+            orderBy: { order: "asc" } 
+          } 
+        },
       });
     }),
 
@@ -527,13 +538,22 @@ export const planRouter = createTRPCRouter({
       );
 
       if (newExercises.length > 0) {
+        // Get the current max order for target day
+        const maxOrder = await ctx.db.planExercise.findFirst({
+          where: { planDayId: input.targetDayId },
+          orderBy: { order: "desc" },
+          select: { order: true },
+        });
+        const startOrder = (maxOrder?.order ?? -1) + 1;
+        
         await ctx.db.planExercise.createMany({
-          data: newExercises.map((item) => ({
+          data: newExercises.map((item, index) => ({
             planDayId: input.targetDayId,
             exerciseId: item.exerciseId,
             sets: item.sets,
             reps: item.reps,
             weight: item.weight ?? null,
+            order: startOrder + index,
           })),
         });
       }
@@ -550,12 +570,20 @@ export const planRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Get the current max order for this day
+      const maxOrder = await ctx.db.planExercise.findFirst({
+        where: { planDayId: input.dayId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      
       const it = await ctx.db.planExercise.create({
         data: {
           planDayId: input.dayId,
           exerciseId: input.exerciseId,
           sets: input.sets,
           reps: input.reps,
+          order: (maxOrder?.order ?? -1) + 1,
         },
       });
       return { ok: true, id: it.id };
@@ -593,7 +621,28 @@ export const planRouter = createTRPCRouter({
         orderedIds: z.array(z.string().min(1)).min(1),
       }),
     )
-    .mutation(async ({ ctx }) => {
+    .mutation(async ({ ctx, input }) => {
+      // Verify all exercise IDs belong to this day
+      const exercises = await ctx.db.planExercise.findMany({
+        where: {
+          planDayId: input.dayId,
+          id: { in: input.orderedIds },
+        },
+      });
+
+      if (exercises.length !== input.orderedIds.length) {
+        throw new Error("Some exercise IDs not found or don't belong to this day");
+      }
+
+      // Update order for each exercise based on its position in the array
+      await ctx.db.$transaction(
+        input.orderedIds.map((exerciseId, index) =>
+          ctx.db.planExercise.update({
+            where: { id: exerciseId, planDayId: input.dayId },
+            data: { order: index },
+          })
+        )
+      );
       return { ok: true };
     }),
   reorderDays: publicProcedure
@@ -732,7 +781,14 @@ export const planRouter = createTRPCRouter({
                     title: d.title,
                     order: d.order,
                     day: d.day,
-                    items: { create: d.items },
+                    items: { 
+                      create: d.items.map((item, itemIndex) => ({
+                        exerciseId: item.exerciseId,
+                        sets: item.sets,
+                        reps: item.reps,
+                        order: itemIndex,
+                      }))
+                    },
                   })),
                 },
               },
@@ -802,7 +858,14 @@ export const planRouter = createTRPCRouter({
               title: d.title,
               order: d.order,
               day: d.day,
-              items: { create: d.items },
+              items: { 
+                create: d.items.map((item, itemIndex) => ({
+                  exerciseId: item.exerciseId,
+                  sets: item.sets,
+                  reps: item.reps,
+                  order: itemIndex,
+                }))
+              },
             })),
           },
         },

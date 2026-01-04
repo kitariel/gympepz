@@ -30,7 +30,10 @@ model PlanExercise {
   sets       Int
   reps       Int
   weight     Float?
+  order      Int    @default(0) // Order within the plan day
 
   day      PlanDay  @relation(fields: [planDayId], references: [id], onDelete: Cascade)
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([planDayId, order])
 }

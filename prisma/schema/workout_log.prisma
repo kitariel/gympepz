@@ -30,12 +30,14 @@ model WorkoutLogExercise {
   weight        Float?
   rpe           Int?     // Rate of Perceived Exertion (1-10)
   notes         String?
+  order         Int      @default(0) // Order within the workout
   createdAt     DateTime @default(now())
 
   workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
   exercise   Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
 
   @@index([workoutLogId, exerciseId])
+  @@index([workoutLogId, order])
 }
 
 // NEW: Granular set-by-set tracking

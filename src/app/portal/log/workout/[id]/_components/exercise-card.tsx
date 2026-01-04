@@ -45,6 +45,8 @@ interface ExerciseCardProps {
   isMarkedDone?: boolean;
   onToggleDone?: () => void;
   exerciseId?: string;
+  isCollapsed?: boolean; // For sortable mode - show only title
+  isDragging?: boolean; // When actively being dragged
 }
 
 export function ExerciseCard({
@@ -61,6 +63,8 @@ export function ExerciseCard({
   isMarkedDone = false,
   onToggleDone,
   exerciseId,
+  isCollapsed = false,
+  isDragging = false,
 }: ExerciseCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -69,6 +73,68 @@ export function ExerciseCard({
   const allCompleted = completedSets === totalSets && totalSets > 0;
   const isDone = isMarkedDone || allCompleted;
 
+  // Collapsed view for sortable mode
+  if (isCollapsed) {
+    return (
+      <Card
+        className={cn(
+          "ring-border border-0 shadow-sm ring-1 transition-all duration-300 ease-in-out",
+          isDone && "ring-primary bg-primary/5",
+          isDragging && "opacity-50 shadow-lg",
+        )}
+      >
+        <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 flex items-center gap-2">
+              {onToggleDone && (
+                <button
+                  onClick={onToggleDone}
+                  className="shrink-0 touch-manipulation"
+                  aria-label={
+                    isMarkedDone
+                      ? "Mark as incomplete"
+                      : "Mark exercise as done"
+                  }
+                >
+                  {isMarkedDone ? (
+                    <CheckCircle2 className="text-primary h-4 w-4" />
+                  ) : (
+                    <Circle className="text-muted-foreground hover:text-primary h-4 w-4 transition-colors" />
+                  )}
+                </button>
+              )}
+              <CardTitle
+                className={cn(
+                  "min-w-0 text-sm font-semibold tracking-tight truncate sm:text-base",
+                  isMarkedDone && "text-muted-foreground line-through",
+                )}
+              >
+                {exerciseName}
+              </CardTitle>
+              <span className="text-muted-foreground text-xs shrink-0">
+                {muscleGroup}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <span className="text-muted-foreground text-xs">
+                {completedSets}/{totalSets}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive h-8 w-8 touch-manipulation"
+                onClick={onDeleteExercise}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  // Full expanded view
   return (
     <Card
       className={cn(

@@ -12,6 +12,7 @@
     "db:studio": "prisma studio",
     "db:seed:exercises": "node prisma/seed-exercises.js",
     "db:migrate:plan-day": "npx tsx scripts/migrate-plan-day-field.ts",
+    "db:migrate:exercise-order": "npx tsx scripts/migrate-exercise-order.ts",
     "dev": "next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",

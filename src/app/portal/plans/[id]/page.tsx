@@ -30,8 +30,221 @@ import {
   Calendar,
   Pencil,
   Copy,
+  Move,
+  Check,
 } from "lucide-react";
 import { WeeklyScheduleBoard } from "./_components/weekly-schedule-board";
+
+// Sortable wrapper component for plan exercises with collapsed view when dragging
+function SortableExerciseItem({
+  id,
+  item,
+  itemIndex,
+  onDeleteItem,
+  onUpdateItem,
+  onRefetch,
+  isDraggingState,
+}: {
+  id: string;
+  item: PlanExercise;
+  itemIndex: number;
+  onDeleteItem: (id: string) => void;
+  onUpdateItem: (id: string, field: "sets" | "reps" | "weight", value: number) => void;
+  onRefetch: () => void;
+  isDraggingState: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+  
+  // Check if any item is being dragged (not just this one)
+  const { active } = useDndContext();
+  const isAnyDragging = !!active || isDraggingState;
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isAnyDragging ? transition : "all 0.3s ease-in-out",
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  // Show collapsed view only when in arrange mode, otherwise show full card
+  if (isDraggingState) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="relative transition-all duration-300 cursor-grab active:cursor-grabbing"
+      >
+        <div className="absolute left-0 top-0 z-10 flex h-full items-center justify-center px-2 text-muted-foreground pointer-events-none">
+          <GripVertical className="h-5 w-5" />
+        </div>
+        <div className="pl-8 transition-all duration-300">
+          <Card className="group relative border-2 shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-xl overflow-hidden">
+            <CardContent className="relative p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1 flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 text-sm font-extrabold text-primary border border-primary/20">
+                    {itemIndex + 1}
+                  </div>
+                  <h4 className="text-base font-extrabold leading-tight tracking-tight truncate">
+                    {item.exercise?.name ?? item.exerciseId}
+                  </h4>
+                  {item.exercise?.muscleGroup && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs px-2 py-1 font-semibold border-primary/30 rounded-full shrink-0"
+                    >
+                      {item.exercise.muscleGroup}
+                    </Badge>
+                  )}
+                  <span className="text-muted-foreground text-xs shrink-0">
+                    {item.sets} sets × {item.reps} reps
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 opacity-0 transition-all duration-200 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-lg"
+                  onClick={() => onDeleteItem(item.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Full expanded view when not dragging
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="relative transition-all duration-300 cursor-grab active:cursor-grabbing"
+    >
+      <div className="absolute left-0 top-0 z-10 flex h-full items-center justify-center px-2 text-muted-foreground pointer-events-none">
+        <GripVertical className="h-5 w-5" />
+      </div>
+      <div className="pl-8 transition-all duration-300">
+        <Card className="group relative border-2 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-primary/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <CardContent className="relative p-6 sm:p-7 space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1 space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-base font-extrabold text-primary border border-primary/20 shadow-sm">
+                    {itemIndex + 1}
+                  </div>
+                  <h4 className="text-xl font-extrabold leading-tight tracking-tight">
+                    {item.exercise?.name ?? item.exerciseId}
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2.5 pl-[52px]">
+                  {item.exercise?.muscleGroup && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs px-3.5 py-1.5 font-semibold border-2 border-primary/30 rounded-full"
+                    >
+                      {item.exercise.muscleGroup}
+                    </Badge>
+                  )}
+                  {item.exercise?.equipment && (
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-3.5 py-1.5 font-semibold rounded-full"
+                    >
+                      {item.exercise.equipment}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 shrink-0 opacity-0 transition-all duration-200 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl"
+                onClick={() => onDeleteItem(item.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-4 pt-5 border-t-2 border-border/50">
+              <div className="space-y-2.5">
+                <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  Sets
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
+                  value={item.sets ?? 3}
+                  onChange={(e) =>
+                    onUpdateItem(
+                      item.id,
+                      "sets",
+                      Number(e.target.value),
+                    )
+                  }
+                  onBlur={onRefetch}
+                />
+              </div>
+              <div className="space-y-2.5">
+                <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  Reps
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
+                  value={item.reps ?? 10}
+                  onChange={(e) =>
+                    onUpdateItem(
+                      item.id,
+                      "reps",
+                      Number(e.target.value),
+                    )
+                  }
+                  onBlur={onRefetch}
+                />
+              </div>
+              <div className="space-y-2.5">
+                <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  Weight (kg)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  className="h-14 text-xl font-extrabold text-center border-2 focus:border-primary rounded-xl shadow-sm transition-all focus:shadow-lg focus:shadow-primary/20"
+                  value={item.weight ?? ""}
+                  placeholder="0"
+                  onChange={(e) =>
+                    onUpdateItem(
+                      item.id,
+                      "weight",
+                      Number(e.target.value),
+                    )
+                  }
+                  onBlur={onRefetch}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
 interface Exercise {
   id: string;
@@ -46,6 +259,7 @@ interface PlanExercise {
   reps: number;
   weight: number | null;
   exerciseId: string;
+  order?: number; // Order within the plan day
   exercise: Exercise | null;
 }
 
@@ -62,7 +276,10 @@ interface Plan {
   days: PlanDay[];
 }
 
-import type { DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, useDndContext } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 
 export default function PlanDetailPage({
   params,
@@ -96,10 +313,12 @@ export default function PlanDetailPage({
   const duplicateDay = api.plan.duplicateDay.useMutation();
   const copyExercises = api.plan.copyExercises.useMutation();
   const toggleRestDay = api.plan.toggleRestDay.useMutation();
+  const reorderItems = api.plan.reorderItems.useMutation();
   const [copyFromDayId, setCopyFromDayId] = useState<string | null>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [localDays, setLocalDays] = useState<(PlanDay | null)[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const p = plan.data as Plan | null | undefined;
 
@@ -161,6 +380,39 @@ export default function PlanDetailPage({
     { q: searchQuery, take: 20 },
     { enabled: isAddExerciseDialogOpen },
   );
+
+  // Drag and drop sensors for exercises
+  const exerciseSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle exercise reordering within a day
+  const handleExerciseDragEnd = async (event: DragEndEvent, dayId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const selectedDay = p?.days?.find((d) => d.id === dayId);
+    if (!selectedDay) return;
+
+    // Sort items by order to ensure correct indices
+    const items = [...(selectedDay.items ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      const orderedIds = reordered.map((item) => item.id);
+      
+      await reorderItems.mutateAsync({
+        dayId,
+        orderedIds,
+      });
+      await plan.refetch();
+    }
+  };
 
   useEffect(() => {
     if (p?.name && !planName) {
@@ -706,29 +958,80 @@ export default function PlanDetailPage({
                   </SheetHeader>
 
                   <div className="flex-1 space-y-6 overflow-y-auto px-6 pt-7 pb-8">
-                    {/* Add Exercise Button - Premium */}
-                    <Button
-                      className="group h-14 w-full gap-3 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-[1.02]"
-                      onClick={() => {
-                        setTargetDayId(selectedDay.id);
-                        setIsAddExerciseDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
-                      Add Exercise to Workout
-                    </Button>
+                    {/* Arrange Mode Toggle Button */}
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant={isDragging ? "default" : "outline"}
+                        onClick={() => setIsDragging(!isDragging)}
+                        className="h-14 gap-2 font-semibold"
+                      >
+                        {isDragging ? (
+                          <>
+                            <Check className="h-4 w-4" />
+                            Done Arranging
+                          </>
+                        ) : (
+                          <>
+                            <Move className="h-4 w-4" />
+                            Arrange Exercises
+                          </>
+                        )}
+                      </Button>
+                      {!isDragging && (
+                        <Button
+                          className="group h-14 flex-1 gap-3 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-[1.02]"
+                          onClick={() => {
+                            setTargetDayId(selectedDay.id);
+                            setIsAddExerciseDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
+                          Add Exercise to Workout
+                        </Button>
+                      )}
+                    </div>
 
                     {/* Exercise List - Premium Cards */}
                     {(selectedDay.items ?? []).length > 0 ? (
+                      isDragging ? (
+                        <DndContext
+                          sensors={exerciseSensors}
+                          collisionDetection={closestCenter}
+                          onDragStart={() => {}}
+                          onDragEnd={(e) => {
+                            handleExerciseDragEnd(e, selectedDay.id);
+                          }}
+                        >
+                        <SortableContext
+                          items={(selectedDay.items ?? []).map((item) => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-4">
+                            {(selectedDay.items ?? [])
+                              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                              .map((item, itemIndex: number) => (
+                                <SortableExerciseItem
+                                  key={item.id}
+                                  id={item.id}
+                                  item={item}
+                                  itemIndex={itemIndex}
+                                  onDeleteItem={handleDeleteItem}
+                                  onUpdateItem={handleUpdateItem}
+                                  onRefetch={() => plan.refetch()}
+                                  isDraggingState={isDragging}
+                                />
+                              ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    ) : (
                       <div className="space-y-4">
-                        {(selectedDay.items ?? []).map(
-                          (item, itemIndex: number) => (
-                            <Card key={itemIndex} className="group relative border-2 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-primary/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
-                              {/* Subtle gradient overlay */}
+                        {(selectedDay.items ?? [])
+                          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                          .map((item, itemIndex: number) => (
+                            <Card key={item.id} className="group relative border-2 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-primary/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
                               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                              
                               <CardContent className="relative p-6 sm:p-7 space-y-5">
-                                {/* Exercise Header */}
                                 <div className="flex items-start justify-between gap-4">
                                   <div className="min-w-0 flex-1 space-y-4">
                                     <div className="flex items-center gap-3.5">
@@ -767,8 +1070,6 @@ export default function PlanDetailPage({
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
-
-                                {/* Sets/Reps/Weight - Premium Grid */}
                                 <div className="grid grid-cols-3 gap-4 pt-5 border-t-2 border-border/50">
                                   <div className="space-y-2.5">
                                     <label className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
@@ -832,9 +1133,9 @@ export default function PlanDetailPage({
                                 </div>
                               </CardContent>
                             </Card>
-                          ),
-                        )}
+                          ))}
                       </div>
+                    )
                     ) : (
                       <Card className="border-2 bg-gradient-to-br from-muted/30 to-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
                         <CardContent className="flex flex-col items-center justify-center py-20 px-6 text-center">

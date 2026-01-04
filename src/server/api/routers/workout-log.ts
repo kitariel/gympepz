@@ -50,13 +50,16 @@ export const workoutLogRouter = createTRPCRouter({
         });
 
         if (planDay && planDay.items.length > 0) {
+          // Sort items by order before creating
+          const sortedItems = [...planDay.items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
           await ctx.db.workoutLogExercise.createMany({
-            data: planDay.items.map((item) => ({
+            data: sortedItems.map((item, index) => ({
               workoutLogId: log.id,
               exerciseId: item.exerciseId,
               sets: item.sets,
               reps: item.reps,
               weight: item.weight,
+              order: index,
             })),
           });
         }
@@ -105,7 +108,7 @@ export const workoutLogRouter = createTRPCRouter({
         include: {
           exercises: {
             include: { exercise: true },
-            orderBy: { createdAt: "asc" },
+            orderBy: { order: "asc" },
           },
           planDay: true,
         },
@@ -125,6 +128,13 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Get the current max order for this workout
+      const maxOrder = await ctx.db.workoutLogExercise.findFirst({
+        where: { workoutLogId: input.workoutLogId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      
       return ctx.db.workoutLogExercise.create({
         data: {
           workoutLogId: input.workoutLogId,
@@ -134,6 +144,7 @@ export const workoutLogRouter = createTRPCRouter({
           weight: input.weight,
           rpe: input.rpe,
           notes: input.notes,
+          order: (maxOrder?.order ?? -1) + 1,
         },
       });
     }),
@@ -168,6 +179,38 @@ export const workoutLogRouter = createTRPCRouter({
       return ctx.db.workoutLogExercise.delete({
         where: { id: input.id },
       });
+    }),
+
+  reorderExercises: publicProcedure
+    .input(
+      z.object({
+        workoutLogId: z.string().min(1),
+        orderedIds: z.array(z.string().min(1)).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify all exercise IDs belong to this workout
+      const exercises = await ctx.db.workoutLogExercise.findMany({
+        where: {
+          workoutLogId: input.workoutLogId,
+          id: { in: input.orderedIds },
+        },
+      });
+
+      if (exercises.length !== input.orderedIds.length) {
+        throw new Error("Some exercise IDs not found or don't belong to this workout");
+      }
+
+      // Update order for each exercise based on its position in the array
+      await ctx.db.$transaction(
+        input.orderedIds.map((exerciseId, index) =>
+          ctx.db.workoutLogExercise.update({
+            where: { id: exerciseId, workoutLogId: input.workoutLogId },
+            data: { order: index },
+          })
+        )
+      );
+      return { ok: true };
     }),
 
   complete: publicProcedure
@@ -298,7 +341,7 @@ export const workoutLogRouter = createTRPCRouter({
         include: {
           exercises: {
             include: { exercise: true },
-            orderBy: { createdAt: "asc" },
+            orderBy: { order: "asc" },
           },
           planDay: true,
           // Note: sets relation will be available after migration
@@ -321,6 +364,7 @@ export const workoutLogRouter = createTRPCRouter({
           include: {
             exercises: {
               include: { exercise: true },
+              orderBy: { order: "asc" },
             },
           },
         });
