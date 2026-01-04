@@ -201,18 +201,11 @@ export default function PlansPage() {
     const isActivePlan = activePlan?.id === planId;
     
     if (isActivePlan) {
-      // Check if today is a rest day first
-      if (todaysWorkout.data?.todayWorkout?.isRestDay) {
-        // It's a rest day - show rest day message
-        setSelectedPlanForStart(planId);
-        setShowRestDayDialog(true);
-        return;
-      }
-      
-      // Check if today's workout has exercises
+      // Check if today's workout has exercises first
       const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
                           todaysWorkout.data.todayWorkout.exercises.length > 0;
       
+      // If there are exercises, allow starting (exercises take priority over isRestDay flag)
       if (!hasExercises && todaysWorkout.data?.todayWorkout) {
         // No exercises - show rest day dialog
         setSelectedPlanForStart(planId);

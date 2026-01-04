@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,9 @@ export default function PlanDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
+  const utils = api.useUtils();
 
   const [planName, setPlanName] = useState("");
   const [isAddDayDialogOpen, setIsAddDayDialogOpen] = useState(false);
@@ -187,6 +191,10 @@ export default function PlanDetailPage({
     setNewDayTitle("");
     setIsAddDayDialogOpen(false);
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -261,6 +269,11 @@ export default function PlanDetailPage({
 
           // Refetch to sync with database after updates complete
           await plan.refetch();
+          
+          // Invalidate getTodaysWorkout query so start page updates
+          if (userId) {
+            await utils.plan.getTodaysWorkout.invalidate({ userId });
+          }
         } catch (error) {
           console.error("Failed to update day orders:", error);
           // Revert by refetching original data
@@ -274,6 +287,10 @@ export default function PlanDetailPage({
     if (!confirm("Delete this day and all its exercises?")) return;
     await deleteDay.mutateAsync({ id: dayId });
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleAddExercise = async (exerciseId: string) => {
@@ -287,6 +304,10 @@ export default function PlanDetailPage({
     setIsAddExerciseDialogOpen(false);
     setSearchQuery("");
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleUpdateItem = async (
@@ -300,6 +321,10 @@ export default function PlanDetailPage({
   const handleDeleteItem = async (itemId: string) => {
     await delItem.mutateAsync({ id: itemId });
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleStartEditDay = (dayId: string, currentTitle: string) => {
@@ -313,6 +338,10 @@ export default function PlanDetailPage({
     setEditingDayId(null);
     setEditingDayTitle("");
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleCancelEditDay = () => {
@@ -324,6 +353,10 @@ export default function PlanDetailPage({
     if (!id) return;
     await duplicateDay.mutateAsync({ dayId, planId: id });
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   const handleOpenCopyDialog = (dayId: string) => {
@@ -340,6 +373,10 @@ export default function PlanDetailPage({
     setIsCopyDialogOpen(false);
     setCopyFromDayId(null);
     await plan.refetch();
+    // Invalidate getTodaysWorkout query so start page updates
+    if (userId) {
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+    }
   };
 
   if (plan.isLoading) {
@@ -488,6 +525,10 @@ export default function PlanDetailPage({
           onToggleRestDay={async (dayId) => {
             await toggleRestDay.mutateAsync({ id: dayId });
             await plan.refetch();
+            // Invalidate getTodaysWorkout query so start page updates
+            if (userId) {
+              await utils.plan.getTodaysWorkout.invalidate({ userId });
+            }
           }}
           editingDayId={editingDayId}
           editingDayTitle={editingDayTitle}

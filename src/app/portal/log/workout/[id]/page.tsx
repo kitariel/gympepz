@@ -376,7 +376,7 @@ export default function ActiveWorkoutPage({
                 {workout.planDay?.title ?? "Workout"}
               </h1>
               <p className="text-muted-foreground/70 truncate text-xs font-medium tracking-wider uppercase sm:text-sm md:text-base">
-                {format(new Date(workout.date), "EEEE, MMM d")}
+                {format(new Date(), "EEEE, MMM d")}
               </p>
             </div>
           </div>
@@ -472,7 +472,16 @@ export default function ActiveWorkoutPage({
                     variant="outline"
                     className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase sm:text-xs md:text-sm"
                   >
-                    Last: {format(new Date(workout.lastWorkout.date), "MMM d")}
+                    Last: {(() => {
+                      const date = new Date(workout.lastWorkout.date);
+                      // Dates are stored as UTC start of day, so use UTC components directly
+                      const year = date.getUTCFullYear();
+                      const month = date.getUTCMonth();
+                      const day = date.getUTCDate();
+                      // Format using UTC date (stored as start of day in UTC)
+                      const displayDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+                      return format(displayDate, "MMM d");
+                    })()}
                   </Badge>
                 </div>
               )}

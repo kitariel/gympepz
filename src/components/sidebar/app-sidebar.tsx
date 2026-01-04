@@ -105,8 +105,12 @@ export function AppSidebar({
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   
   // Get today's workout for badge
+  // Pass day based on local timezone to avoid UTC timezone issues
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+  
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
-    { userId },
+    { userId, day: localDayName },
     { enabled: !!userId }
   );
 

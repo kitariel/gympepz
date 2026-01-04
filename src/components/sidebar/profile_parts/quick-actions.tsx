@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Play, BarChart3, Target, Scale } from "lucide-react";
+import { Play, BarChart3, Target, Scale, Calendar } from "lucide-react";
 import { SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from "@/components/ui/sidebar";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { api } from "@/trpc/react";
+import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 
 interface QuickActionsProps {
   activePlanId?: string;
@@ -26,10 +27,19 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
   const userId = session?.user?.id ?? "";
 
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
 
+  // Pass day based on local timezone to avoid UTC timezone issues
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+  
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
-    { userId },
-    { enabled: !!userId && !!activePlanId },
+    { userId, day: localDayName },
+    { 
+      enabled: !!userId && !!activePlanId,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    },
   );
   const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
     { userId },
@@ -40,7 +50,15 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     { enabled: !!userId },
   );
   
-  const toggleRestDay = api.plan.toggleRestDay.useMutation();
+  const utils = api.useUtils();
+  const toggleRestDay = api.plan.toggleRestDay.useMutation({
+    onSuccess: () => {
+      // Invalidate getTodaysWorkout query to ensure UI updates
+      if (userId) {
+        void utils.plan.getTodaysWorkout.invalidate({ userId, day: localDayName });
+      }
+    },
+  });
   const quickStart = api.workoutLog.quickStart.useMutation({
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
@@ -62,30 +80,35 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
       return;
     }
 
-    // Check if today is a rest day first
-    if (todaysWorkout.data?.todayWorkout?.isRestDay) {
-      // It's a rest day - show rest day message
+    const todayWorkout = todaysWorkout.data?.todayWorkout;
+    const isRestDay = todayWorkout?.isRestDay ?? false;
+    const hasExercises = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+
+    // Priority: 1. Rest Day (if marked as rest day, show dialog), 2. Exercises, 3. No workout
+    if (isRestDay) {
+      // It's a rest day - show dialog
       setShowRestDayDialog(true);
       return;
     }
 
-    // Check if today's workout has exercises
-    const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
-                        todaysWorkout.data.todayWorkout.exercises.length > 0;
-    
-    if (!hasExercises && todaysWorkout.data?.todayWorkout) {
-      // No exercises - show rest day dialog
-      setShowRestDayDialog(true);
-      return;
-    }
-    
-    // Check if there's a recent completed workout
-    if (recentWorkoutCheck.data?.hasRecentWorkout) {
-      // For now, just proceed - or you can add warning dialog here if needed
+    // If there are exercises, allow starting
+    if (hasExercises) {
+      // Check if there's a recent completed workout
+      if (recentWorkoutCheck.data?.hasRecentWorkout) {
+        setShowWarningDialog(true);
+        return;
+      }
       quickStart.mutate({ userId });
       return;
     }
-    
+
+    // No exercises and not a rest day - show dialog
+    if (todayWorkout) {
+      setShowRestDayDialog(true);
+      return;
+    }
+
+    // No workout scheduled - proceed anyway
     quickStart.mutate({ userId });
   };
 
@@ -93,13 +116,13 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     setShowRestDayDialog(false);
     
     if (action === 'skip') {
-      // User confirms it's a rest day - just close the dialog
+      // User confirms it's a rest day - just close
       return;
     } else if (action === 'mark') {
       // User wants to mark today as rest day
       if (todaysWorkout.data?.todayWorkout?.id) {
         await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
-        await todaysWorkout.refetch();
+        // Query will be invalidated automatically by the mutation's onSuccess
       }
       return;
     } else {
@@ -110,19 +133,81 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     }
   };
 
+  const handleConfirmStart = () => {
+    setShowWarningDialog(false);
+    if (activePlanId && userId) {
+      quickStart.mutate({ userId });
+    } else {
+      router.push("/portal/log");
+    }
+  };
+
   return (
     <SidebarGroup className="p-0">
       <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-4 py-2">
         Actions
       </SidebarGroupLabel>
       <SidebarGroupContent className="px-3 gap-2 grid grid-cols-2">
-        <Button
-          className="w-full col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-          onClick={handleStartWorkout}
-        >
-          <Play className="h-4 w-4 mr-2 fill-current" />
-          Start Workout
-        </Button>
+        {(() => {
+          const todayWorkout = todaysWorkout.data?.todayWorkout;
+          const exercises = todayWorkout?.exercises;
+          const hasExercises = exercises && exercises.length > 0;
+          const isRestDay = todayWorkout?.isRestDay ?? false;
+
+          // Determine button text and icon
+          // Priority: 1. Rest Day status (if marked as rest day, always show Rest Day), 2. Exercises, 3. No workout
+          const getButtonContent = () => {
+            if (quickStart.isPending) {
+              return {
+                icon: <Play className="h-4 w-4 mr-2 fill-current animate-spin" />,
+                text: "Starting...",
+              };
+            }
+
+            // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
+            if (isRestDay) {
+              return {
+                icon: <Calendar className="h-4 w-4 mr-2" />,
+                text: "Rest Day",
+              };
+            }
+
+            // Priority 2: Check if there are exercises
+            if (hasExercises) {
+              return {
+                icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+                text: "Start Workout",
+              };
+            }
+
+            // Priority 3: No exercises and not a rest day - show based on whether workout exists
+            if (todayWorkout) {
+              return {
+                icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+                text: "No Exercises",
+              };
+            }
+
+            // No workout scheduled
+            return {
+              icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+              text: "Start Workout",
+            };
+          };
+
+          const buttonContent = getButtonContent();
+
+          return (
+            <Button
+              className="w-full col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              onClick={handleStartWorkout}
+              disabled={quickStart.isPending}
+            >
+              {buttonContent.icon}
+              {buttonContent.text}
+            </Button>
+          );
+        })()}
         
         <Button
           variant="outline"
@@ -208,6 +293,15 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Rest Warning Dialog */}
+      <WorkoutRestWarning
+        open={showWarningDialog}
+        onOpenChange={setShowWarningDialog}
+        onConfirm={handleConfirmStart}
+        onCancel={() => setShowWarningDialog(false)}
+        recentWorkout={recentWorkoutCheck.data?.workout ?? null}
+      />
     </SidebarGroup>
   );
 }

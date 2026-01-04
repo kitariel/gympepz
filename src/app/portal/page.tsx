@@ -151,33 +151,32 @@ export default function PortalPage() {
   const handleQuickStart = () => {
     if (!userId) return;
 
-    // If has active plan, check if today's workout is a rest day first
+    // If has active plan, check if today's workout has exercises first
     if (activePlan) {
-      // Check if today is a rest day
-      if (todaysWorkout.data?.todayWorkout?.isRestDay) {
-        // It's a rest day - show rest day message
-        setShowRestDayDialog(true);
-        return;
-      }
-      
-      // Check if today's workout has exercises
+      // Check if today's workout has exercises first
       const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
                           todaysWorkout.data.todayWorkout.exercises.length > 0;
       
-      if (!hasExercises && todaysWorkout.data?.todayWorkout) {
-        // No exercises - show rest day dialog
+      // If there are exercises, allow starting (exercises take priority over isRestDay flag)
+      if (hasExercises) {
+        // Check if there's a recent completed workout
+        if (recentWorkoutCheck.data?.hasRecentWorkout) {
+          setPendingAction("quickStart");
+          setShowWarningDialog(true);
+          return;
+        }
+        quickStart.mutate({ userId });
+        return;
+      }
+      
+      // No exercises - check if it's marked as rest day or show dialog
+      if (todaysWorkout.data?.todayWorkout) {
         setShowRestDayDialog(true);
         return;
       }
       
-      // Check if there's a recent completed workout
-      if (recentWorkoutCheck.data?.hasRecentWorkout) {
-        setPendingAction("quickStart");
-        setShowWarningDialog(true);
-        return;
-      }
-      
-      quickStart.mutate({ userId });
+      // No workout scheduled for today - redirect to log page
+      router.push("/portal/log");
     } else {
       router.push("/portal/log");
     }

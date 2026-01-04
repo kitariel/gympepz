@@ -15,6 +15,7 @@ model PlanDay {
   planId    String
   title     String
   order     Int
+  day       String? // Day of week: "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
   isRestDay Boolean @default(false)
 
   plan  Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)

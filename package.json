@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed:exercises": "node prisma/seed-exercises.js",
+    "db:migrate:plan-day": "npx tsx scripts/migrate-plan-day-field.ts",
     "dev": "next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",

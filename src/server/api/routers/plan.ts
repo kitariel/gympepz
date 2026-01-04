@@ -3,6 +3,24 @@ import { z } from "zod";
 import { mastra } from "@/mastra";
 import { handleSuggest } from "./plan.suggest";
 import { workoutPlannerAgent } from "@/mastra/agents";
+import { appendFileSync, mkdirSync, existsSync } from "fs";
+import { join, dirname } from "path";
+
+// Helper function for debug logging
+const debugLog = (location: string, message: string, data: unknown, hypothesisId: string) => {
+  try {
+    const logData = { location, message, data, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId };
+    const logPath = join(process.cwd(), '.cursor', 'debug.log');
+    const logDir = dirname(logPath);
+    if (!existsSync(logDir)) {
+      mkdirSync(logDir, { recursive: true });
+    }
+    appendFileSync(logPath, JSON.stringify(logData) + '\n');
+  } catch (e) {
+    console.error('Debug log write failed:', e);
+    console.log(message, data);
+  }
+};
 
 const PlanExerciseInput = z.object({
   exerciseId: z.string().min(1),
@@ -22,30 +40,46 @@ const CreatePlanInput = z.object({
         items: z.array(PlanExerciseInput).default([]),
       }),
     )
-    .min(1),
+    .default([]), // Allow empty array - will create 7 days automatically
 });
 
 export const planRouter = createTRPCRouter({
   create: publicProcedure
     .input(CreatePlanInput)
     .mutation(async ({ ctx, input }) => {
+      // Day names for order 0-6 (Sunday-Saturday)
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      // If input.days is provided, use it; otherwise create 7 empty days
+      const daysToCreate = input.days.length > 0
+        ? input.days.map((d) => ({
+          title: d.title,
+          order: d.order,
+          day: d.order >= 0 && d.order < 7 ? dayNames[d.order] : null,
+          items: {
+            create: d.items.map((i) => ({
+              exerciseId: i.exerciseId,
+              sets: i.sets,
+              reps: i.reps,
+              weight: i.weight ?? null,
+            })),
+          },
+        }))
+        : dayNames.map((dayName, index) => ({
+          title: dayName,
+          order: index,
+          day: dayName,
+          items: {
+            create: [],
+          },
+        }));
+
       const created = await ctx.db.plan.create({
         data: {
           userId: input.userId,
           name: input.name,
           days: {
-            create: input.days.map((d) => ({
-              title: d.title,
-              order: d.order,
-              items: {
-                create: d.items.map((i) => ({
-                  exerciseId: i.exerciseId,
-                  sets: i.sets,
-                  reps: i.reps,
-                  weight: i.weight ?? null,
-                })),
-              },
-            })),
+            create: daysToCreate,
           },
         },
         include: { days: { include: { items: true } } },
@@ -58,7 +92,7 @@ export const planRouter = createTRPCRouter({
       const plans = await ctx.db.plan.findMany({
         where: { userId: input.userId },
         orderBy: { updatedAt: "desc" },
-        include: { 
+        include: {
           _count: { select: { days: true } },
           days: {
             select: { id: true, title: true, order: true, isRestDay: true }
@@ -91,19 +125,37 @@ export const planRouter = createTRPCRouter({
 
   // Get today's workout from active plan
   getTodaysWorkout: publicProcedure
-    .input(z.object({ userId: z.string().min(1) }))
+    .input(z.object({ 
+      userId: z.string().min(1),
+      day: z.enum(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]).optional(),
+    }))
     .query(async ({ ctx, input }) => {
+      // Constants
+      const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const DAY_ORDER_MAP: Record<string, number> = {
+        "Sunday": 0,
+        "Monday": 1,
+        "Tuesday": 2,
+        "Wednesday": 3,
+        "Thursday": 4,
+        "Friday": 5,
+        "Saturday": 6,
+      };
+      
+      // Use provided day from client (local timezone) or fall back to UTC calculation
+      const now = new Date();
+      const currentDayName = input.day ?? DAY_NAMES[now.getUTCDay()]!;
+      const currentDayOfWeek = input.day ? DAY_ORDER_MAP[input.day]! : now.getUTCDay();
+      const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+      // Fetch user with active plan
       const user = await ctx.db.user.findUnique({
         where: { id: input.userId },
         include: {
           activePlan: {
             include: {
               days: {
-                include: {
-                  items: {
-                    include: { exercise: true },
-                  },
-                },
+                include: { items: { include: { exercise: true } } },
                 orderBy: { order: "asc" },
               },
             },
@@ -115,57 +167,116 @@ export const planRouter = createTRPCRouter({
         return { hasPlan: false, plan: null, todayWorkout: null };
       }
 
-      // Get last completed workout with plan day
+      const planDays = user.activePlan.days;
+
+      // Helper: Check if day has exercises
+      const hasExercises = (day: typeof planDays[0]) => {
+        return day && day.items.length > 0 && day.items.some((item) => item.exercise !== null);
+      };
+
+      // Helper: Normalize order (7 -> 6 for Saturday)
+      const normalizeOrder = (order: number) => (order === 7 ? 6 : order);
+
+      // Helper: Match day by day field or order
+      // Checks day field first (most reliable), then falls back to order
+      const matchesDayOfWeek = (day: typeof planDays[0], targetDayName: string, targetDayOrder: number) => {
+        // First try to match by day field (e.g., "Monday")
+        if (day.day === targetDayName) return true;
+        // Fall back to matching by order if day field doesn't match or is null
+        return normalizeOrder(day.order) === targetDayOrder;
+      };
+
+      // Helper: Find day matching specific day of week
+      // Returns the matching day, prioritizing days with exercises, but still returns a day without exercises if that's the only match
+      const findDayForDayOfWeek = (dayName: string, dayOrder: number) => {
+        const matches = planDays.filter(d => matchesDayOfWeek(d, dayName, dayOrder));
+        // Prioritize days with exercises, but return any match if no day with exercises exists
+        return matches.find(hasExercises) ?? matches[0] ?? undefined;
+      };
+
+      // Get last completed workout
       const lastLog = await ctx.db.workoutLog.findFirst({
-        where: {
-          userId: input.userId,
-          planDayId: { not: null },
-          completed: true,
-        },
+        where: { userId: input.userId, planDayId: { not: null }, completed: true },
         orderBy: { date: "desc" },
-        include: { planDay: true },
+        include: { planDay: { include: { items: { include: { exercise: true } } } } },
       });
 
-      // Determine today's workout day
-      let todayDay = user.activePlan.days[0]; // Default to first day
-      
-      if (lastLog?.planDay) {
-        const lastDayOrder = lastLog.planDay.order;
-        const nextDayIndex = user.activePlan.days.findIndex(
-          (d) => d.order > lastDayOrder
-        );
-        if (nextDayIndex >= 0) {
-          todayDay = user.activePlan.days[nextDayIndex]!;
+      // Determine which day to show
+      // First, try to find exact match for today's day of week
+      let selectedDay = findDayForDayOfWeek(currentDayName!, currentDayOfWeek);
+
+      // Only fallback if there's absolutely no match for today's day
+      // This ensures we show the correct day of week, even if it has no exercises
+      if (!selectedDay) {
+        // No day matches today - fallback to first day with exercises as last resort
+        selectedDay = planDays.find(hasExercises) ?? planDays[0];
+      }
+
+      // Adjust selection based on last workout log
+      if (lastLog?.planDay && selectedDay) {
+        const lastLogDateUTC = new Date(Date.UTC(
+          lastLog.date.getUTCFullYear(),
+          lastLog.date.getUTCMonth(),
+          lastLog.date.getUTCDate()
+        ));
+        const wasCompletedToday = lastLogDateUTC.getTime() === todayUTC.getTime();
+
+        if (wasCompletedToday) {
+          // Show next day after completion
+          const nextDayOfWeek = (currentDayOfWeek + 1) % 7;
+          const nextDayName = DAY_NAMES[nextDayOfWeek]!;
+          
+          let nextDay = findDayForDayOfWeek(nextDayName, nextDayOfWeek);
+          
+          if (!nextDay) {
+            // Find next by order
+            const lastOrder = normalizeOrder(lastLog.planDay.order);
+            const nextDayIndex = planDays.findIndex(d => normalizeOrder(d.order) > lastOrder);
+            nextDay = nextDayIndex >= 0 
+              ? planDays[nextDayIndex]! 
+              : planDays.find(hasExercises) ?? planDays[0]!;
+          }
+          
+          selectedDay = nextDay;
         } else {
-          // Cycle back to first day
-          todayDay = user.activePlan.days[0]!;
+          // Check if should repeat last day
+          const lastDayInPlan = planDays.find(d => d.id === lastLog.planDay!.id);
+          const lastDayMatchesToday = lastLog.planDay.day 
+            ? lastLog.planDay.day === currentDayName
+            : normalizeOrder(lastLog.planDay.order) === currentDayOfWeek;
+
+          if (lastDayMatchesToday && lastDayInPlan && hasExercises(lastDayInPlan)) {
+            selectedDay = lastDayInPlan;
+          }
         }
       }
 
-      return {
+      // Build result
+      const result = {
         hasPlan: true,
-        plan: {
-          id: user.activePlan.id,
-          name: user.activePlan.name,
-        },
-        todayWorkout: todayDay
+        plan: { id: user.activePlan.id, name: user.activePlan.name },
+        todayWorkout: selectedDay
           ? {
-              id: todayDay.id,
-              title: todayDay.title,
-              order: todayDay.order,
-              isRestDay: todayDay.isRestDay ?? false,
-              exercises: todayDay.items.map((item) => ({
-                id: item.id,
-                exerciseId: item.exerciseId,
-                exerciseName: item.exercise.name,
-                muscleGroup: item.exercise.muscleGroup,
-                sets: item.sets,
-                reps: item.reps,
-                weight: item.weight,
-              })),
+              id: selectedDay.id,
+              title: selectedDay.title,
+              order: selectedDay.order,
+              isRestDay: selectedDay.isRestDay ?? false,
+              exercises: selectedDay.items
+                .filter((item) => item.exercise !== null)
+                .map((item) => ({
+                  id: item.id,
+                  exerciseId: item.exerciseId,
+                  exerciseName: item.exercise!.name,
+                  muscleGroup: item.exercise!.muscleGroup,
+                  sets: item.sets,
+                  reps: item.reps,
+                  weight: item.weight,
+                })),
             }
           : null,
       };
+
+      return result;
     }),
   delete: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
@@ -227,20 +338,35 @@ export const planRouter = createTRPCRouter({
         planId: z.string().min(1),
         title: z.string().min(1),
         order: z.number().min(0),
+        day: z.string().optional(), // Day of week name
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Day names for order 0-6 (Sunday-Saturday)
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const dayName = input.day ?? (input.order >= 0 && input.order < 7 ? dayNames[input.order] : null);
+
       const day = await ctx.db.planDay.create({
-        data: { planId: input.planId, title: input.title, order: input.order },
+        data: {
+          planId: input.planId,
+          title: input.title,
+          order: input.order,
+          day: dayName,
+        },
       });
       return { ok: true, id: day.id };
     }),
   updateDay: publicProcedure
     .input(z.object({ id: z.string().min(1), title: z.string().min(1), order: z.number().optional() }))
     .mutation(async ({ ctx, input }) => {
-      const updateData: { title: string; order?: number } = { title: input.title };
+      // Day names for order 0-6 (Sunday-Saturday), order 7 also maps to Saturday
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      const updateData: { title: string; order?: number; day?: string | null } = { title: input.title };
       if (input.order !== undefined) {
         updateData.order = input.order;
+        // Update day field based on order
+        updateData.day = input.order === 7 ? "Saturday" : (input.order >= 0 && input.order < 7 ? dayNames[input.order] : null);
       }
       await ctx.db.planDay.update({
         where: { id: input.id },
@@ -251,9 +377,16 @@ export const planRouter = createTRPCRouter({
   updateDayOrder: publicProcedure
     .input(z.object({ id: z.string().min(1), order: z.number().min(0) }))
     .mutation(async ({ ctx, input }) => {
+      // Day names for order 0-6 (Sunday-Saturday), order 7 also maps to Saturday
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const dayName = input.order === 7 ? "Saturday" : (input.order >= 0 && input.order < 7 ? dayNames[input.order] : null);
+
       await ctx.db.planDay.update({
         where: { id: input.id },
-        data: { order: input.order },
+        data: {
+          order: input.order,
+          day: dayName,
+        },
       });
       return { ok: true };
     }),
@@ -270,14 +403,21 @@ export const planRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Update all day orders in a transaction
+      // Day names for order 0-6 (Sunday-Saturday), order 7 also maps to Saturday
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      // Update all day orders and day fields in a transaction
       await ctx.db.$transaction(
-        input.orders.map(({ id, order }) =>
-          ctx.db.planDay.update({
+        input.orders.map(({ id, order }) => {
+          const dayName = order === 7 ? "Saturday" : (order >= 0 && order < 7 ? dayNames[order] : null);
+          return ctx.db.planDay.update({
             where: { id, planId: input.planId },
-            data: { order },
-          })
-        )
+            data: {
+              order,
+              day: dayName,
+            },
+          });
+        })
       );
       return { ok: true };
     }),
@@ -332,6 +472,7 @@ export const planRouter = createTRPCRouter({
           planId: input.planId,
           title: `${sourceDay.title} Copy`,
           order: (maxOrder?.order ?? -1) + 1,
+          day: sourceDay.day, // Preserve day field when duplicating
           items: {
             create: sourceDay.items.map((item) => ({
               exerciseId: item.exerciseId,
@@ -563,9 +704,13 @@ export const planRouter = createTRPCRouter({
             );
             return m?.id ?? null;
           };
+          // Day names for order 0-6 (Sunday-Saturday)
+          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
           const normalized = daysFromAi.map((d, idx) => ({
             title: d.title ?? `Day ${idx + 1}`,
             order: idx,
+            day: idx < 7 ? dayNames[idx] : null,
             items: d.items
               .map((it) => ({
                 exerciseId: it.exerciseId ?? mapNameToId(it.exerciseName) ?? "",
@@ -586,6 +731,7 @@ export const planRouter = createTRPCRouter({
                   create: normalized.map((d) => ({
                     title: d.title,
                     order: d.order,
+                    day: d.day,
                     items: { create: d.items },
                   })),
                 },
@@ -626,9 +772,13 @@ export const planRouter = createTRPCRouter({
         }
         return res;
       };
+      // Day names for order 0-6 (Sunday-Saturday)
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
       const days: {
         title: string;
         order: number;
+        day: string | null;
         items: { exerciseId: string; sets: number; reps: number }[];
       }[] = [];
       const pattern = ["push", "pull", "legs"] as const;
@@ -641,7 +791,7 @@ export const planRouter = createTRPCRouter({
             : kind === "pull"
               ? pick("back", 4)
               : pick("legs", 4);
-        days.push({ title, order: i, items });
+        days.push({ title, order: i, day: i < 7 ? dayNames[i] : null, items });
       }
       const created = await ctx.db.plan.create({
         data: {
@@ -651,6 +801,7 @@ export const planRouter = createTRPCRouter({
             create: days.map((d) => ({
               title: d.title,
               order: d.order,
+              day: d.day,
               items: { create: d.items },
             })),
           },

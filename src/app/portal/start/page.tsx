@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 import {
@@ -42,8 +42,24 @@ export default function StartWorkoutPage() {
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 
-  // Get today's workout
+  const utils = api.useUtils();
+
+  // Get today's workout - refetch on window focus and when returning to page
+  // Pass day based on local timezone to avoid UTC timezone issues
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+  
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId, day: localDayName },
+    {
+      enabled: !!userId,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    },
+  );
+
+  // Check for active workout (match quick-actions behavior)
+  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
     { userId },
     { enabled: !!userId },
   );
@@ -58,40 +74,51 @@ export default function StartWorkoutPage() {
     onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
   });
 
-  const toggleRestDay = api.plan.toggleRestDay.useMutation();
+  const toggleRestDay = api.plan.toggleRestDay.useMutation({
+    onSuccess: async () => {
+      // Invalidate and refetch today's workout after toggling rest day
+      await utils.plan.getTodaysWorkout.invalidate({ userId });
+      await todaysWorkout.refetch();
+    },
+  });
 
   const handleStartWorkout = () => {
     if (!userId) return;
 
-    // Check if today is a rest day
-    if (todaysWorkout.data?.todayWorkout?.isRestDay) {
-      // It's a rest day - show rest day message
+    // Check if there's already an active workout - redirect to it (match quick-actions behavior)
+    if (activeWorkout.data && !activeWorkout.data.completed) {
+      router.push(`/portal/log/workout/${activeWorkout.data.id}`);
+      return;
+    }
+
+    // Check if today's workout has exercises first
+    const hasExercises = todaysWorkout.data?.todayWorkout?.exercises &&
+      todaysWorkout.data.todayWorkout.exercises.length > 0;
+
+    // If there are exercises, allow starting (exercises take priority over isRestDay flag)
+    if (hasExercises) {
+      // Check if there's a recent completed workout
+      if (recentWorkoutCheck.data?.hasRecentWorkout) {
+        setShowWarningDialog(true);
+        return;
+      }
+      quickStart.mutate({ userId });
+      return;
+    }
+
+    // No exercises - check if it's marked as rest day or show dialog
+    if (todaysWorkout.data?.todayWorkout) {
       setShowRestDayDialog(true);
       return;
     }
 
-    // Check if today's workout has exercises
-    const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
-                        todaysWorkout.data.todayWorkout.exercises.length > 0;
-    
-    if (!hasExercises && todaysWorkout.data?.todayWorkout) {
-      // No exercises - show rest day dialog
-      setShowRestDayDialog(true);
-      return;
-    }
-
-    // Check if there's a recent completed workout
-    if (recentWorkoutCheck.data?.hasRecentWorkout) {
-      setShowWarningDialog(true);
-      return;
-    }
-
+    // No workout scheduled - proceed anyway (match quick-actions behavior)
     quickStart.mutate({ userId });
   };
 
   const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
     setShowRestDayDialog(false);
-    
+
     if (action === 'skip') {
       // User confirms it's a rest day - just close the dialog
       return;
@@ -116,6 +143,18 @@ export default function StartWorkoutPage() {
     if (userId) quickStart.mutate({ userId });
   };
 
+  // Refetch today's workout when component mounts or when returning to page
+  useEffect(() => {
+    if (userId) {
+      // Refetch when page becomes visible (user returns from another tab/page)
+      const handleFocus = () => {
+        void utils.plan.getTodaysWorkout.invalidate({ userId });
+      };
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, [userId, utils]);
+
   // Loading state
   if (todaysWorkout.isLoading) {
     return (
@@ -127,9 +166,23 @@ export default function StartWorkoutPage() {
       </div>
     );
   }
-
+  // #region agent log
+  if (todaysWorkout.data) {
+    console.log('Start page - todaysWorkout data:', {
+      hasPlan: todaysWorkout.data.hasPlan,
+      planName: todaysWorkout.data.plan?.name,
+      todayWorkout: todaysWorkout.data.todayWorkout ? {
+        id: todaysWorkout.data.todayWorkout.id,
+        title: todaysWorkout.data.todayWorkout.title,
+        order: todaysWorkout.data.todayWorkout.order,
+        exercisesCount: todaysWorkout.data.todayWorkout.exercises.length,
+        isRestDay: todaysWorkout.data.todayWorkout.isRestDay
+      } : null
+    });
+  }
+  // #endregion
+  
   const { hasPlan, plan, todayWorkout } = todaysWorkout.data ?? {};
-
   // No plan - show plan creation options
   if (!hasPlan || !plan) {
     // Show quick wizard if user chose manual builder
@@ -146,6 +199,8 @@ export default function StartWorkoutPage() {
             userId={userId}
             onComplete={async () => {
               setShowQuickWizard(false);
+              // Invalidate and refetch to get updated workout data
+              await utils.plan.getTodaysWorkout.invalidate({ userId });
               await todaysWorkout.refetch();
             }}
             onCancel={() => setShowQuickWizard(false)}
@@ -367,7 +422,6 @@ export default function StartWorkoutPage() {
                 onClick={handleStartWorkout}
                 disabled={
                   quickStart.isPending ||
-                  todaysWorkout.data?.todayWorkout?.isRestDay ||
                   (todaysWorkout.data?.todayWorkout?.exercises?.length ?? 0) === 0
                 }
                 className="h-12 w-full bg-gradient-to-br from-teal-600 to-teal-700 text-base font-semibold text-white hover:from-teal-700 hover:to-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -377,15 +431,19 @@ export default function StartWorkoutPage() {
                     <Dumbbell className="mr-2 h-5 w-5 animate-spin" />
                     Starting...
                   </>
-                ) : todaysWorkout.data?.todayWorkout?.isRestDay ? (
-                  <>
-                    <Calendar className="mr-2 h-5 w-5" />
-                    Rest Day
-                  </>
                 ) : (todaysWorkout.data?.todayWorkout?.exercises?.length ?? 0) === 0 ? (
                   <>
-                    <Target className="mr-2 h-5 w-5" />
-                    No Exercises Scheduled
+                    {todaysWorkout.data?.todayWorkout?.isRestDay ? (
+                      <>
+                        <Calendar className="mr-2 h-5 w-5" />
+                        Rest Day
+                      </>
+                    ) : (
+                      <>
+                        <Target className="mr-2 h-5 w-5" />
+                        No Exercises Scheduled
+                      </>
+                    )}
                   </>
                 ) : (
                   <>

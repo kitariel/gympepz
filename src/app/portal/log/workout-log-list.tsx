@@ -403,7 +403,16 @@ export function WorkoutLogList() {
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <div className="mr-2 flex items-center justify-between">
                     <span className="text-muted-foreground/70 text-[10px] font-semibold tracking-wider uppercase">
-                      {format(new Date(log.date), "EEEE, MMM d")}
+                      {(() => {
+                        const date = new Date(log.date);
+                        // Extract UTC date components to avoid timezone shifts
+                        const utcDate = new Date(Date.UTC(
+                          date.getUTCFullYear(),
+                          date.getUTCMonth(),
+                          date.getUTCDate()
+                        ));
+                        return format(utcDate, "EEEE, MMM d");
+                      })()}
                     </span>
                     {status && StatusIcon && (
                       <Badge

@@ -195,7 +195,16 @@ export function CalendarTab({ userId }: CalendarTabProps) {
                     {log.planDay?.title ?? "Untitled Workout"}
                   </p>
                   <p className="text-muted-foreground/70 mt-1 text-[10px] font-medium tracking-wider uppercase">
-                    {format(new Date(log.date), "EEEE, MMM d")}
+                    {(() => {
+                      const date = new Date(log.date);
+                      // Extract UTC date components to avoid timezone shifts
+                      const utcDate = new Date(Date.UTC(
+                        date.getUTCFullYear(),
+                        date.getUTCMonth(),
+                        date.getUTCDate()
+                      ));
+                      return format(utcDate, "EEEE, MMM d");
+                    })()}
                   </p>
                 </div>
                 <div className="ml-4 flex shrink-0 flex-col items-end gap-0.5 text-right">

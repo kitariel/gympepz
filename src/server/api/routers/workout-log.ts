@@ -12,11 +12,33 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Use provided date or set to today's date in UTC (start of day)
+      let workoutDate: Date;
+      if (input.date) {
+        // If date is provided, normalize it to start of day in UTC
+        const providedDate = new Date(input.date);
+        workoutDate = new Date(Date.UTC(
+          providedDate.getUTCFullYear(),
+          providedDate.getUTCMonth(),
+          providedDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
+      } else {
+        // Default to today in UTC (start of day)
+        const now = new Date();
+        workoutDate = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0, 0, 0, 0
+        ));
+      }
+
       const log = await ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
           planDayId: input.planDayId,
-          date: input.date ?? new Date(),
+          date: workoutDate,
           notes: input.notes,
         },
       });
@@ -225,12 +247,21 @@ export const workoutLogRouter = createTRPCRouter({
         throw new Error("No workout day found");
       }
 
-      // Create workout log
+      // Create workout log with today's date in UTC (start of day)
+      // This ensures the date displays correctly regardless of timezone
+      const now = new Date();
+      const todayUTC = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0, 0, 0, 0
+      ));
+
       const log = await ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
           planDayId: nextDay.id,
-          date: new Date(),
+          date: todayUTC,
         },
       });
 

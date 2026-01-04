@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Play,
   Sparkles,
@@ -30,9 +29,6 @@ import {
   User,
   LogOut,
   Home,
-  Dumbbell,
-  Target,
-  BarChart3,
   Calendar,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -51,7 +47,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { User } from "lucide-react";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -125,18 +120,42 @@ export function PortalHeader() {
   );
   const activePlanData = activePlan.data?.find((p) => p.isActive);
 
+  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
+
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
     { enabled: !!userId },
   );
 
   // Get today's workout to check if it has exercises
-  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
-    { userId },
-    { enabled: !!userId && !!activePlanData },
-  );
+  // Match quick-actions behavior: enable when userId and activePlanId exist
+  // Pass day based on local timezone to avoid UTC timezone issues
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
   
-  const toggleRestDay = api.plan.toggleRestDay.useMutation();
+  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId, day: localDayName },
+    { 
+      enabled: !!userId && !!activePlanData?.id,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    },
+  );
+
+  console.log('todaysWorkout.datatodaysWorkout.datatodaysWorkout.data', todaysWorkout.data)
+
+  const utils = api.useUtils();
+  const toggleRestDay = api.plan.toggleRestDay.useMutation({
+    onSuccess: () => {
+      // Invalidate getTodaysWorkout query to ensure UI updates
+      if (userId) {
+        void utils.plan.getTodaysWorkout.invalidate({ userId });
+      }
+    },
+  });
 
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
@@ -146,39 +165,57 @@ export function PortalHeader() {
   });
 
   const handleQuickStart = () => {
-    if (!userId || !activePlanData) {
+    if (!userId) {
       router.push("/portal/log");
       return;
     }
 
-    // Check if today is a rest day first
-    if (todaysWorkout.data?.todayWorkout?.isRestDay) {
-      // It's a rest day - show rest day message
+    if (!activePlanData) {
+      router.push("/portal/log");
+      return;
+    }
+
+    // Check if there's already an active workout - redirect to it (match quick-actions behavior)
+    if (activeWorkout.data && !activeWorkout.data.completed) {
+      router.push(`/portal/log/workout/${activeWorkout.data.id}`);
+      return;
+    }
+
+    const todayWorkout = todaysWorkout.data?.todayWorkout;
+    const isRestDay = todayWorkout?.isRestDay ?? false;
+    const hasExercises = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+
+    // Priority: 1. Rest Day (if marked as rest day, show dialog), 2. Exercises, 3. No workout
+    if (isRestDay) {
+      // It's a rest day - show dialog
       setShowRestDayDialog(true);
       return;
     }
 
-    // Check if today's workout has exercises
-    const hasExercises = todaysWorkout.data?.todayWorkout?.exercises && 
-                        todaysWorkout.data.todayWorkout.exercises.length > 0;
-    
-    if (!hasExercises && todaysWorkout.data?.todayWorkout) {
-      // No exercises - show rest day dialog
+    // If there are exercises, allow starting
+    if (hasExercises) {
+      // Check if there's a recent completed workout
+      if (recentWorkoutCheck.data?.hasRecentWorkout) {
+        setShowWarningDialog(true);
+        return;
+      }
+      quickStart.mutate({ userId });
+      return;
+    }
+
+    // No exercises and not a rest day - show dialog
+    if (todayWorkout) {
       setShowRestDayDialog(true);
       return;
     }
 
-    if (recentWorkoutCheck.data?.hasRecentWorkout) {
-      setShowWarningDialog(true);
-      return;
-    }
-
+    // No workout scheduled - proceed anyway (match quick-actions behavior)
     quickStart.mutate({ userId });
   };
 
   const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
     setShowRestDayDialog(false);
-    
+
     if (action === 'skip') {
       // User confirms it's a rest day - just close
       return;
@@ -186,7 +223,7 @@ export function PortalHeader() {
       // User wants to mark today as rest day
       if (todaysWorkout.data?.todayWorkout?.id) {
         await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
-        await todaysWorkout.refetch();
+        // Query will be invalidated automatically by the mutation's onSuccess
       }
       return;
     } else {
@@ -205,7 +242,6 @@ export function PortalHeader() {
       router.push("/portal/log");
     }
   };
-
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 rounded-t-xl border-b px-4 backdrop-blur">
       {/* Sidebar Trigger */}
@@ -258,19 +294,69 @@ export function PortalHeader() {
       {/* Quick Actions */}
       <div className="ml-auto flex items-center gap-2">
         {/* Quick Start Workout Button */}
-        {activePlanData && (
-          <Button
-            size="sm"
-            onClick={handleQuickStart}
-            disabled={quickStart.isPending}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
-          >
-            <Play className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">
-              {quickStart.isPending ? "Starting..." : "Start Workout"}
-            </span>
-          </Button>
-        )}
+        {activePlanData && (() => {
+          const todayWorkout = todaysWorkout.data?.todayWorkout;
+          const exercises = todayWorkout?.exercises;
+          const hasExercises = exercises && exercises.length > 0;
+
+          // Check if planDay is marked as rest day (this is the primary check)
+          const isRestDay = todayWorkout?.isRestDay ?? false;
+
+          // Determine button text and icon
+          // Priority: 1. Rest Day status (if marked as rest day, always show Rest Day), 2. Exercises, 3. No workout
+          const getButtonContent = () => {
+            if (quickStart.isPending) {
+              return {
+                icon: <Play className="h-3.5 w-3.5 animate-spin" />,
+                text: "Starting...",
+              };
+            }
+
+            // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
+            if (isRestDay) {
+              return {
+                icon: <Calendar className="h-3.5 w-3.5" />,
+                text: "Rest Day",
+              };
+            }
+
+            // Priority 2: Check if there are exercises
+            if (hasExercises) {
+              return {
+                icon: <Play className="h-3.5 w-3.5" />,
+                text: "Start Workout",
+              };
+            }
+
+            // Priority 3: No exercises and not a rest day - show based on whether workout exists
+            if (todayWorkout) {
+              return {
+                icon: <Play className="h-3.5 w-3.5" />,
+                text: "No Exercises",
+              };
+            }
+
+            // No workout scheduled
+            return {
+              icon: <Play className="h-3.5 w-3.5" />,
+              text: "Start Workout",
+            };
+          };
+
+          const buttonContent = getButtonContent();
+
+          return (
+            <Button
+              size="sm"
+              onClick={handleQuickStart}
+              disabled={quickStart.isPending}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
+            >
+              {buttonContent.icon}
+              <span className="hidden sm:inline">{buttonContent.text}</span>
+            </Button>
+          );
+        })()}
 
         {/* AI Planner Button */}
         <Button
