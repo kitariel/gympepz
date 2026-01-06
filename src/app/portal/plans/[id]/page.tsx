@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { WeeklyScheduleBoard } from "./_components/weekly-schedule-board";
 import { LoadingView } from "./_components/loading-view";
 import { PlanHeader } from "./_components/plan-header";
-import { PlanNameEditor } from "./_components/plan-name-editor";
 import { AddDayDialog } from "./_components/add-day-dialog";
 import { AddExerciseDialog } from "./_components/add-exercise-dialog";
 import { CopyExercisesDialog } from "./_components/copy-exercises-dialog";
@@ -132,27 +131,25 @@ export default function PlanDetailPage({
       <PlanHeader
         plan={data.planData}
         totalExercises={data.totalExercises}
-      />
-
-      {/* Plan Name Editor */}
-      <PlanNameEditor
         planName={planName}
-        currentPlanName={data.planData?.name}
         onPlanNameChange={setPlanName}
-        onSave={() => handlers.handleSaveName(planName)}
-        isSaving={mutations.updateMeta.isPending}
+        onSaveName={() => handlers.handleSaveName(planName)}
+        isSavingName={mutations.updateMeta.isPending}
       />
 
       {/* Weekly Schedule */}
-      <div className="space-y-5 w-full max-w-full">
+      <div className="w-full max-w-full space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Weekly Schedule
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Drag days to reorder • Click empty slots to add workouts • Scroll
-              horizontally to view all days
+              Drag days to reorder • Click empty slots to add workouts
+              <span className="hidden md:inline">
+                {" "}
+                • Scroll horizontally to view all days
+              </span>
             </p>
           </div>
         </div>

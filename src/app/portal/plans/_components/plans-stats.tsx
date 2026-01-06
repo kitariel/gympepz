@@ -20,7 +20,7 @@ export function PlansStats({ stats }: PlansStatsProps) {
               <div className="space-y-0.5 sm:space-y-1">
                 <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                 <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">
-                  Total Plans
+                  Saved Programs
                 </p>
               </div>
               <div className="bg-blue-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">
@@ -38,7 +38,7 @@ export function PlansStats({ stats }: PlansStatsProps) {
               <div className="space-y-0.5 sm:space-y-1">
                 <p className="text-xl sm:text-2xl font-bold">{stats.active}</p>
                 <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">
-                  Active Plans
+                  Current Mission
                 </p>
               </div>
               <div className="bg-amber-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">
@@ -58,7 +58,7 @@ export function PlansStats({ stats }: PlansStatsProps) {
                   {stats.totalDays}
                 </p>
                 <p className="text-muted-foreground text-[10px] sm:text-xs font-medium">
-                  Total Days
+                  Weekly Commitment
                 </p>
               </div>
               <div className="bg-purple-500/20 rounded-xl p-2 sm:p-3 group-hover:scale-110 transition-transform">

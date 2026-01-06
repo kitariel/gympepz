@@ -60,21 +60,21 @@ export default function PlansPage() {
       <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Workout Plans
+            Training Programs
           </h2>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            Manage your workout programs and training splits
+            Design your protocol or let the Coach build one for you
           </p>
         </div>
         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => router.push("/portal/ai-planner")}
-            className="gap-2 h-9 text-xs sm:text-sm flex-1 sm:flex-initial min-w-[120px] sm:min-w-0"
+            className="gap-2 h-9 text-xs sm:text-sm flex-1 sm:flex-initial min-w-[120px] sm:min-w-0 bg-indigo-600 hover:bg-indigo-700"
           >
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">AI Generator</span>
+            <span className="hidden xs:inline">Ask Coach</span>
             <span className="xs:hidden">AI</span>
           </Button>
           <CreatePlanDialog
