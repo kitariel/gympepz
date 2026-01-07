@@ -4,17 +4,15 @@
 
 import { useRouter } from "next/navigation";
 import type { DragEndEvent } from "@dnd-kit/core";
-import type { Plan, PlanDay } from "../_types";
-import type { ReturnType } from "./use-plan-detail-data";
-import type { ReturnType as MutationsReturnType } from "./use-plan-detail-mutations";
+import type { PlanDay } from "../_types";
+import type { usePlanDetailData } from "./use-plan-detail-data";
+import type { usePlanDetailMutations } from "./use-plan-detail-mutations";
 
 interface UsePlanDetailHandlersProps {
   planId: string;
   userId: string;
-  data: ReturnType<typeof import("./use-plan-detail-data").usePlanDetailData>;
-  mutations: MutationsReturnType<
-    typeof import("./use-plan-detail-mutations").usePlanDetailMutations
-  >;
+  data: ReturnType<typeof usePlanDetailData>;
+  mutations: ReturnType<typeof usePlanDetailMutations>;
   localDays: (PlanDay | null)[];
   setLocalDays: (days: (PlanDay | null)[]) => void;
 }
@@ -85,47 +83,22 @@ export function usePlanDetailHandlers({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const activeDayId = active.id as string;
-    let overSlotIndex = -1;
-
-    // Check if over.id is a slot index (0-6)
-    if (["0", "1", "2", "3", "4", "5", "6"].includes(over.id as string)) {
-      overSlotIndex = parseInt(over.id as string);
-    } else {
-      // Otherwise assume it's a day ID and look it up
-      overSlotIndex = localDays.findIndex((d) => d?.id === over.id);
-    }
-
-    // If dropping on a slot (slot index 0-6)
-    if (overSlotIndex >= 0 && overSlotIndex < 7) {
-      const newDays = [...localDays];
-      const activeDay = planData?.days?.find((d) => d.id === activeDayId);
-
-      if (!activeDay) return;
-
-      // Find current position of dragged day
-      const currentSlotIndex = newDays.findIndex(
-        (day) => day?.id === activeDayId,
-      );
-
-      // Check if target slot already has a day (need to swap)
-      const existingDayAtSlot = newDays[overSlotIndex];
-
-      if (currentSlotIndex >= 0) {
-        // Clear current slot
-        newDays[currentSlotIndex] = null;
-
-        // If target slot has a day, move it to the source slot (swap)
-        if (existingDayAtSlot && existingDayAtSlot.id !== activeDayId) {
-          newDays[currentSlotIndex] = {
-            ...existingDayAtSlot,
-            order: currentSlotIndex,
-          };
-        }
+    // Helper to find index in localDays
+    const getIndex = (id: string) => {
+      // If id is a slot index (0-6)
+      if (["0", "1", "2", "3", "4", "5", "6"].includes(id)) {
+        return parseInt(id);
       }
+      // Otherwise look it up by UUID
+      return localDays.findIndex((d) => d?.id === id);
+    };
 
-      // Place active day in target slot with updated order
-      newDays[overSlotIndex] = { ...activeDay, order: overSlotIndex };
+    const activeIndex = getIndex(active.id as string);
+    const overIndex = getIndex(over.id as string);
+
+    if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+      const { arrayMove } = await import("@dnd-kit/sortable");
+      const newDays = arrayMove(localDays, activeIndex, overIndex);
 
       // Update local state immediately for responsive UI
       setLocalDays(newDays);
@@ -266,4 +239,3 @@ export function usePlanDetailHandlers({
     handleExerciseDragEnd,
   };
 }
-

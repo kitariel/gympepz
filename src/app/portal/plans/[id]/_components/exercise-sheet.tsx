@@ -12,29 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
+  Sortable,
+  SortableContent,
+  SortableItem,
   type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import {
-  Dumbbell,
-  Plus,
-  Move,
-  Check,
-  Pencil,
-  Save,
-} from "lucide-react";
+} from "@/components/ui/sortable";
+import { Dumbbell, Plus, Move, Check, Pencil, Save } from "lucide-react";
 import { SortableExerciseItem } from "./sortable-exercise-item";
 import { ExerciseCard } from "./exercise-card";
 import type { PlanDay } from "../_types";
@@ -51,7 +35,11 @@ interface ExerciseSheetProps {
   onCancelEdit: () => void;
   onAddExercise: () => void;
   onDeleteItem: (id: string) => void;
-  onUpdateItem: (id: string, field: "sets" | "reps" | "weight", value: number) => void;
+  onUpdateItem: (
+    id: string,
+    field: "sets" | "reps" | "weight",
+    value: number,
+  ) => void;
   onRefetch: () => void;
   onExerciseDragEnd: (event: DragEndEvent, dayId: string) => void;
   isUpdatingDay: boolean;
@@ -76,22 +64,12 @@ export function ExerciseSheet({
 }: ExerciseSheetProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  // Drag and drop sensors for exercises
-  const exerciseSensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
   const sortedItems = [...(day.items ?? [])].sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
 
-  const totalSets = day.items?.reduce(
-    (sum, item) => sum + (item.sets ?? 0),
-    0,
-  ) ?? 0;
+  const totalSets =
+    day.items?.reduce((sum, item) => sum + (item.sets ?? 0), 0) ?? 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -99,11 +77,11 @@ export function ExerciseSheet({
         side="bottom"
         className="flex max-h-[95vh] w-full flex-col overflow-y-auto p-0 sm:max-h-[92vh] md:max-h-[85vh]"
       >
-        <SheetHeader className="bg-gradient-to-b from-muted/40 via-muted/20 to-background sticky top-0 z-10 border-b border-border/50 px-6 pt-7 pb-6 shadow-lg backdrop-blur-sm">
+        <SheetHeader className="from-muted/40 via-muted/20 to-background border-border/50 sticky top-0 z-10 border-b bg-gradient-to-b px-6 pt-7 pb-6 shadow-lg backdrop-blur-sm">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-4">
               {editingDayId === day.id ? (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                   <Input
                     value={editingDayTitle}
                     onChange={(e) => onEditingDayTitleChange(e.target.value)}
@@ -114,14 +92,14 @@ export function ExerciseSheet({
                         onCancelEdit();
                       }
                     }}
-                    className="h-12 flex-1 text-lg font-bold border-2 focus:border-primary rounded-xl shadow-sm transition-all"
+                    className="focus:border-primary h-12 flex-1 rounded-xl border-2 text-lg font-bold shadow-sm transition-all"
                     autoFocus
                     placeholder="Enter day title..."
                   />
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex shrink-0 gap-2">
                     <Button
                       size="sm"
-                      className="h-12 gap-2 px-6 font-semibold shadow-lg shadow-primary/20 rounded-xl"
+                      className="shadow-primary/20 h-12 gap-2 rounded-xl px-6 font-semibold shadow-lg"
                       onClick={() => onSaveDayTitle(day.id, editingDayTitle)}
                       disabled={isUpdatingDay || !editingDayTitle.trim()}
                     >
@@ -141,25 +119,25 @@ export function ExerciseSheet({
               ) : (
                 <>
                   <div className="space-y-4">
-                    <SheetTitle className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    <SheetTitle className="from-foreground to-foreground/70 bg-gradient-to-r bg-clip-text text-3xl leading-tight font-extrabold tracking-tight text-transparent sm:text-4xl">
                       {day.title}
                     </SheetTitle>
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 shadow-sm">
-                        <Dumbbell className="h-4 w-4 text-primary" />
-                        <span className="font-extrabold text-primary text-sm">
+                      <div className="from-primary/15 to-primary/5 border-primary/20 flex items-center gap-2.5 rounded-full border bg-gradient-to-r px-4 py-2 shadow-sm">
+                        <Dumbbell className="text-primary h-4 w-4" />
+                        <span className="text-primary text-sm font-extrabold">
                           {day.items?.length ?? 0}
                         </span>
-                        <span className="text-sm text-foreground/70 font-semibold">
+                        <span className="text-foreground/70 text-sm font-semibold">
                           {day.items?.length === 1 ? "exercise" : "exercises"}
                         </span>
                       </div>
                       {totalSets > 0 && (
-                        <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-muted/60 backdrop-blur-sm shadow-sm">
-                          <span className="font-extrabold text-foreground text-sm">
+                        <div className="bg-muted/60 flex items-center gap-2.5 rounded-full px-4 py-2 shadow-sm backdrop-blur-sm">
+                          <span className="text-foreground text-sm font-extrabold">
                             {totalSets}
                           </span>
-                          <span className="text-sm text-muted-foreground font-semibold">
+                          <span className="text-muted-foreground text-sm font-semibold">
                             total sets
                           </span>
                         </div>
@@ -173,7 +151,7 @@ export function ExerciseSheet({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-12 w-12 shrink-0 rounded-xl hover:bg-primary/5 hover:border-primary/50 transition-all shadow-sm"
+                className="hover:bg-primary/5 hover:border-primary/50 h-12 w-12 shrink-0 rounded-xl shadow-sm transition-all"
                 onClick={() => onStartEdit(day.id, day.title)}
               >
                 <Pencil className="h-4 w-4" />
@@ -204,7 +182,7 @@ export function ExerciseSheet({
             </Button>
             {!isDragging && (
               <Button
-                className="group h-14 flex-1 gap-3 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-[1.02]"
+                className="group shadow-primary/30 hover:shadow-primary/40 h-14 flex-1 gap-3 rounded-xl text-base font-bold shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl"
                 onClick={onAddExercise}
               >
                 <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
@@ -216,32 +194,32 @@ export function ExerciseSheet({
           {/* Exercise List */}
           {sortedItems.length > 0 ? (
             isDragging ? (
-              <DndContext
-                sensors={exerciseSensors}
-                collisionDetection={closestCenter}
-                onDragStart={() => {}}
+              <Sortable
+                value={sortedItems}
                 onDragEnd={(e) => onExerciseDragEnd(e, day.id)}
+                getItemValue={(item) => item.id}
+                orientation="vertical"
               >
-                <SortableContext
-                  items={sortedItems.map((item) => item.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <SortableContent>
                     {sortedItems.map((item, itemIndex) => (
-                      <SortableExerciseItem
+                      <SortableItem
                         key={item.id}
-                        id={item.id}
-                        item={item}
-                        itemIndex={itemIndex}
-                        onDeleteItem={onDeleteItem}
-                        onUpdateItem={onUpdateItem}
-                        onRefetch={onRefetch}
-                        isDraggingState={isDragging}
-                      />
+                        value={item.id}
+                        asChild
+                        asHandle
+                        className="mb-2"
+                      >
+                        <SortableExerciseItem
+                          item={item}
+                          itemIndex={itemIndex}
+                          onDeleteItem={onDeleteItem}
+                        />
+                      </SortableItem>
                     ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+                  </SortableContent>
+                </div>
+              </Sortable>
             ) : (
               <div className="space-y-4">
                 {sortedItems.map((item, itemIndex) => (
@@ -257,25 +235,25 @@ export function ExerciseSheet({
               </div>
             )
           ) : (
-            <Card className="border-2 bg-gradient-to-br from-muted/30 to-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-              <CardContent className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <Card className="from-muted/30 to-muted/10 overflow-hidden rounded-2xl border-2 bg-gradient-to-br backdrop-blur-sm">
+              <CardContent className="flex flex-col items-center justify-center px-6 py-20 text-center">
                 <div className="relative mb-8">
-                  <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-muted/80 to-muted/60 shadow-xl">
-                    <Dumbbell className="h-12 w-12 text-muted-foreground" />
+                  <div className="bg-primary/20 absolute inset-0 animate-pulse rounded-full blur-2xl" />
+                  <div className="from-muted/80 to-muted/60 relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br shadow-xl">
+                    <Dumbbell className="text-muted-foreground h-12 w-12" />
                   </div>
                 </div>
                 <h3 className="mb-3 text-2xl font-extrabold tracking-tight">
                   No exercises added yet
                 </h3>
-                <p className="text-muted-foreground mb-10 text-base max-w-md leading-relaxed">
+                <p className="text-muted-foreground mb-10 max-w-md text-base leading-relaxed">
                   Start building your workout by adding exercises to this day.
                   You can set sets, reps, and weight for each exercise.
                 </p>
                 <Button
                   size="lg"
                   onClick={onAddExercise}
-                  className="group h-14 gap-3 px-8 font-bold text-base shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 rounded-xl transition-all hover:scale-105"
+                  className="group shadow-primary/30 hover:shadow-primary/40 h-14 gap-3 rounded-xl px-8 text-base font-bold shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
                 >
                   <Plus className="h-5 w-5 transition-transform group-hover:scale-110" />
                   Add Your First Exercise
@@ -288,4 +266,3 @@ export function ExerciseSheet({
     </Sheet>
   );
 }
-

@@ -46,9 +46,7 @@ interface DayCardContentProps {
   // Style & DnD props
   style?: React.CSSProperties;
   className?: string;
-  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
-  isDragging?: boolean;
-  innerRef?: React.Ref<HTMLDivElement>;
+  dragHandle?: React.ReactNode;
 }
 
 export function DayCardContent({
@@ -69,9 +67,7 @@ export function DayCardContent({
   isCurrentDay = false,
   style,
   className,
-  dragHandleProps,
-  isDragging,
-  innerRef,
+  dragHandle,
 }: DayCardContentProps) {
   const totalSets = (dayData.items ?? []).reduce(
     (sum: number, item) => sum + (item.sets ?? 0),
@@ -80,7 +76,6 @@ export function DayCardContent({
 
   return (
     <Card
-      ref={innerRef}
       style={style}
       className={cn(
         "group relative flex w-full shrink-0 flex-col md:w-[340px]",
@@ -89,8 +84,7 @@ export function DayCardContent({
         "md:rounded-none md:border-y-0! md:border-t-0! md:border-r-2 md:border-b-0! md:border-l-2",
         "transition-all duration-300",
         "border-border/90 hover:border-border/60 hover:bg-card",
-        isDragging &&
-          "ring-primary/40 z-50 scale-95 rotate-1 opacity-50 ring-2",
+        "group-data-[dragging]:ring-primary/40 group-data-[dragging]:z-50 group-data-[dragging]:scale-95 group-data-[dragging]:rotate-1 group-data-[dragging]:opacity-50 group-data-[dragging]:ring-2",
         isCurrentDay && "border-primary/50 bg-primary/5 ring-primary/20 ring-1",
         "shadow-none!",
         className,
@@ -103,7 +97,7 @@ export function DayCardContent({
           !target.closest("button") &&
           !target.closest('[role="menuitem"]') &&
           !target.closest("input") &&
-          !isDragging
+          !document.querySelector("[data-dragging]")?.contains(target)
         ) {
           onOpenDrawer(dayData.id);
         }
@@ -145,17 +139,8 @@ export function DayCardContent({
             )}
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            {/* Drag Handle - Only visible if dragHandleProps are provided */}
-            {dragHandleProps && (
-              <div
-                {...dragHandleProps}
-                data-drag-handle
-                className="hover:bg-muted cursor-grab touch-none rounded-md p-1.5 opacity-0 transition-all duration-200 group-hover:opacity-100 active:cursor-grabbing"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GripVertical className="text-muted-foreground h-4 w-4" />
-              </div>
-            )}
+            {/* Drag Handle - Only visible if dragHandle is provided */}
+            {dragHandle}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

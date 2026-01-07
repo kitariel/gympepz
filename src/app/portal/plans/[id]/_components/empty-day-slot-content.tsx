@@ -12,7 +12,6 @@ interface EmptyDaySlotContentProps {
   isOver?: boolean;
 
   // Style & DnD props
-  innerRef?: React.Ref<HTMLDivElement>;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -22,13 +21,11 @@ export function EmptyDaySlotContent({
   onAddDay,
   isCurrentDay = false,
   isOver = false,
-  innerRef,
   style,
   className,
 }: EmptyDaySlotContentProps) {
   return (
     <Card
-      ref={innerRef}
       style={style}
       className={cn(
         "group relative flex w-full shrink-0 cursor-pointer flex-col transition-all md:w-[340px]",
