@@ -110,30 +110,38 @@
    DARK MODE
 -------------------------------- */
 .dark {
-  --background: #0a1f18; /* Very dark green (almost black) */
-  --foreground: #e8f5f0;
+  --background: #0F1115;
+  --foreground: #E5E7EB;
 
-  --card: #0d261d;
-  --card-foreground: #e8f5f0;
+  --card: #151922;
+  --card-foreground: #E5E7EB;
 
-  --primary: #18503c; /* Keep brand color or go slightly lighter: #2d7a5d */
+  --popover: #1C2230;
+  --popover-foreground: #E5E7EB;
+
+  --primary: #22C55E;
   --primary-foreground: #ffffff;
 
-  --secondary: #1a3b2f;
-  --secondary-foreground: #e8f5f0;
+  --secondary: #151922;
+  --secondary-foreground: #E5E7EB;
 
-  --muted: #1a3b2f;
-  --muted-foreground: #8ba89e;
+  --muted: #1A2029;
+  --muted-foreground: #9AA3AF;
 
-  --accent: #1a3b2f;
-  --accent-foreground: #e8f5f0;
+  --accent: #1C2230;
+  --accent-foreground: #E5E7EB;
 
-  --border: #1f4236;
-  --input: #1f4236;
-  --ring: #2d7a5d;
+  --border: #22262E;
+  --input: #22262E;
+  --ring: #22C55E;
 
-  --sidebar: #0a1f18;
-  --sidebar-foreground: #e8f5f0;
+  --sidebar: #0F1115;
+  --sidebar-foreground: #E5E7EB;
+  --sidebar-primary: #22C55E;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #151922;
+  --sidebar-accent-foreground: #E5E7EB;
+  --sidebar-border: #22262E;
 }
 
 /* -------------------------------
