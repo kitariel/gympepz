@@ -4,13 +4,11 @@
 
 import { useRouter } from "next/navigation";
 import type { RestDayAction } from "../_types";
-import type { ReturnType } from "./use-plans-data";
-import type { ReturnType as MutationsReturnType } from "./use-plans-mutations";
 
 interface UsePlanHandlersProps {
   userId: string;
   data: ReturnType<typeof import("./use-plans-data").usePlansData>;
-  mutations: MutationsReturnType<typeof import("./use-plans-mutations").usePlansMutations>;
+  mutations: ReturnType<typeof import("./use-plans-mutations").usePlansMutations>;
   activePlan: { id: string } | undefined;
   setShowRestDayDialog: (show: boolean) => void;
   setSelectedPlanForStart: (planId: string | null) => void;

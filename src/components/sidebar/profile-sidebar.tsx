@@ -11,10 +11,7 @@ import {
   SidebarGroupContent,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import {
@@ -39,12 +36,21 @@ export function useProfileSidebar() {
   const context = useContext(ProfileSidebarContext);
   if (!context) {
     // Return a no-op if context is not available
-    return { open: false, setOpen: () => {} };
+    return {
+      open: false,
+      setOpen: () => {
+        /* empty */
+      },
+    };
   }
   return context;
 }
 
-export function ProfileSidebarProvider({ children }: { children: React.ReactNode }) {
+export function ProfileSidebarProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <ProfileSidebarContext.Provider value={{ open, setOpen }}>
@@ -60,7 +66,11 @@ export default function ProfileSidebar(props: Props) {
   const isMobile = useIsMobile();
   const profileSidebarContext = useContext(ProfileSidebarContext);
   const openMobile = profileSidebarContext?.open ?? false;
-  const setOpenMobile = profileSidebarContext?.setOpen ?? (() => {});
+  const setOpenMobile =
+    profileSidebarContext?.setOpen ??
+    (() => {
+      /* empty */
+    });
 
   // API Queries
   const userQuery = api.user.getByEmail.useQuery(
@@ -80,11 +90,11 @@ export default function ProfileSidebar(props: Props) {
     date.setDate(date.getDate() - 30);
     return date;
   }, []);
-  
+
   const analyticsQuery = api.workoutLog.getAnalytics.useQuery(
     { userId, startDate: thirtyDaysAgo },
-    { 
-      enabled: !!userId, 
+    {
+      enabled: !!userId,
       refetchInterval: 20000, // Refetch every 20 seconds
       refetchOnWindowFocus: false, // Prevent refetch on window focus
     },
@@ -114,9 +124,17 @@ export default function ProfileSidebar(props: Props) {
     { enabled: !!userId },
   );
   // Pass day based on local timezone to avoid UTC timezone issues
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId, day: localDayName },
     { enabled: !!userId },
@@ -143,45 +161,48 @@ export default function ProfileSidebar(props: Props) {
     const today = new Date();
     // Start week on Sunday (0) to match plan day orders (0-6)
     const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday = 0
-    const workoutDates = calendarQuery.data?.map((w) => ({
-      date: new Date(w.date),
-      completed: w.completed ?? true,
-      planDayId: w.planDayId,
-    })) ?? [];
-    
+    const workoutDates =
+      calendarQuery.data?.map((w) => ({
+        date: new Date(w.date),
+        completed: w.completed ?? true,
+        planDayId: w.planDayId,
+      })) ?? [];
+
     // Get active plan days - order 0-6 maps to Sunday-Saturday
     const activePlanDays = activePlan?.days ?? [];
-    
+
     // Create a map of order -> planDay for quick lookup
-    const planDayByOrder = new Map(activePlanDays.map(d => [d.order, d]));
-    
+    const planDayByOrder = new Map(activePlanDays.map((d) => [d.order, d]));
+
     // Get today's plan day from the API
     const todayPlanDay = todaysWorkout.data?.todayWorkout;
-    
+
     // Check if there's an active workout
-    const hasActiveWorkout = !!activeWorkout.data && !activeWorkout.data.completed;
+    const hasActiveWorkout =
+      !!activeWorkout.data && !activeWorkout.data.completed;
     const activeWorkoutPlanDayId = activeWorkout.data?.planDayId;
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
       const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-      
+
       // Find the plan day for this day of week (order matches dayOfWeek: 0-6)
       const planDayForThisDay = planDayByOrder.get(dayOfWeek);
       const isRestDay = planDayForThisDay?.isRestDay ?? false;
-      
+
       // Find matching workout for this date
       const workoutForDate = workoutDates.find((w) => isSameDay(w.date, date));
       const hasWorkout = !!workoutForDate && workoutForDate.completed;
-      
+
       // Check if this is today and has an active workout for today's plan day
       const isToday = isSameDay(date, today);
-      const isInProgress = isToday && 
-                          hasActiveWorkout && 
-                          todayPlanDay &&
-                          planDayForThisDay?.id === todayPlanDay.id &&
-                          activeWorkoutPlanDayId === todayPlanDay.id;
-      
+      const isInProgress =
+        isToday &&
+        hasActiveWorkout &&
+        todayPlanDay &&
+        planDayForThisDay?.id === todayPlanDay.id &&
+        activeWorkoutPlanDayId === todayPlanDay.id;
+
       const isPast = date < today && !isToday;
 
       return {
@@ -197,7 +218,12 @@ export default function ProfileSidebar(props: Props) {
         isInProgress: !!isInProgress,
       };
     });
-  }, [calendarQuery.data, activePlan?.days, activeWorkout.data, todaysWorkout.data]);
+  }, [
+    calendarQuery.data,
+    activePlan?.days,
+    activeWorkout.data,
+    todaysWorkout.data,
+  ]);
 
   const hasWorkouts =
     recentWorkouts.data?.items && recentWorkouts.data.items.length > 0;
@@ -279,11 +305,8 @@ export default function ProfileSidebar(props: Props) {
   if (isMobile) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-        <SheetContent
-          side="right"
-          className="w-[20rem] p-0 sm:w-[20rem]"
-        >
-          <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
+        <SheetContent side="right" className="w-[20rem] p-0 sm:w-[20rem]">
+          <div className="bg-sidebar text-sidebar-foreground flex h-full w-full flex-col">
             {sidebarContent}
           </div>
         </SheetContent>
@@ -303,4 +326,3 @@ export default function ProfileSidebar(props: Props) {
     </Sidebar>
   );
 }
-

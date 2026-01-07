@@ -13,7 +13,7 @@ export function usePlanDetailData(
 ) {
   const plan = api.plan.get.useQuery({ id: planId }, { enabled: !!planId });
   const exercises = api.exercise.list.useQuery(
-    { q: searchQuery || undefined, take: 20 },
+    { q: searchQuery ?? undefined, take: 20 },
     { enabled: isExerciseDialogOpen ?? false }, // Only fetch when dialog is open
   );
 
@@ -32,4 +32,3 @@ export function usePlanDetailData(
     totalExercises,
   };
 }
-

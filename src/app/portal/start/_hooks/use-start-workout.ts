@@ -13,7 +13,7 @@ export function useStartWorkout(userId: string) {
 
   // Get local day name based on timezone
   const localDayName = useMemo(() => {
-    return DAY_NAMES[new Date().getDay()] as DayName;
+    return DAY_NAMES[new Date().getDay()]!;
   }, []);
 
   // Queries
@@ -58,4 +58,3 @@ export function useStartWorkout(userId: string) {
     utils,
   };
 }
-

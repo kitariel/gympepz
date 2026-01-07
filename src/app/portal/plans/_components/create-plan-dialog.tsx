@@ -24,10 +24,16 @@ interface CreatePlanDialogProps {
   onCreateComplete: () => Promise<void>;
   templateCreation: ReturnType<typeof useTemplateCreation>;
   mutations: {
-    create: ReturnType<typeof import("../../_hooks/use-plans-mutations").usePlansMutations>["create"];
-    setActive: ReturnType<typeof import("../../_hooks/use-plans-mutations").usePlansMutations>["setActive"];
+    create: ReturnType<
+      typeof import("../_hooks/use-plans-mutations").usePlansMutations
+    >["create"];
+    setActive: ReturnType<
+      typeof import("../_hooks/use-plans-mutations").usePlansMutations
+    >["setActive"];
   };
-  list: ReturnType<typeof import("../../_hooks/use-plans-data").usePlansData>["list"];
+  list: ReturnType<
+    typeof import("../_hooks/use-plans-data").usePlansData
+  >["list"];
 }
 
 export function CreatePlanDialog({
@@ -76,7 +82,10 @@ export function CreatePlanDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-2 h-9 text-xs sm:text-sm flex-1 sm:flex-initial min-w-[120px] sm:min-w-0">
+        <Button
+          size="sm"
+          className="h-9 min-w-[120px] flex-1 gap-2 text-xs sm:min-w-0 sm:flex-initial sm:text-sm"
+        >
           <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           New Plan
         </Button>
@@ -96,7 +105,7 @@ export function CreatePlanDialog({
                 onChange={(e) => setNewPlanName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    void onCreatePlan();
+                    void handleCreatePlan();
                   }
                 }}
               />
@@ -157,4 +166,3 @@ export function CreatePlanDialog({
     </Dialog>
   );
 }
-

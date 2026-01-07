@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Play, BarChart3, Target, Scale, Calendar } from "lucide-react";
-import { SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from "@/components/ui/sidebar";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+} from "@/components/ui/sidebar";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +34,20 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
   const [showWarningDialog, setShowWarningDialog] = useState(false);
 
   // Pass day based on local timezone to avoid UTC timezone issues
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId, day: localDayName },
-    { 
+    {
       enabled: !!userId && !!activePlanId,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
@@ -49,13 +61,16 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     { userId, hoursBack: 6 },
     { enabled: !!userId },
   );
-  
+
   const utils = api.useUtils();
   const toggleRestDay = api.plan.toggleRestDay.useMutation({
     onSuccess: () => {
       // Invalidate getTodaysWorkout query to ensure UI updates
       if (userId) {
-        void utils.plan.getTodaysWorkout.invalidate({ userId, day: localDayName });
+        void utils.plan.getTodaysWorkout.invalidate({
+          userId,
+          day: localDayName,
+        });
       }
     },
   });
@@ -82,7 +97,8 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
 
     const todayWorkout = todaysWorkout.data?.todayWorkout;
     const isRestDay = todayWorkout?.isRestDay ?? false;
-    const hasExercises = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+    const hasExercises =
+      todayWorkout?.exercises && todayWorkout.exercises.length > 0;
 
     // Priority: 1. Rest Day (if marked as rest day, show dialog), 2. Exercises, 3. No workout
     if (isRestDay) {
@@ -112,16 +128,18 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     quickStart.mutate({ userId });
   };
 
-  const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
+  const handleRestDayChoice = async (action: "skip" | "add" | "mark") => {
     setShowRestDayDialog(false);
-    
-    if (action === 'skip') {
+
+    if (action === "skip") {
       // User confirms it's a rest day - just close
       return;
-    } else if (action === 'mark') {
+    } else if (action === "mark") {
       // User wants to mark today as rest day
       if (todaysWorkout.data?.todayWorkout?.id) {
-        await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
+        await toggleRestDay.mutateAsync({
+          id: todaysWorkout.data.todayWorkout.id,
+        });
         // Query will be invalidated automatically by the mutation's onSuccess
       }
       return;
@@ -144,10 +162,10 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
 
   return (
     <SidebarGroup className="p-0">
-      <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-4 py-2">
+      <SidebarGroupLabel className="text-muted-foreground px-4 py-2 text-xs font-medium">
         Actions
       </SidebarGroupLabel>
-      <SidebarGroupContent className="px-3 gap-2 grid grid-cols-2">
+      <SidebarGroupContent className="grid grid-cols-2 gap-2 px-3">
         {(() => {
           const todayWorkout = todaysWorkout.data?.todayWorkout;
           const exercises = todayWorkout?.exercises;
@@ -159,7 +177,9 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
           const getButtonContent = () => {
             if (quickStart.isPending) {
               return {
-                icon: <Play className="h-4 w-4 mr-2 fill-current animate-spin" />,
+                icon: (
+                  <Play className="mr-2 h-4 w-4 animate-spin fill-current" />
+                ),
                 text: "Starting...",
               };
             }
@@ -167,7 +187,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
             // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
             if (isRestDay) {
               return {
-                icon: <Calendar className="h-4 w-4 mr-2" />,
+                icon: <Calendar className="mr-2 h-4 w-4" />,
                 text: "Rest Day",
               };
             }
@@ -175,7 +195,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
             // Priority 2: Check if there are exercises
             if (hasExercises) {
               return {
-                icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+                icon: <Play className="mr-2 h-4 w-4 fill-current" />,
                 text: "Start Workout",
               };
             }
@@ -183,14 +203,14 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
             // Priority 3: No exercises and not a rest day - show based on whether workout exists
             if (todayWorkout) {
               return {
-                icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+                icon: <Play className="mr-2 h-4 w-4 fill-current" />,
                 text: "No Exercises",
               };
             }
 
             // No workout scheduled
             return {
-              icon: <Play className="h-4 w-4 mr-2 fill-current" />,
+              icon: <Play className="mr-2 h-4 w-4 fill-current" />,
               text: "Start Workout",
             };
           };
@@ -199,7 +219,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
 
           return (
             <Button
-              className="w-full col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 col-span-2 w-full shadow-sm"
               onClick={handleStartWorkout}
               disabled={quickStart.isPending}
             >
@@ -208,24 +228,24 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
             </Button>
           );
         })()}
-        
+
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs justify-start"
+          className="h-8 justify-start text-xs"
           onClick={() => router.push("/portal/log?tab=analytics")}
         >
-          <BarChart3 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+          <BarChart3 className="text-muted-foreground mr-2 h-3.5 w-3.5" />
           Analytics
         </Button>
-        
+
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs justify-start"
+          className="h-8 justify-start text-xs"
           onClick={() => router.push("/portal/plans")}
         >
-          <Target className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+          <Target className="text-muted-foreground mr-2 h-3.5 w-3.5" />
           Plans
         </Button>
       </SidebarGroupContent>
@@ -255,27 +275,27 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
             )}
           </DialogHeader>
 
-          <DialogFooter className="flex-col gap-2 mt-4">
+          <DialogFooter className="mt-4 flex-col gap-2">
             {todaysWorkout.data?.todayWorkout?.isRestDay ? (
               <Button
                 variant="default"
-                onClick={() => handleRestDayChoice('skip')}
+                onClick={() => handleRestDayChoice("skip")}
                 className="w-full"
               >
                 Got It
               </Button>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <div className="flex w-full flex-col gap-2 sm:flex-row">
                   <Button
                     variant="outline"
-                    onClick={() => handleRestDayChoice('skip')}
+                    onClick={() => handleRestDayChoice("skip")}
                     className="flex-1"
                   >
                     Skip for Now
                   </Button>
                   <Button
-                    onClick={() => handleRestDayChoice('add')}
+                    onClick={() => handleRestDayChoice("add")}
                     className="flex-1"
                   >
                     Add Exercises
@@ -283,7 +303,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
                 </div>
                 <Button
                   variant="secondary"
-                  onClick={() => handleRestDayChoice('mark')}
+                  onClick={() => handleRestDayChoice("mark")}
                   className="w-full"
                 >
                   Mark Today as Rest Day

@@ -133,19 +133,30 @@ export function PortalHeader() {
   // Get today's workout to check if it has exercises
   // Match quick-actions behavior: enable when userId and activePlanId exist
   // Pass day based on local timezone to avoid UTC timezone issues
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId, day: localDayName },
-    { 
+    {
       enabled: !!userId && !!activePlanData?.id,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
     },
   );
 
-  console.log('todaysWorkout.datatodaysWorkout.datatodaysWorkout.data', todaysWorkout.data)
+  console.log(
+    "todaysWorkout.datatodaysWorkout.datatodaysWorkout.data",
+    todaysWorkout.data,
+  );
 
   const utils = api.useUtils();
   const toggleRestDay = api.plan.toggleRestDay.useMutation({
@@ -183,7 +194,8 @@ export function PortalHeader() {
 
     const todayWorkout = todaysWorkout.data?.todayWorkout;
     const isRestDay = todayWorkout?.isRestDay ?? false;
-    const hasExercises = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+    const hasExercises =
+      todayWorkout?.exercises && todayWorkout.exercises.length > 0;
 
     // Priority: 1. Rest Day (if marked as rest day, show dialog), 2. Exercises, 3. No workout
     if (isRestDay) {
@@ -213,16 +225,18 @@ export function PortalHeader() {
     quickStart.mutate({ userId });
   };
 
-  const handleRestDayChoice = async (action: 'skip' | 'add' | 'mark') => {
+  const handleRestDayChoice = async (action: "skip" | "add" | "mark") => {
     setShowRestDayDialog(false);
 
-    if (action === 'skip') {
+    if (action === "skip") {
       // User confirms it's a rest day - just close
       return;
-    } else if (action === 'mark') {
+    } else if (action === "mark") {
       // User wants to mark today as rest day
       if (todaysWorkout.data?.todayWorkout?.id) {
-        await toggleRestDay.mutateAsync({ id: todaysWorkout.data.todayWorkout.id });
+        await toggleRestDay.mutateAsync({
+          id: todaysWorkout.data.todayWorkout.id,
+        });
         // Query will be invalidated automatically by the mutation's onSuccess
       }
       return;
@@ -294,69 +308,70 @@ export function PortalHeader() {
       {/* Quick Actions */}
       <div className="ml-auto flex items-center gap-2">
         {/* Quick Start Workout Button */}
-        {activePlanData && (() => {
-          const todayWorkout = todaysWorkout.data?.todayWorkout;
-          const exercises = todayWorkout?.exercises;
-          const hasExercises = exercises && exercises.length > 0;
+        {activePlanData &&
+          (() => {
+            const todayWorkout = todaysWorkout.data?.todayWorkout;
+            const exercises = todayWorkout?.exercises;
+            const hasExercises = exercises && exercises.length > 0;
 
-          // Check if planDay is marked as rest day (this is the primary check)
-          const isRestDay = todayWorkout?.isRestDay ?? false;
+            // Check if planDay is marked as rest day (this is the primary check)
+            const isRestDay = todayWorkout?.isRestDay ?? false;
 
-          // Determine button text and icon
-          // Priority: 1. Rest Day status (if marked as rest day, always show Rest Day), 2. Exercises, 3. No workout
-          const getButtonContent = () => {
-            if (quickStart.isPending) {
-              return {
-                icon: <Play className="h-3.5 w-3.5 animate-spin" />,
-                text: "Starting...",
-              };
-            }
+            // Determine button text and icon
+            // Priority: 1. Rest Day status (if marked as rest day, always show Rest Day), 2. Exercises, 3. No workout
+            const getButtonContent = () => {
+              if (quickStart.isPending) {
+                return {
+                  icon: <Play className="h-3.5 w-3.5 animate-spin" />,
+                  text: "Starting...",
+                };
+              }
 
-            // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
-            if (isRestDay) {
-              return {
-                icon: <Calendar className="h-3.5 w-3.5" />,
-                text: "Rest Day",
-              };
-            }
+              // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
+              if (isRestDay) {
+                return {
+                  icon: <Calendar className="h-3.5 w-3.5" />,
+                  text: "Rest Day",
+                };
+              }
 
-            // Priority 2: Check if there are exercises
-            if (hasExercises) {
+              // Priority 2: Check if there are exercises
+              if (hasExercises) {
+                return {
+                  icon: <Play className="h-3.5 w-3.5" />,
+                  text: "Start Workout",
+                };
+              }
+
+              // Priority 3: No exercises and not a rest day - show based on whether workout exists
+              if (todayWorkout) {
+                return {
+                  icon: <Play className="h-3.5 w-3.5" />,
+                  text: "No Exercises",
+                };
+              }
+
+              // No workout scheduled
               return {
                 icon: <Play className="h-3.5 w-3.5" />,
                 text: "Start Workout",
               };
-            }
-
-            // Priority 3: No exercises and not a rest day - show based on whether workout exists
-            if (todayWorkout) {
-              return {
-                icon: <Play className="h-3.5 w-3.5" />,
-                text: "No Exercises",
-              };
-            }
-
-            // No workout scheduled
-            return {
-              icon: <Play className="h-3.5 w-3.5" />,
-              text: "Start Workout",
             };
-          };
 
-          const buttonContent = getButtonContent();
+            const buttonContent = getButtonContent();
 
-          return (
-            <Button
-              size="sm"
-              onClick={handleQuickStart}
-              disabled={quickStart.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
-            >
-              {buttonContent.icon}
-              <span className="hidden sm:inline">{buttonContent.text}</span>
-            </Button>
-          );
-        })()}
+            return (
+              <Button
+                size="sm"
+                onClick={handleQuickStart}
+                disabled={quickStart.isPending}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
+              >
+                {buttonContent.icon}
+                <span className="hidden sm:inline">{buttonContent.text}</span>
+              </Button>
+            );
+          })()}
 
         {/* AI Planner Button */}
         <Button
@@ -472,27 +487,27 @@ export function PortalHeader() {
             )}
           </DialogHeader>
 
-          <DialogFooter className="flex-col gap-2 mt-4">
+          <DialogFooter className="mt-4 flex-col gap-2">
             {todaysWorkout.data?.todayWorkout?.isRestDay ? (
               <Button
                 variant="default"
-                onClick={() => handleRestDayChoice('skip')}
+                onClick={() => handleRestDayChoice("skip")}
                 className="w-full"
               >
                 Got It
               </Button>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <div className="flex w-full flex-col gap-2 sm:flex-row">
                   <Button
                     variant="outline"
-                    onClick={() => handleRestDayChoice('skip')}
+                    onClick={() => handleRestDayChoice("skip")}
                     className="flex-1"
                   >
                     Skip for Now
                   </Button>
                   <Button
-                    onClick={() => handleRestDayChoice('add')}
+                    onClick={() => handleRestDayChoice("add")}
                     className="flex-1"
                   >
                     Add Exercises
@@ -500,7 +515,7 @@ export function PortalHeader() {
                 </div>
                 <Button
                   variant="secondary"
-                  onClick={() => handleRestDayChoice('mark')}
+                  onClick={() => handleRestDayChoice("mark")}
                   className="w-full"
                 >
                   Mark Today as Rest Day

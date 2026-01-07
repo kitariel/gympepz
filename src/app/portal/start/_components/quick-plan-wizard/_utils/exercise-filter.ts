@@ -4,10 +4,10 @@
 
 import type { BodyPart } from "../../../_types";
 
-export function filterExercisesByBodyPart(
-  exercises: Array<{ muscleGroup: string }>,
+export function filterExercisesByBodyPart<T extends { muscleGroup: string }>(
+  exercises: T[],
   bodyPart: BodyPart | null,
-): Array<{ muscleGroup: string }> {
+): T[] {
   if (!bodyPart) return exercises;
 
   return exercises.filter((ex) => {

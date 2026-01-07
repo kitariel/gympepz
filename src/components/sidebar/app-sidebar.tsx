@@ -103,18 +103,27 @@ export function AppSidebar({
   // Get user session for active workout check
   const { data: session } = useSession();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
-  
+
   // Get today's workout for badge
   // Pass day based on local timezone to avoid UTC timezone issues
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId, day: localDayName },
-    { enabled: !!userId }
+    { enabled: !!userId },
   );
 
-  const hasActiveWorkout = todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout;
+  const hasActiveWorkout =
+    todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout;
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -125,15 +134,24 @@ export function AppSidebar({
         searchInputRef.current?.focus();
       }
       // Cmd+W or Ctrl+W: Start workout (only if not in input/textarea)
-      if ((e.metaKey || e.ctrlKey) && e.key === "w" && 
-          !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key === "w" &&
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
+      ) {
         e.preventDefault();
         if (hasActiveWorkout) {
           window.location.href = "/portal/start";
         }
       }
       // Escape: Clear search
-      if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+      if (
+        e.key === "Escape" &&
+        document.activeElement === searchInputRef.current
+      ) {
         setSearchQuery("");
         searchInputRef.current?.blur();
       }
@@ -163,10 +181,11 @@ export function AppSidebar({
     return items
       .map((item) => {
         const titleMatch = item.title.toLowerCase().includes(query);
-        const children = item.items?.filter(
-          (child) => child.title.toLowerCase().includes(query)
-        ) ?? [];
-        
+        const children =
+          item.items?.filter((child) =>
+            child.title.toLowerCase().includes(query),
+          ) ?? [];
+
         // Include item if title matches or has matching children
         if (titleMatch || children.length > 0) {
           return {
@@ -269,20 +288,20 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
               <SidebarInput
                 ref={searchInputRef}
                 type="search"
                 placeholder="Search menu... (⌘K)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-8"
+                className="pr-8 pl-8"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                  className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2"
                   onClick={() => setSearchQuery("")}
                 >
                   <X className="h-3 w-3" />
@@ -299,16 +318,23 @@ export function AppSidebar({
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     tooltip="Start today's workout (⌘W)"
-                    className={hasActiveWorkout ? "bg-primary/10 hover:bg-primary/20" : undefined}
+                    className={
+                      hasActiveWorkout
+                        ? "bg-primary/10 hover:bg-primary/20"
+                        : undefined
+                    }
                   >
                     <Link href="/portal/start">
                       <Command className="size-4" />
                       <span>Start Workout</span>
                       {hasActiveWorkout && (
-                        <Badge variant="default" className="ml-auto text-xs bg-primary">
+                        <Badge
+                          variant="default"
+                          className="bg-primary ml-auto text-xs"
+                        >
                           Ready
                         </Badge>
                       )}
@@ -319,7 +345,6 @@ export function AppSidebar({
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-
 
         <NavMain
           searchQuery={searchQuery}
@@ -361,25 +386,33 @@ export function AppSidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-xs text-muted-foreground"
+                className="text-muted-foreground w-full justify-start text-xs"
                 onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
               >
-                <Keyboard className="h-3 w-3 mr-2" />
+                <Keyboard className="mr-2 h-3 w-3" />
                 Shortcuts
               </Button>
               {showKeyboardShortcuts && (
-                <div className="px-2 pb-2 space-y-1.5 text-xs">
+                <div className="space-y-1.5 px-2 pb-2 text-xs">
                   <div className="flex items-center justify-between py-1">
-                    <span className="text-muted-foreground">Toggle sidebar</span>
-                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">B</kbd>
+                    <span className="text-muted-foreground">
+                      Toggle sidebar
+                    </span>
+                    <kbd className="bg-muted rounded px-1.5 py-0.5 text-xs">
+                      B
+                    </kbd>
                   </div>
                   <div className="flex items-center justify-between py-1">
                     <span className="text-muted-foreground">Search</span>
-                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">⌘K</kbd>
+                    <kbd className="bg-muted rounded px-1.5 py-0.5 text-xs">
+                      ⌘K
+                    </kbd>
                   </div>
                   <div className="flex items-center justify-between py-1">
                     <span className="text-muted-foreground">Start workout</span>
-                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">⌘W</kbd>
+                    <kbd className="bg-muted rounded px-1.5 py-0.5 text-xs">
+                      ⌘W
+                    </kbd>
                   </div>
                 </div>
               )}

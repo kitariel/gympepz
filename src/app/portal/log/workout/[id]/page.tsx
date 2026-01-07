@@ -7,12 +7,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Plus, ArrowLeft, Clock, Dumbbell, AlertCircle, GripVertical, Move, Check, X } from "lucide-react";
+import {
+  Plus,
+  ArrowLeft,
+  Clock,
+  Dumbbell,
+  AlertCircle,
+  GripVertical,
+  Move,
+  Check,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, useDndContext } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  useDndContext,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
@@ -82,7 +107,7 @@ function SortableExerciseItem({
     transition,
     isDragging,
   } = useSortable({ id });
-  
+
   // Check if any item is being dragged (not just this one)
   const { active } = useDndContext();
   const isAnyDragging = !!active || isDragging;
@@ -98,9 +123,9 @@ function SortableExerciseItem({
       style={style}
       {...attributes}
       {...listeners}
-      className="relative transition-all duration-300 cursor-grab active:cursor-grabbing"
+      className="relative cursor-grab transition-all duration-300 active:cursor-grabbing"
     >
-      <div className="absolute left-0 top-0 z-10 flex h-full items-center justify-center px-2 text-muted-foreground pointer-events-none">
+      <div className="text-muted-foreground pointer-events-none absolute top-0 left-0 z-10 flex h-full items-center justify-center px-2">
         <GripVertical className="h-5 w-5" />
       </div>
       <div className="pl-8 transition-all duration-300">
@@ -183,11 +208,19 @@ export default function ActiveWorkoutPage({
   const restTimer = useRestTimer();
 
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
-  
+
   // Get today's workout from plan (for reference)
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-  const localDayName = dayNames[new Date().getDay()] as "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+
   const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
     { userId, day: localDayName },
     { enabled: !!userId },
@@ -231,7 +264,7 @@ export default function ActiveWorkoutPage({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Handle exercise reordering
@@ -243,13 +276,15 @@ export default function ActiveWorkoutPage({
     const w = workout as any;
     // Exercises are already sorted by order from the query
     const workoutExercises = w?.exercises ?? [];
-    const oldIndex = workoutExercises.findIndex((ex: any) => ex.id === active.id);
+    const oldIndex = workoutExercises.findIndex(
+      (ex: any) => ex.id === active.id,
+    );
     const newIndex = workoutExercises.findIndex((ex: any) => ex.id === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const reordered = arrayMove(workoutExercises, oldIndex, newIndex);
       const orderedIds = reordered.map((ex: any) => ex.id);
-      
+
       reorderExercises.mutate({
         workoutLogId: logId,
         orderedIds,
@@ -529,7 +564,9 @@ export default function ActiveWorkoutPage({
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-base font-bold tracking-tight sm:text-lg md:text-xl">
-                {todaysWorkout.data?.todayWorkout?.title ?? (workout as any)?.planDay?.title ?? "Workout"}
+                {todaysWorkout.data?.todayWorkout?.title ??
+                  (workout as any)?.planDay?.title ??
+                  "Workout"}
               </h1>
               <p className="text-muted-foreground/70 truncate text-xs font-medium tracking-wider uppercase sm:text-sm md:text-base">
                 {format(new Date(), "EEEE, MMM d")}
@@ -548,7 +585,7 @@ export default function ActiveWorkoutPage({
               onClick={() => setIsArrangeMode(!isArrangeMode)}
               variant={isArrangeMode ? "default" : "outline"}
               size="sm"
-              className="h-9 shrink-0 px-3 text-xs font-semibold sm:h-8 sm:px-4 sm:text-sm md:h-9 md:px-5 md:text-base gap-2"
+              className="h-9 shrink-0 gap-2 px-3 text-xs font-semibold sm:h-8 sm:px-4 sm:text-sm md:h-9 md:px-5 md:text-base"
             >
               {isArrangeMode ? (
                 <>
@@ -646,14 +683,17 @@ export default function ActiveWorkoutPage({
                     variant="outline"
                     className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase sm:text-xs md:text-sm"
                   >
-                    Last: {(() => {
+                    Last:{" "}
+                    {(() => {
                       const date = new Date((workout as any).lastWorkout.date);
                       // Dates are stored as UTC start of day, so use UTC components directly
                       const year = date.getUTCFullYear();
                       const month = date.getUTCMonth();
                       const day = date.getUTCDate();
                       // Format using UTC date (stored as start of day in UTC)
-                      const displayDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+                      const displayDate = new Date(
+                        Date.UTC(year, month, day, 12, 0, 0),
+                      );
                       return format(displayDate, "MMM d");
                     })()}
                   </Badge>
@@ -702,8 +742,8 @@ export default function ActiveWorkoutPage({
               items={(workout as any)?.exercises?.map((ex: any) => ex.id) ?? []}
               strategy={verticalListSortingStrategy}
             >
-            <div className="space-y-3 sm:space-y-4 md:space-y-5">
-              {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
+              <div className="space-y-3 sm:space-y-4 md:space-y-5">
+                {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
                   const exerciseId = exerciseLog.exerciseId;
                   const group = exerciseGroups[exerciseId];
                   if (!group) return null;
@@ -723,7 +763,7 @@ export default function ActiveWorkoutPage({
 
                   // Check if this exercise is being dragged
                   const isDragging = false; // Will be set by useSortable in the wrapper
-                  
+
                   return (
                     <SortableExerciseItem
                       key={exerciseLog.id}
@@ -749,7 +789,9 @@ export default function ActiveWorkoutPage({
                                 lastWorkoutSet.weight ??
                                 0,
                               reps:
-                                lastWorkoutSet.actualReps ?? lastWorkoutSet.reps ?? 0,
+                                lastWorkoutSet.actualReps ??
+                                lastWorkoutSet.reps ??
+                                0,
                               date: w.lastWorkout!.date,
                             }
                           : undefined
@@ -764,13 +806,17 @@ export default function ActiveWorkoutPage({
                         }
                         setCompletedExercises(newCompleted);
                       }}
-                      onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
+                      onUpdateSet={(setId, data) =>
+                        handleUpdateSet(setId, data)
+                      }
                       onCompleteSet={(setId) => {
                         handleCompleteSet(setId);
                         restTimer.start(180);
                       }}
                       onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
-                      onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
+                      onDeleteSet={(setId) =>
+                        handleDeleteSet(setId, exerciseLogId)
+                      }
                       onDeleteExercise={() =>
                         handleDeleteExercise(exerciseId, exerciseLogId)
                       }
@@ -779,84 +825,86 @@ export default function ActiveWorkoutPage({
                     />
                   );
                 })}
-            </div>
-          </SortableContext>
-        </DndContext>
+              </div>
+            </SortableContext>
+          </DndContext>
         ) : (
           <div className="space-y-3 sm:space-y-4 md:space-y-5">
             {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
-                const exerciseId = exerciseLog.exerciseId;
-                const group = exerciseGroups[exerciseId];
-                if (!group) return null;
+              const exerciseId = exerciseLog.exerciseId;
+              const group = exerciseGroups[exerciseId];
+              if (!group) return null;
 
-                const { exercise, sets, exerciseLogId } = group;
-                // Find last workout data for this exercise
-                const w = workout as any;
-                const lastWorkoutSet =
-                  w.lastWorkout?.sets?.find(
-                    (s: any) => s.exerciseId === exerciseId && s.completed,
-                  ) ??
-                  w.lastWorkout?.exercises?.find(
-                    (e: any) => e.exerciseId === exerciseId,
-                  );
-
-                const isMarkedDone = completedExercises.has(exerciseId);
-
-                return (
-                  <ExerciseCard
-                    key={exerciseLog.id}
-                    exerciseName={exercise.name}
-                    muscleGroup={exercise.muscleGroup}
-                    exerciseId={exerciseId}
-                    sets={sets.map((s) => ({
-                      id: s.id,
-                      setNumber: s.setNumber,
-                      targetReps: s.targetReps,
-                      targetWeight: s.targetWeight ?? undefined,
-                      actualReps: s.actualReps ?? 0,
-                      actualWeight: s.actualWeight ?? undefined,
-                      rpe: s.rpe ?? undefined,
-                      completed: s.completed ?? false,
-                    }))}
-                    lastWorkoutData={
-                      lastWorkoutSet
-                        ? {
-                            weight:
-                              lastWorkoutSet.actualWeight ??
-                              lastWorkoutSet.weight ??
-                              0,
-                            reps:
-                              lastWorkoutSet.actualReps ?? lastWorkoutSet.reps ?? 0,
-                            date: w.lastWorkout!.date,
-                          }
-                        : undefined
-                    }
-                    isMarkedDone={isMarkedDone}
-                    onToggleDone={() => {
-                      const newCompleted = new Set(completedExercises);
-                      if (isMarkedDone) {
-                        newCompleted.delete(exerciseId);
-                      } else {
-                        newCompleted.add(exerciseId);
-                      }
-                      setCompletedExercises(newCompleted);
-                    }}
-                    onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
-                    onCompleteSet={(setId) => {
-                      handleCompleteSet(setId);
-                      restTimer.start(180);
-                    }}
-                    onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
-                    onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
-                    onDeleteExercise={() =>
-                      handleDeleteExercise(exerciseId, exerciseLogId)
-                    }
-                    onStartRestTimer={() => restTimer.start(180)}
-                    isCollapsed={false}
-                    isDragging={false}
-                  />
+              const { exercise, sets, exerciseLogId } = group;
+              // Find last workout data for this exercise
+              const w = workout as any;
+              const lastWorkoutSet =
+                w.lastWorkout?.sets?.find(
+                  (s: any) => s.exerciseId === exerciseId && s.completed,
+                ) ??
+                w.lastWorkout?.exercises?.find(
+                  (e: any) => e.exerciseId === exerciseId,
                 );
-              })}
+
+              const isMarkedDone = completedExercises.has(exerciseId);
+
+              return (
+                <ExerciseCard
+                  key={exerciseLog.id}
+                  exerciseName={exercise.name}
+                  muscleGroup={exercise.muscleGroup}
+                  exerciseId={exerciseId}
+                  sets={sets.map((s) => ({
+                    id: s.id,
+                    setNumber: s.setNumber,
+                    targetReps: s.targetReps,
+                    targetWeight: s.targetWeight ?? undefined,
+                    actualReps: s.actualReps ?? 0,
+                    actualWeight: s.actualWeight ?? undefined,
+                    rpe: s.rpe ?? undefined,
+                    completed: s.completed ?? false,
+                  }))}
+                  lastWorkoutData={
+                    lastWorkoutSet
+                      ? {
+                          weight:
+                            lastWorkoutSet.actualWeight ??
+                            lastWorkoutSet.weight ??
+                            0,
+                          reps:
+                            lastWorkoutSet.actualReps ??
+                            lastWorkoutSet.reps ??
+                            0,
+                          date: w.lastWorkout!.date,
+                        }
+                      : undefined
+                  }
+                  isMarkedDone={isMarkedDone}
+                  onToggleDone={() => {
+                    const newCompleted = new Set(completedExercises);
+                    if (isMarkedDone) {
+                      newCompleted.delete(exerciseId);
+                    } else {
+                      newCompleted.add(exerciseId);
+                    }
+                    setCompletedExercises(newCompleted);
+                  }}
+                  onUpdateSet={(setId, data) => handleUpdateSet(setId, data)}
+                  onCompleteSet={(setId) => {
+                    handleCompleteSet(setId);
+                    restTimer.start(180);
+                  }}
+                  onAddSet={() => handleAddSet(exerciseId, exerciseLogId)}
+                  onDeleteSet={(setId) => handleDeleteSet(setId, exerciseLogId)}
+                  onDeleteExercise={() =>
+                    handleDeleteExercise(exerciseId, exerciseLogId)
+                  }
+                  onStartRestTimer={() => restTimer.start(180)}
+                  isCollapsed={false}
+                  isDragging={false}
+                />
+              );
+            })}
           </div>
         )}
 
