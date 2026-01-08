@@ -56,107 +56,107 @@
 }
 
 /* -------------------------------
-   LIGHT MODE (TEAL IDENTITY)
+   LIGHT MODE (BLUE/EMERALD GRADIENT)
 -------------------------------- */
 :root {
   --radius: 0.75rem;
 
-  /* Base - Clean white with teal tint */
-  --background: #F0FDFA; /* Teal 50 */
-  --foreground: #134E4A; /* Teal 900 */
+  /* Base - Clean white with subtle blue tint */
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
 
   /* Cards */
   --card: #ffffff;
-  --card-foreground: #134E4A;
+  --card-foreground: #0f172a;
 
   /* Popovers */
   --popover: #ffffff;
-  --popover-foreground: #134E4A;
+  --popover-foreground: #0f172a;
 
-  /* Brand Primary - Deep Teal */
-  --primary: #0D9488; /* Teal 600 */
+  /* Brand Primary - Blue to Emerald Gradient */
+  --primary: #3b82f6; /* Blue 500 */
   --primary-foreground: #ffffff;
 
   /* Secondary surfaces */
-  --secondary: #CCFBF1; /* Teal 100 */
-  --secondary-foreground: #134E4A;
+  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary-foreground: #0f172a;
 
   /* Muted */
-  --muted: #E0F2FE;
-  --muted-foreground: #64748B;
+  --muted: #f8fafc; /* Slate 50 */
+  --muted-foreground: #64748b; /* Slate 500 */
 
-  /* Accent */
-  --accent: #CCFBF1; /* Teal 100 */
-  --accent-foreground: #0F766E;
+  /* Accent - Emerald */
+  --accent: #10b981; /* Emerald 500 */
+  --accent-foreground: #ffffff;
 
   /* Borders & Inputs */
-  --border: #99F6E4; /* Teal 200 */
-  --input: #99F6E4;
-  --ring: #0D9488;
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #3b82f6;
 
   /* Destructive */
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: #ffffff;
 
   /* Sidebar */
-  --sidebar: #F0FDFA;
-  --sidebar-foreground: #134E4A;
-  --sidebar-primary: #0D9488;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #CCFBF1;
-  --sidebar-accent-foreground: #134E4A;
-  --sidebar-border: #99F6E4;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
 }
 
 /* -------------------------------
-   DARK MODE (PERFORMANCE TEAL)
+   DARK MODE (BLUE/EMERALD PERFORMANCE)
 -------------------------------- */
 .dark {
-  /* Base - Deep Black/Charcoal */
-  --background: #050505; /* Almost Pure Black */
-  --foreground: #FFFFFF;
+  /* Base - Deep Slate/Blue */
+  --background: #0f172a; /* Slate 900 */
+  --foreground: #ffffff;
 
   /* Cards - Subtle separation */
-  --card: #121212;
-  --card-foreground: #FFFFFF;
+  --card: #1e293b; /* Slate 800 */
+  --card-foreground: #ffffff;
 
   /* Popovers */
-  --popover: #121212;
-  --popover-foreground: #FFFFFF;
+  --popover: #1e293b;
+  --popover-foreground: #ffffff;
 
-  /* Brand Primary - Vibrant Aqua/Teal */
-  --primary: #2DD4BF; /* Teal 400 - High Visibility */
-  --primary-foreground: #000000; /* Black text on teal for contrast */
+  /* Brand Primary - Vibrant Blue */
+  --primary: #3b82f6; /* Blue 500 */
+  --primary-foreground: #ffffff;
 
   /* Secondary */
-  --secondary: #27272A; /* Zinc 800 */
-  --secondary-foreground: #FFFFFF;
+  --secondary: #1e293b; /* Slate 800 */
+  --secondary-foreground: #ffffff;
 
   /* Muted */
-  --muted: #18181B; /* Zinc 900 */
-  --muted-foreground: #A1A1AA; /* Zinc 400 */
+  --muted: #1e293b; /* Slate 800 */
+  --muted-foreground: #94a3b8; /* Slate 400 */
 
-  /* Accent - Hover states */
-  --accent: #27272A;
-  --accent-foreground: #2DD4BF; /* Teal text on hover */
+  /* Accent - Emerald */
+  --accent: #10b981; /* Emerald 500 */
+  --accent-foreground: #ffffff;
 
   /* Borders & Inputs */
-  --border: #27272A; /* Zinc 800 */
-  --input: #27272A;
-  --ring: #2DD4BF;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #3b82f6;
 
   /* Destructive */
   --destructive: #7f1d1d;
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: #ffffff;
 
   /* Sidebar */
-  --sidebar: #050505;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #2DD4BF;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #121212;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #27272A;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
 }
 
 /* -------------------------------
@@ -199,6 +199,49 @@
 }
 
 /* -------------------------------
+   ANIMATIONS
+-------------------------------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* -------------------------------
    UTILITIES
 -------------------------------- */
 @layer utilities {
@@ -224,5 +267,59 @@
 
   .sidebar-item-active {
     @apply bg-sidebar-primary text-sidebar-primary-foreground;
+  }
+
+  /* Animation utilities */
+  .animate-fade-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-fade-scale {
+    animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-fade-up.visible,
+  .animate-fade-scale.visible,
+  .animate-float.visible {
+    opacity: 1;
+  }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .delay-700 {
+    animation-delay: 700ms;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10;
   }
 }

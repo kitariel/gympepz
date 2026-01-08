@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FAQSection } from "./_components/faq-section";
+import { ScrollAnimations } from "./_components/scroll-animations";
 import {
   Dumbbell,
   CheckCircle2,
@@ -28,107 +29,133 @@ export default async function Home() {
 
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
-      {/* Navigation - Clean Design */}
-      <header className="bg-background border-b border-border/40 sticky top-0 z-50 w-full">
+      {/* Navigation - Glassmorphism Design */}
+      <header className="fixed w-full z-50 top-0 border-b border-white/10 dark:bg-black/40 bg-white/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-20 items-center justify-between px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <span className="text-foreground">GymPepz</span>
+          <Link href="/" className="flex items-center gap-3 group">
+            {/* Logo */}
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:rotate-[360deg]">
+              <Dumbbell className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-semibold text-foreground tracking-tight">GymPepz</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Progress Made Visible</span>
+            </div>
           </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <Link href="#home" className="text-foreground hover:text-primary transition-colors">
+            <Link href="#home" className="text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-xs">
               Home
             </Link>
-            <Link href="#about" className="text-muted-foreground hover:text-foreground transition-colors">
-              About us
+            <Link href="#about" className="text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-xs">
+              About
             </Link>
-            <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-xs">
               How It Works
             </Link>
-            <Link href="#programs" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="#programs" className="text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-xs">
               Programs
             </Link>
-            <Link href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
-              Contact us
+            <Link href="#contact" className="text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-xs">
+              Contact
             </Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
             {session ? (
               <Link href="/portal">
-                <Button size="lg" className="rounded-full px-8">
+                <Button className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-full hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 text-xs font-semibold tracking-wide">
                   Go to Portal
                 </Button>
               </Link>
             ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" className="hidden sm:inline-flex">
-                    Log In
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="rounded-full px-6 sm:px-8">
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
+              <Link href="/login">
+                <Button className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-full hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 text-xs font-semibold tracking-wide">
+                  Get Started Free
+                </Button>
+              </Link>
             )}
-          </div>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button className="md:hidden text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/>
+              <line x1="4" x2="20" y1="6" y2="6"/>
+              <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
         </div>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section id="home" className="relative bg-gradient-to-b from-background to-muted/20 pt-20 pb-16 sm:pt-28 sm:pb-24">
-          <div className="container mx-auto px-6 lg:px-8">
-            <div className="text-center max-w-4xl mx-auto mb-16">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-                Transform Your Fitness Journey{" "}
-                <span className="text-primary">💪</span> With AI-Powered Workout Plans
-              </h1>
-              <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto mb-10 leading-relaxed">
-                Track your workouts, monitor your progress, and achieve your fitness goals with intelligent training plans powered by AI. Built for athletes who take their training seriously.
-              </p>
-              <Link href={session ? "/portal" : "/login"}>
-                <Button size="lg" className="rounded-full h-14 px-10 text-base font-semibold shadow-lg">
-                  Start Training Free
-                </Button>
-              </Link>
-            </div>
+        <section id="home" className="relative min-h-screen flex flex-col justify-center px-6 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 pt-20">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/gymlandingpics.png" 
+              alt="Athletic person tracking workout with visible progress and determination"
+              className="w-full h-full object-cover opacity-40"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-slate-900/60 to-slate-900"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 via-transparent to-slate-900/50"></div>
+          </div>
 
-            {/* Hero Images Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
-              {/* Image placeholders with different colors */}
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 1
+          <div className="relative z-10 container mx-auto w-full pt-20">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+              <div className="lg:col-span-8 animate-fade-up">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-md text-xs uppercase tracking-widest font-semibold text-emerald-300 mb-8">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  10,247 Workouts Logged Today
+                </div>
+
+                {/* Headline */}
+                <h1 className="text-5xl md:text-8xl font-bold tracking-tighter text-white mb-8 leading-[0.95]">
+                  Track Every Rep.<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-blue-400">
+                    See Every Gain.
+                  </span>
+                </h1>
+
+                {/* Subheadline */}
+                <p className="text-lg text-slate-300 max-w-2xl font-normal leading-relaxed border-l-2 border-blue-400/50 pl-6 mb-10">
+                  The fitness tracking app that turns your workouts into visible progress. Log exercises in 3 taps, watch your strength grow with AI-powered insights, and hit PRs you never thought possible.
+                </p>
+
+                {/* CTAs */}
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <Link href={session ? "/portal" : "/login"}>
+                    <Button size="lg" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 flex items-center gap-3 group">
+                      <span className="tracking-tight">Start Tracking Free</span>
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="#how-it-works">
+                    <Button variant="outline" size="lg" className="px-8 py-4 border border-white/20 text-white backdrop-blur-sm font-semibold rounded-lg hover:bg-white/10 transition-all duration-300">
+                      Watch Demo
+                    </Button>
+                  </Link>
                 </div>
               </div>
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 2
+
+              {/* Hero Stats */}
+              <div className="lg:col-span-4 flex flex-col gap-6 lg:items-end pb-2 animate-fade-up delay-200">
+                <div className="p-6 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-xs hover:bg-white/[0.15] transition-all duration-300 cursor-default animate-float">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-slate-300 uppercase tracking-widest font-semibold">Active Users</span>
+                    <Users className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div className="text-4xl font-bold text-white mb-1">127K+</div>
+                  <div className="text-xs text-slate-400">Crushing goals daily</div>
                 </div>
-              </div>
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 3
-                </div>
-              </div>
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 4
-                </div>
-              </div>
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-purple-400 to-purple-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 5
-                </div>
-              </div>
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-pink-400 to-pink-500 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/80 font-semibold">
-                  Fitness Image 6
+
+                <div className="p-6 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-xs hover:bg-white/[0.15] transition-all duration-300 cursor-default animate-float delay-300">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-slate-300 uppercase tracking-widest font-semibold">Goal Success</span>
+                    <TrendingUp className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="text-4xl font-bold text-white mb-1">85%</div>
+                  <div className="text-xs text-slate-400">Reach their targets</div>
                 </div>
               </div>
             </div>
@@ -726,20 +753,39 @@ export default async function Home() {
         </section>
 
         {/* Final CTA Section */}
-        <section className="py-20 sm:py-28 bg-foreground text-background">
-          <div className="container mx-auto px-6 lg:px-8 text-center">
-            <div className="max-w-3xl mx-auto space-y-8">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
-                Start Your Transformation Today
-              </h2>
-              <p className="text-background/80 text-lg leading-relaxed">
-                Join thousands of athletes who are already crushing their fitness goals with GymPepz. Create your free account and get your personalized workout plan in minutes.
-              </p>
+        <section className="py-24 px-6 bg-gradient-to-br from-blue-600 via-blue-500 to-emerald-500 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItMnptMC0ydjJoLTJ2LTJoMnptLTItMnYyaC0ydi0yaDJ6bTAtMnYyaC0ydi0yaDJ6bTItMnYyaC0ydi0yaDJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-40"></div>
+          
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+              Start Your Transformation Today
+            </h2>
+            <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Join 127,000+ users who track smarter, train harder, and achieve more. Free forever. No credit card required.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link href={session ? "/portal" : "/login"}>
-                <Button size="lg" variant="secondary" className="rounded-full h-14 px-10 text-base font-semibold">
-                  Start Training Free
+                <Button size="lg" className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-slate-100 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                  <span>Start Tracking Free</span>
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
+            </div>
+
+            <div className="flex items-center justify-center gap-8 text-white/80 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5" />
+                <span>Free Forever</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5" />
+                <span>No Ads</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5" />
+                <span>Offline Mode</span>
+              </div>
             </div>
           </div>
         </section>
@@ -784,6 +830,7 @@ export default async function Home() {
           </div>
         </div>
       </footer>
+      <ScrollAnimations />
     </div>
   );
 }
