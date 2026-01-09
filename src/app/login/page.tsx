@@ -285,7 +285,7 @@ function LoginPageContent() {
 
   return (
     <SidebarProvider
-      style={{ ["--sidebar-width"]: "22rem" } as React.CSSProperties}
+      style={{ ["--sidebar-width"]: "35rem" } as React.CSSProperties}
     >
       <Sidebar side="left" variant="inset">
         <SidebarHeader>

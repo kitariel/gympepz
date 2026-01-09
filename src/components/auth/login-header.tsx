@@ -36,29 +36,31 @@ export function LoginHeader({
   return (
     <div className="px-4 py-4 sm:py-5 md:py-6">
       {/* Logo and Brand - Matching landing page style */}
-      <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-        <div className="bg-primary text-primary-foreground flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg shadow-sm">
-          <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5" />
+      <div className="flex flex-col gap-4 items-center justify-center">
+        <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <div className="bg-primary text-primary-foreground flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg shadow-sm">
+            <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+              {title}
+            </h1>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-            {title}
-          </h1>
-        </div>
-      </div>
 
-      {/* Subtitle - Mobile responsive */}
-      <div className="space-y-1">
-        <p className="text-sm sm:text-base font-medium text-foreground">
-          {currentSubtitle}
-        </p>
-        
-        {/* Step description - Only show on certain steps */}
-        {currentDescription && step !== "password_login" && (
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            {currentDescription}
+        {/* Subtitle - Mobile responsive */}
+        <div className="space-y-1">
+          <p className="text-sm sm:text-base font-medium text-foreground">
+            {currentSubtitle}
           </p>
-        )}
+
+          {/* Step description - Only show on certain steps */}
+          {currentDescription && step !== "password_login" && (
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {currentDescription}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
