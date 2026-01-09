@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Play, BarChart3, Target, Scale, Calendar } from "lucide-react";
@@ -27,8 +27,13 @@ interface QuickActionsProps {
 
 export function QuickActions({ activePlanId }: QuickActionsProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
+  
+  // Check if Analytics tab is active
+  const isAnalyticsActive = pathname?.startsWith("/portal/log") && searchParams?.get("tab") === "analytics";
 
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
@@ -232,20 +237,40 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 justify-start text-xs"
+          className={`h-8 justify-start text-xs ${
+            isAnalyticsActive
+              ? "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
+              : ""
+          }`}
           onClick={() => router.push("/portal/log?tab=analytics")}
         >
-          <BarChart3 className="text-muted-foreground mr-2 h-3.5 w-3.5" />
+          <BarChart3
+            className={`mr-2 h-3.5 w-3.5 ${
+              isAnalyticsActive
+                ? "text-primary"
+                : "text-muted-foreground"
+            }`}
+          />
           Analytics
         </Button>
 
         <Button
           variant="outline"
           size="sm"
-          className="h-8 justify-start text-xs"
+          className={`h-8 justify-start text-xs ${
+            pathname?.startsWith("/portal/plans")
+              ? "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
+              : ""
+          }`}
           onClick={() => router.push("/portal/plans")}
         >
-          <Target className="text-muted-foreground mr-2 h-3.5 w-3.5" />
+          <Target
+            className={`mr-2 h-3.5 w-3.5 ${
+              pathname?.startsWith("/portal/plans")
+                ? "text-primary"
+                : "text-muted-foreground"
+            }`}
+          />
           Plans
         </Button>
       </SidebarGroupContent>

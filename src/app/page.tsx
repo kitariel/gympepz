@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FAQSection } from "./_components/faq-section";
 import { ScrollAnimations } from "./_components/scroll-animations";
+import { MobileNav } from "./_components/mobile-nav";
 import {
   Dumbbell,
   CheckCircle2,
@@ -75,29 +76,30 @@ export default async function Home() {
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button className="md:hidden text-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" x2="20" y1="12" y2="12"/>
-              <line x1="4" x2="20" y1="6" y2="6"/>
-              <line x1="4" x2="20" y1="18" y2="18"/>
-            </svg>
-          </button>
+          {/* Mobile Menu */}
+          <MobileNav session={session} />
         </div>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section id="home" className="relative min-h-screen flex flex-col justify-center px-6 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 pt-20">
+        <section id="home" className="relative min-h-screen flex flex-col justify-center px-6 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-black dark:to-slate-900 pt-20">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
+            {/* Mobile Image */}
             <img 
               src="/gymlandingpics.png" 
               alt="Athletic person tracking workout with visible progress and determination"
-              className="w-full h-full object-cover opacity-40"
+              className="w-full h-full object-cover object-top opacity-40 md:hidden"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-slate-900/60 to-slate-900"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 via-transparent to-slate-900/50"></div>
+            {/* Desktop Image */}
+            <img 
+              src="/Default_A_realistic_premium_fitness_brand_image_for_a_modern_g_0.jpg" 
+              alt="Athletic person tracking workout with visible progress and determination"
+              className="hidden w-full h-full object-cover opacity-40 md:block"
+            />
+            {/* <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-slate-900/60 to-slate-900"></div> */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-transparent to-black/50 md:hidden"></div>
           </div>
 
           <div className="relative z-10 container mx-auto w-full pt-20">

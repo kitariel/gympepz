@@ -7,6 +7,7 @@ import * as HeroOutline from "@heroicons/react/24/outline";
 import type { MenuCreateType, IconPlatform } from "@/types/menu";
 import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -102,6 +103,7 @@ export function AppSidebar({
 
   // Get user session for active workout check
   const { data: session } = useSession();
+  const pathname = usePathname();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
 
   // Get today's workout for badge
@@ -321,6 +323,7 @@ export function AppSidebar({
                   <SidebarMenuButton
                     asChild
                     tooltip="Start today's workout (⌘W)"
+                    isActive={pathname?.startsWith("/portal/start") || pathname?.includes("/portal/log/workout/")}
                     className={
                       hasActiveWorkout
                         ? "bg-primary/10 hover:bg-primary/20"
@@ -342,7 +345,11 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="AI Workout Creator">
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="AI Workout Creator"
+                    isActive={pathname?.startsWith("/portal/ai-planner")}
+                  >
                     <Link href="/portal/ai-planner">
                       <Sparkles className="size-4" />
                       <span>AI Workout Creator</span>
