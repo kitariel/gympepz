@@ -241,6 +241,15 @@
   }
 }
 
+@keyframes glow-border {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 /* -------------------------------
    UTILITIES
 -------------------------------- */
@@ -321,5 +330,49 @@
 
   .glass-dark {
     @apply bg-black/40 backdrop-blur-xl border border-white/10;
+  }
+
+  /* Glowing animated border */
+  .glow-border {
+    position: relative;
+    border-radius: 9999px;
+    background: var(--background);
+  }
+
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 9999px;
+    padding: 2px;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #3b82f6);
+    background-size: 200% 200%;
+    animation: glow-border 3s ease infinite;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 0;
+  }
+
+  .glow-border::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #3b82f6);
+    background-size: 200% 200%;
+    animation: glow-border 3s ease infinite;
+    filter: blur(10px);
+    opacity: 0.6;
+    z-index: -1;
+  }
+
+  .glow-border > * {
+    background: var(--background);
+    border: none;
+    position: relative;
+    z-index: 1;
   }
 }
