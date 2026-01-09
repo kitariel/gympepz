@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Command, SquareTerminal, Search, X, Keyboard } from "lucide-react";
+import { Command, SquareTerminal, Search, X, Keyboard, Sparkles } from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
 import type { MenuCreateType, IconPlatform } from "@/types/menu";
@@ -338,6 +338,14 @@ export function AppSidebar({
                           Ready
                         </Badge>
                       )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="AI Workout Creator">
+                    <Link href="/portal/ai-planner">
+                      <Sparkles className="size-4" />
+                      <span>AI Workout Creator</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

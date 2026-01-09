@@ -15,11 +15,6 @@
       "iconPlatform": "lucide",
       "enabled": true,
       "items": [
-        {
-          "title": "AI Workout Creator",
-          "url": "/portal/ai-planner",
-          "enabled": true
-        },
         { "title": "My Plans", "url": "/portal/plans", "enabled": true },
         {
           "title": "Exercise Library",
