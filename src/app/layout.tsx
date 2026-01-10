@@ -7,7 +7,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 
 export const metadata: Metadata = {
   title: "GymPepz - Your Fitness Journey Starts Here",
-  description: "Track workouts, analyze progress, and achieve your fitness goals with intelligent training and personalized workout plans.",
+  description:
+    "Track workouts, analyze progress, and achieve your fitness goals with intelligent training and personalized workout plans.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
@@ -19,6 +20,7 @@ const geist = Geist({
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -29,7 +31,9 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthSessionProvider session={null}>
             <TRPCReactProvider>
-              <AnalyticsTracker />
+              <Suspense fallback={null}>
+                <AnalyticsTracker />
+              </Suspense>
               {children}
             </TRPCReactProvider>
           </AuthSessionProvider>
