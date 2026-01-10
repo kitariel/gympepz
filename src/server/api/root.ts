@@ -10,6 +10,7 @@ import { planRouter } from "./routers/plan";
 import { workoutLogRouter } from "./routers/workout-log";
 // import { workoutSetRouter } from "./routers/workout-set"; // Temporarily disabled until migration
 import { progressRouter } from "./routers/progress";
+import { analyticsRouter } from "./routers/analytics";
 
 /**
  * This is the primary router for your server.
@@ -28,6 +29,7 @@ export const appRouter = createTRPCRouter({
   workoutLog: workoutLogRouter,
   // workoutSet: workoutSetRouter, // Temporarily disabled until migration
   progress: progressRouter,
+  analytics: analyticsRouter,
 });
 
 // export type definition of API

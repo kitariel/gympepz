@@ -18,6 +18,7 @@ const geist = Geist({
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 export default function RootLayout({
   children,
@@ -27,7 +28,10 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <AuthSessionProvider session={null}>
-            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              <AnalyticsTracker />
+              {children}
+            </TRPCReactProvider>
           </AuthSessionProvider>
         </ThemeProvider>
       </body>

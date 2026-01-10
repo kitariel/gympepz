@@ -29,4 +29,5 @@ model User {
     progressEntries ProgressEntry[]
     prs             ExercisePR[]
     streak          WorkoutStreak?
+    pageViews       PageView[]
 }
