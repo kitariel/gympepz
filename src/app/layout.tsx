@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   description:
     "Track workouts, analyze progress, and achieve your fitness goals with intelligent training and personalized workout plans.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
-  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

@@ -20,11 +20,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/gymguywomen.png",
         sizes: "192x192",
         type: "image/png",
+        purpose: "maskable",
       },
       {
         src: "/gymguywomen.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "maskable",
       },
     ],
   };

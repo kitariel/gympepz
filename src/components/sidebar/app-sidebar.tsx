@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Command, SquareTerminal, Search, X, Keyboard, Sparkles } from "lucide-react";
+import {
+  Command,
+  SquareTerminal,
+  Search,
+  X,
+  Keyboard,
+  Sparkles,
+} from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
 import type { MenuCreateType, IconPlatform } from "@/types/menu";
@@ -29,6 +36,7 @@ import { AddMenuPopover } from "@/components/sidebar/AddMenuPopover";
 import { useMenuState } from "@/hooks/useMenuState";
 import { useHeaderState } from "@/hooks/useHeaderState";
 import { HeaderSettingsPopover } from "@/components/sidebar/HeaderSettingsPopover";
+import { InstallPWAButton } from "@/components/pwa-install-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
@@ -323,7 +331,10 @@ export function AppSidebar({
                   <SidebarMenuButton
                     asChild
                     tooltip="Start today's workout (⌘W)"
-                    isActive={pathname?.startsWith("/portal/start") || pathname?.includes("/portal/log/workout/")}
+                    isActive={
+                      pathname?.startsWith("/portal/start") ||
+                      pathname?.includes("/portal/log/workout/")
+                    }
                     className={
                       hasActiveWorkout
                         ? "bg-primary/10 hover:bg-primary/20"
@@ -345,17 +356,18 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip="AI Workout Creator"
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Ask AI Coach (⌘I)"
                     isActive={pathname?.startsWith("/portal/ai-planner")}
                   >
                     <Link href="/portal/ai-planner">
                       <Sparkles className="size-4" />
-                      <span>AI Workout Creator</span>
+                      <span>Ask AI Coach</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <InstallPWAButton variant="sidebar" />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
