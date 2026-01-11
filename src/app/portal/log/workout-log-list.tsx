@@ -84,6 +84,23 @@ export function WorkoutLogList() {
 
   const activePlan = plans.data?.find((p) => p.isActive);
 
+  // Get today's workout from active plan
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
+  
+  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
+    { userId, day: localDayName },
+    { enabled: !!userId && !!activePlan },
+  );
+
   // Logic to find next workout
   const nextDay = useMemo(() => {
     if (!activePlan || !logs.data) return null;
@@ -258,8 +275,89 @@ export function WorkoutLogList() {
 
   return (
     <div className="space-y-4">
+      {/* Today's Workout Card */}
+      {todaysWorkout.data?.todayWorkout && (
+        <Card className="bg-emerald-500/5 border-emerald-500/20 shadow-sm">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="bg-background text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                >
+                  Today
+                </Badge>
+                <span className="text-muted-foreground text-xs">
+                  From: {todaysWorkout.data.plan?.name ?? activePlan?.name}
+                </span>
+              </div>
+            </div>
+            <CardTitle className="mt-2 flex items-center gap-2 text-lg">
+              {todaysWorkout.data.todayWorkout.title}
+              <CalendarIcon className="text-emerald-600 dark:text-emerald-400 h-4 w-4" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-4">
+            {/* Exercises List */}
+            {todaysWorkout.data.todayWorkout.items &&
+            todaysWorkout.data.todayWorkout.items.length > 0 ? (
+              <div className="space-y-2 rounded-lg bg-muted/30 p-3">
+                {todaysWorkout.data.todayWorkout.items.map((item, idx) => (
+                  <div
+                    key={item.id ?? idx}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                      {idx + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">
+                        {item.exercise?.name ?? "Unknown Exercise"}
+                      </div>
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                        <span>
+                          {item.sets}x{item.reps} reps
+                        </span>
+                        {item.exercise?.muscleGroup && (
+                          <>
+                            <span>•</span>
+                            <span>{item.exercise.muscleGroup}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">Rest day</p>
+            )}
+            <Button
+              onClick={async () => {
+                if (recentWorkoutCheck.data?.hasRecentWorkout) {
+                  setShowWarningDialog(true);
+                  return;
+                }
+                await createLog.mutateAsync({
+                  userId,
+                  planDayId: todaysWorkout.data.todayWorkout.id,
+                  date: new Date(),
+                });
+              }}
+              className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+              disabled={createLog.isPending}
+            >
+              <Play className="h-4 w-4" />
+              {createLog.isPending
+                ? "Starting..."
+                : "Start Today's Workout"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Next Workout Card */}
-      {activePlan && nextDay && (
+      {activePlan && nextDay && nextDay.id !== todaysWorkout.data?.todayWorkout?.id && (
         <Card className="bg-primary/5 border-primary/20 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-2">
             <div className="flex items-center justify-between">

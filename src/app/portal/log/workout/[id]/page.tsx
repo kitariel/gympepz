@@ -382,21 +382,22 @@ export default function ActiveWorkoutPage({
 
   const workout = log.data;
 
-  // Group sets by exercise - handle both sets and exercises
+  // Group sets by exercise log ID (not exerciseId) - handle both sets and exercises
   const exerciseGroups: Record<string, ExerciseGroup> = (() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = workout as any;
     // If sets exist (WorkoutSet[]), use them
     if (w.sets && Array.isArray(w.sets) && w.sets.length > 0) {
+      // Group sets by exerciseLogId if available, otherwise by exerciseId
       return w.sets.reduce(
         (acc: Record<string, ExerciseGroup>, set: WorkoutSet) => {
-          const exerciseId = set.exerciseId;
-          acc[exerciseId] ??= {
+          const key = (set as any).exerciseLogId ?? set.exerciseId;
+          acc[key] ??= {
             exercise: set.exercise,
             sets: [],
-            exerciseLogId: null,
+            exerciseLogId: (set as any).exerciseLogId ?? null,
           };
-          acc[exerciseId].sets.push(set);
+          acc[key].sets.push(set);
           return acc;
         },
         {} as Record<string, ExerciseGroup>,
@@ -408,30 +409,29 @@ export default function ActiveWorkoutPage({
       return w.exercises.reduce(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (acc: Record<string, ExerciseGroup>, exerciseLog: any) => {
-          const exerciseId = exerciseLog.exerciseId;
-          if (!acc[exerciseId]) {
-            acc[exerciseId] = {
-              exercise: exerciseLog.exercise,
-              sets: [],
+          // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+          const key = exerciseLog.id;
+          acc[key] = {
+            exercise: exerciseLog.exercise,
+            sets: [],
+            exerciseLogId: exerciseLog.id,
+          };
+          // Create mock sets from exercise data
+          for (let i = 0; i < exerciseLog.sets; i++) {
+            acc[key].sets.push({
+              id: `mock-${exerciseLog.id}-${i}`,
+              exerciseId: exerciseLog.exerciseId,
               exerciseLogId: exerciseLog.id,
-            };
-            // Create mock sets from exercise data
-            for (let i = 0; i < exerciseLog.sets; i++) {
-              acc[exerciseId].sets.push({
-                id: `mock-${exerciseLog.id}-${i}`,
-                exerciseId,
-                exerciseLogId: exerciseLog.id,
-                setNumber: i + 1,
-                targetReps: exerciseLog.reps,
-                targetWeight: exerciseLog.weight,
-                actualReps: exerciseLog.reps ?? 0,
-                actualWeight: exerciseLog.weight,
-                rpe: exerciseLog.rpe,
-                completed: false,
-                exercise: exerciseLog.exercise,
-                isMock: true,
-              });
-            }
+              setNumber: i + 1,
+              targetReps: exerciseLog.reps,
+              targetWeight: exerciseLog.weight,
+              actualReps: exerciseLog.reps ?? 0,
+              actualWeight: exerciseLog.weight,
+              rpe: exerciseLog.rpe,
+              completed: false,
+              exercise: exerciseLog.exercise,
+              isMock: true,
+            });
           }
           return acc;
         },
@@ -767,9 +767,11 @@ export default function ActiveWorkoutPage({
             >
               <div className="space-y-3 sm:space-y-4 md:space-y-5">
                 {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
-                  const exerciseId = exerciseLog.exerciseId;
-                  const group = exerciseGroups[exerciseId];
+                  // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+                  const group = exerciseGroups[exerciseLog.id];
                   if (!group) return null;
+                  
+                  const exerciseId = exerciseLog.exerciseId;
 
                   const { exercise, sets, exerciseLogId } = group;
                   // Find last workout data for this exercise
@@ -854,9 +856,11 @@ export default function ActiveWorkoutPage({
         ) : (
           <div className="space-y-3 sm:space-y-4 md:space-y-5">
             {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
-              const exerciseId = exerciseLog.exerciseId;
-              const group = exerciseGroups[exerciseId];
+              // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+              const group = exerciseGroups[exerciseLog.id];
               if (!group) return null;
+              
+              const exerciseId = exerciseLog.exerciseId;
 
               const { exercise, sets, exerciseLogId } = group;
               // Find last workout data for this exercise
