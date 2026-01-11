@@ -33,7 +33,7 @@ export function Step4Review({
   canSave,
 }: Step4ReviewProps) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0 py-4 shadow-sm">
       <CardHeader>
         <CardTitle>Review Your Plan</CardTitle>
       </CardHeader>
@@ -66,7 +66,9 @@ export function Step4Review({
                 <div className="space-y-2">
                   {day.exercises.length > 0 ? (
                     day.exercises.map((ex, exIdx) => {
-                      const exercise = exercises.find((e) => e.id === ex.exerciseId);
+                      const exercise = exercises.find(
+                        (e) => e.id === ex.exerciseId,
+                      );
                       return (
                         <div
                           key={exIdx}
@@ -77,7 +79,10 @@ export function Step4Review({
                               {exercise?.name ?? "Exercise"}
                             </span>
                             {exercise?.muscleGroup && (
-                              <Badge variant="outline" className="ml-2 text-[9px]">
+                              <Badge
+                                variant="outline"
+                                className="ml-2 text-[9px]"
+                              >
                                 {exercise.muscleGroup}
                               </Badge>
                             )}
@@ -117,4 +122,3 @@ export function Step4Review({
     </Card>
   );
 }
-

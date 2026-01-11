@@ -5,7 +5,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Target, ArrowRight } from "lucide-react";
-import { BODY_PARTS, BODY_PART_DESCRIPTIONS, type BodyPart } from "../../_types";
+import {
+  BODY_PARTS,
+  BODY_PART_DESCRIPTIONS,
+  type BodyPart,
+} from "../../_types";
 
 interface Step1BodyPartProps {
   onSelectBodyPart: (bodyPart: BodyPart) => void;
@@ -17,7 +21,7 @@ export function Step1BodyPart({
   onCancel,
 }: Step1BodyPartProps) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0 py-4 shadow-sm">
       <CardHeader>
         <CardTitle>Select Body Part Focus</CardTitle>
       </CardHeader>
@@ -54,4 +58,3 @@ export function Step1BodyPart({
     </Card>
   );
 }
-

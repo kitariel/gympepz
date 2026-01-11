@@ -22,7 +22,7 @@ export function Step3AddDays({
   onFinish,
 }: Step3AddDaysProps) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0 py-4 shadow-sm">
       <CardHeader>
         <CardTitle>Add More Days?</CardTitle>
       </CardHeader>
@@ -75,4 +75,3 @@ export function Step3AddDays({
     </Card>
   );
 }
-

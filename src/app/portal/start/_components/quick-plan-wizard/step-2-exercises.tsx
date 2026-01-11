@@ -32,7 +32,7 @@ export function Step2Exercises({
   canContinue,
 }: Step2ExercisesProps) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0 py-4 shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -115,4 +115,3 @@ export function Step2Exercises({
     </Card>
   );
 }
-
