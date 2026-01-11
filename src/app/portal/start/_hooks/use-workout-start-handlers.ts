@@ -20,7 +20,24 @@ export function useWorkoutStartHandlers({
   setShowRestDayDialog,
 }: UseWorkoutStartHandlersProps) {
   const router = useRouter();
-  const { todaysWorkout, activeWorkout, recentWorkoutCheck, quickStart, toggleRestDay } = hooks;
+  const {
+    todaysWorkout,
+    activeWorkout,
+    recentWorkoutCheck,
+    quickStart,
+    toggleRestDay,
+  } = hooks;
+
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const;
+  const localDayName = dayNames[new Date().getDay()]!;
 
   const handleStartWorkout = () => {
     if (!userId) return;
@@ -43,7 +60,7 @@ export function useWorkoutStartHandlers({
         setShowWarningDialog(true);
         return;
       }
-      quickStart.mutate({ userId });
+      quickStart.mutate({ userId, day: localDayName });
       return;
     }
 
@@ -54,7 +71,9 @@ export function useWorkoutStartHandlers({
     }
 
     // No workout scheduled - proceed anyway
-    quickStart.mutate({ userId });
+    // Pass the local day name so the backend can try to find a matching day
+    // This helps with "Start Workout Now" on days that might not have a specific schedule
+    quickStart.mutate({ userId, day: localDayName });
   };
 
   const handleRestDayChoice = async (action: RestDayAction) => {
@@ -83,7 +102,7 @@ export function useWorkoutStartHandlers({
 
   const handleConfirmStart = () => {
     setShowWarningDialog(false);
-    if (userId) quickStart.mutate({ userId });
+    if (userId) quickStart.mutate({ userId, day: localDayName });
   };
 
   return {
@@ -92,4 +111,3 @@ export function useWorkoutStartHandlers({
     handleConfirmStart,
   };
 }
-

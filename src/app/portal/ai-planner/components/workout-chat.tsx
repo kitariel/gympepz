@@ -25,7 +25,12 @@ type Props = {
   onPlanCreated: (id: string) => void;
 };
 
-type Msg = { role: "user" | "assistant"; text?: string; planId?: string };
+type Msg = {
+  role: "user" | "assistant";
+  text?: string;
+  planId?: string;
+  suggestedActions?: string[];
+};
 type PreviewItem = {
   exerciseId: string;
   exerciseName: string;
@@ -124,11 +129,16 @@ export default function WorkoutChat({
         name: string;
         days: PreviewDay[];
         assistantText?: string;
+        suggestedActions?: string[];
       };
       if (sg?.assistantText !== undefined) {
         setMessages((m) => [
           ...m,
-          { role: "assistant", text: sg.assistantText },
+          {
+            role: "assistant",
+            text: sg.assistantText,
+            suggestedActions: sg.suggestedActions,
+          },
         ]);
       }
       if (sg?.ok) {
@@ -498,6 +508,22 @@ export default function WorkoutChat({
                   </div>
                 )}
                 {m.planId && renderPlanCard(m.planId)}
+
+                {m.suggestedActions && m.suggestedActions.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {m.suggestedActions.map((action, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        className="bg-background hover:bg-muted h-7 rounded-full px-3 text-xs"
+                        onClick={() => handleSuggestionClick(action)}
+                      >
+                        {action}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {m.role === "user" && (

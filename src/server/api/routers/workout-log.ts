@@ -17,21 +17,31 @@ export const workoutLogRouter = createTRPCRouter({
       if (input.date) {
         // If date is provided, normalize it to start of day in UTC
         const providedDate = new Date(input.date);
-        workoutDate = new Date(Date.UTC(
-          providedDate.getUTCFullYear(),
-          providedDate.getUTCMonth(),
-          providedDate.getUTCDate(),
-          0, 0, 0, 0
-        ));
+        workoutDate = new Date(
+          Date.UTC(
+            providedDate.getUTCFullYear(),
+            providedDate.getUTCMonth(),
+            providedDate.getUTCDate(),
+            0,
+            0,
+            0,
+            0,
+          ),
+        );
       } else {
         // Default to today in UTC (start of day)
         const now = new Date();
-        workoutDate = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate(),
-          0, 0, 0, 0
-        ));
+        workoutDate = new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            0,
+            0,
+            0,
+            0,
+          ),
+        );
       }
 
       const log = await ctx.db.workoutLog.create({
@@ -51,7 +61,9 @@ export const workoutLogRouter = createTRPCRouter({
 
         if (planDay && planDay.items.length > 0) {
           // Sort items by order before creating
-          const sortedItems = [...planDay.items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          const sortedItems = [...planDay.items].sort(
+            (a, b) => (a.order ?? 0) - (b.order ?? 0),
+          );
           await ctx.db.workoutLogExercise.createMany({
             data: sortedItems.map((item, index) => ({
               workoutLogId: log.id,
@@ -134,7 +146,7 @@ export const workoutLogRouter = createTRPCRouter({
         orderBy: { order: "desc" },
         select: { order: true },
       });
-      
+
       return ctx.db.workoutLogExercise.create({
         data: {
           workoutLogId: input.workoutLogId,
@@ -198,7 +210,9 @@ export const workoutLogRouter = createTRPCRouter({
       });
 
       if (exercises.length !== input.orderedIds.length) {
-        throw new Error("Some exercise IDs not found or don't belong to this workout");
+        throw new Error(
+          "Some exercise IDs not found or don't belong to this workout",
+        );
       }
 
       // Update order for each exercise based on its position in the array
@@ -207,8 +221,8 @@ export const workoutLogRouter = createTRPCRouter({
           ctx.db.workoutLogExercise.update({
             where: { id: exerciseId, workoutLogId: input.workoutLogId },
             data: { order: index },
-          })
-        )
+          }),
+        ),
       );
       return { ok: true };
     }),
@@ -247,7 +261,7 @@ export const workoutLogRouter = createTRPCRouter({
 
   // Quick start from active plan
   quickStart: publicProcedure
-    .input(z.object({ userId: z.string().min(1) }))
+    .input(z.object({ userId: z.string().min(1), day: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.user.findUnique({
         where: { id: input.userId },
@@ -255,7 +269,7 @@ export const workoutLogRouter = createTRPCRouter({
           activePlan: {
             include: {
               days: {
-                include: { items: true },
+                include: { items: { include: { exercise: true } } },
                 orderBy: { order: "asc" },
               },
             },
@@ -267,58 +281,122 @@ export const workoutLogRouter = createTRPCRouter({
         throw new Error("No active plan found");
       }
 
-      // Get last workout to determine next day
-      const lastLog = await ctx.db.workoutLog.findFirst({
-        where: {
-          userId: input.userId,
-          planDayId: { not: null },
-        },
-        orderBy: { date: "desc" },
-        include: { planDay: true },
-      });
+      // Use provided day from client (local timezone) or fall back to UTC calculation
+      const DAY_NAMES = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ] as const;
 
-      let nextDay = user.activePlan.days[0];
+      const now = new Date();
+      // If client provides day name, use it; otherwise calculate from UTC
+      const currentDayName = input.day ?? DAY_NAMES[now.getUTCDay()];
 
-      if (lastLog?.planDay) {
-        const lastDayOrder = lastLog.planDay.order;
-        const nextDayIndex =
-          user.activePlan.days.findIndex((d) => d.order > lastDayOrder) ?? 0;
-        nextDay = user.activePlan.days[nextDayIndex] ?? user.activePlan.days[0];
+      // Helper: Check if day has exercises
+      const hasExercises = (day: (typeof user.activePlan.days)[0]) => {
+        return (
+          day &&
+          day.items &&
+          day.items.length > 0 &&
+          day.items.some((item) => item.exercise !== null)
+        );
+      };
+
+      // Find the correct day in the plan
+      // 1. Try to find exact match by day name (prioritize days with exercises)
+      const dayMatches = user.activePlan.days.filter(
+        (d) => d.day === currentDayName,
+      );
+
+      let targetDay = dayMatches.find(hasExercises) ?? dayMatches[0];
+
+      // 2. If no exact day name match, try to find by order (0=Sunday, 1=Monday, etc.)
+      if (!targetDay) {
+        const dayIndex = DAY_NAMES.findIndex((d) => d === currentDayName);
+        if (dayIndex !== -1) {
+          // Normalize order (7 -> 6 for Saturday)
+          const normalizedOrder = (order: number) => (order === 7 ? 6 : order);
+
+          const orderMatches = user.activePlan.days.filter(
+            (d) => normalizedOrder(d.order) === dayIndex,
+          );
+          targetDay = orderMatches.find(hasExercises) ?? orderMatches[0];
+        }
       }
 
-      if (!nextDay) {
+      // 3. If still no match (e.g. today is Sunday but plan only has Mon-Fri),
+      // fall back to next available day logic
+      if (!targetDay) {
+        // Get last workout to determine next day
+        const lastLog = await ctx.db.workoutLog.findFirst({
+          where: {
+            userId: input.userId,
+            planDayId: { not: null },
+          },
+          orderBy: { date: "desc" },
+          include: { planDay: true },
+        });
+
+        if (lastLog?.planDay) {
+          const lastDayOrder = lastLog.planDay.order;
+          const nextDayIndex =
+            user.activePlan.days.findIndex((d) => d.order > lastDayOrder) ?? 0;
+          targetDay =
+            user.activePlan.days[nextDayIndex] ?? user.activePlan.days[0];
+        } else {
+          // No previous logs, start with first day
+          targetDay = user.activePlan.days[0];
+        }
+      }
+
+      if (!targetDay) {
         throw new Error("No workout day found");
       }
 
       // Create workout log with today's date in UTC (start of day)
       // This ensures the date displays correctly regardless of timezone
-      const now = new Date();
-      const todayUTC = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0, 0, 0, 0
-      ));
+      const todayUTC = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0,
+          0,
+          0,
+          0,
+        ),
+      );
 
       const log = await ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
-          planDayId: nextDay.id,
+          planDayId: targetDay.id,
           date: todayUTC,
         },
       });
 
       // Create workout log exercises from plan day items
-      if (nextDay.items && nextDay.items.length > 0) {
-        await ctx.db.workoutLogExercise.createMany({
-          data: nextDay.items.map((item) => ({
-            workoutLogId: log.id,
-            exerciseId: item.exerciseId,
-            sets: item.sets,
-            reps: item.reps,
-            weight: item.weight,
-          })),
-        });
+      if (targetDay.items && targetDay.items.length > 0) {
+        // Filter out items with null exercises (deleted exercises)
+        const validItems = targetDay.items.filter(
+          (item) => item.exercise !== null,
+        );
+
+        if (validItems.length > 0) {
+          await ctx.db.workoutLogExercise.createMany({
+            data: validItems.map((item) => ({
+              workoutLogId: log.id,
+              exerciseId: item.exerciseId,
+              sets: item.sets,
+              reps: item.reps,
+              weight: item.weight,
+            })),
+          });
+        }
       }
 
       // Set tracking will be available after migration

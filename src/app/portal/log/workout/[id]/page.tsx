@@ -232,22 +232,36 @@ export default function ActiveWorkoutPage({
     includeLastWorkout: true,
   });
 
-  const exercises = api.exercise.list.useQuery(
-    { q: exerciseSearch, take: 10 },
-    { enabled: isAddingExercise && exerciseSearch.length > 0 },
+  const exercises = api.exercise.listInfinite.useInfiniteQuery(
+    { q: exerciseSearch, limit: 20 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled: isAddingExercise,
+    },
+  );
+
+  const flatExercises = useMemo(
+    () => exercises.data?.pages.flatMap((page) => page.items) ?? [],
+    [exercises.data?.pages],
   );
 
   // Note: workoutSet router is currently disabled, so we use workoutLogExercise mutations
   // These mutations work with the current database schema
   const deleteExercise = api.workoutLog.deleteExercise.useMutation({
     onSuccess: async () => {
-      await utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      await utils.workoutLog.getWithHistory.invalidate({
+        id: logId,
+        includeLastWorkout: true,
+      });
     },
   });
 
   const addExerciseMutation = api.workoutLog.addExercise.useMutation({
     onSuccess: async () => {
-      await utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      await utils.workoutLog.getWithHistory.invalidate({
+        id: logId,
+        includeLastWorkout: true,
+      });
       setIsAddingExercise(false);
       setExerciseSearch("");
     },
@@ -255,7 +269,10 @@ export default function ActiveWorkoutPage({
 
   const reorderExercises = api.workoutLog.reorderExercises.useMutation({
     onSuccess: async () => {
-      await utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      await utils.workoutLog.getWithHistory.invalidate({
+        id: logId,
+        includeLastWorkout: true,
+      });
     },
   });
 
@@ -294,7 +311,10 @@ export default function ActiveWorkoutPage({
 
   const updateExerciseMutation = api.workoutLog.updateExercise.useMutation({
     onSuccess: async () => {
-      await utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      await utils.workoutLog.getWithHistory.invalidate({
+        id: logId,
+        includeLastWorkout: true,
+      });
     },
   });
 
@@ -302,7 +322,10 @@ export default function ActiveWorkoutPage({
     onSuccess: async () => {
       // Invalidate queries before redirecting
       await utils.workoutLog.list.invalidate();
-      await utils.workoutLog.getWithHistory.invalidate({ id: logId });
+      await utils.workoutLog.getWithHistory.invalidate({
+        id: logId,
+        includeLastWorkout: true,
+      });
       router.push("/portal/log");
     },
     onError: (error) => {
@@ -935,7 +958,7 @@ export default function ActiveWorkoutPage({
                 className="h-10 text-sm sm:h-9 sm:text-base md:h-10 md:text-base"
               />
               <div className="-mx-1 max-h-[300px] space-y-1.5 overflow-y-auto px-1 sm:max-h-[400px] sm:space-y-2 md:max-h-[500px] md:space-y-2.5">
-                {exercises.data?.map((ex) => (
+                {flatExercises.map((ex) => (
                   <Button
                     key={ex.id}
                     variant="ghost"
@@ -955,7 +978,17 @@ export default function ActiveWorkoutPage({
                     </div>
                   </Button>
                 ))}
-                {exerciseSearch && exercises.data?.length === 0 && (
+                {exercises.hasNextPage && (
+                  <Button
+                    variant="ghost"
+                    className="text-muted-foreground w-full text-xs"
+                    onClick={() => exercises.fetchNextPage()}
+                    disabled={exercises.isFetchingNextPage}
+                  >
+                    {exercises.isFetchingNextPage ? "Loading..." : "Load More"}
+                  </Button>
+                )}
+                {flatExercises.length === 0 && !exercises.isLoading && (
                   <p className="text-muted-foreground py-4 text-center text-sm">
                     No exercises found.
                   </p>

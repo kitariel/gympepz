@@ -32,12 +32,67 @@ export const exerciseRouter = createTRPCRouter({
           ],
         });
       }
-      if (mg) Object.assign(where, { muscleGroup: { contains: mg, mode: "insensitive" } });
-      if (eq) Object.assign(where, { equipment: { contains: eq, mode: "insensitive" } });
+      if (mg)
+        Object.assign(where, {
+          muscleGroup: { contains: mg, mode: "insensitive" },
+        });
+      if (eq)
+        Object.assign(where, {
+          equipment: { contains: eq, mode: "insensitive" },
+        });
       if (diff) Object.assign(where, { difficulty: { equals: diff } });
-      return ctx.db.exercise.findMany({ where, orderBy: { name: "asc" }, take, skip });
+      return ctx.db.exercise.findMany({
+        where,
+        orderBy: { name: "asc" },
+        take,
+        skip,
+      });
     }),
-  count: publicProcedure
+
+  listInfinite: publicProcedure
+    .input(
+      z.object({
+        q: z.string().optional(),
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.number().nullish(), // Offset
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input.limit;
+      const skip = input.cursor ?? 0;
+      const q = input.q?.trim();
+
+      const where: Record<string, unknown> = {};
+      if (q) {
+        Object.assign(where, {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { muscleGroup: { contains: q, mode: "insensitive" } },
+            { equipment: { contains: q, mode: "insensitive" } },
+          ],
+        });
+      }
+
+      const items = await ctx.db.exercise.findMany({
+        where,
+        orderBy: { name: "asc" },
+        take: limit + 1, // Fetch one more to check if there are more
+        skip,
+      });
+
+      let nextCursor: typeof input.cursor | undefined = undefined;
+      if (items.length > limit) {
+        const nextItem = items.pop();
+        nextCursor = skip + limit;
+      }
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+
+  get: publicProcedure
     .input(
       z
         .object({
@@ -63,8 +118,14 @@ export const exerciseRouter = createTRPCRouter({
           ],
         });
       }
-      if (mg) Object.assign(where, { muscleGroup: { contains: mg, mode: "insensitive" } });
-      if (eq) Object.assign(where, { equipment: { contains: eq, mode: "insensitive" } });
+      if (mg)
+        Object.assign(where, {
+          muscleGroup: { contains: mg, mode: "insensitive" },
+        });
+      if (eq)
+        Object.assign(where, {
+          equipment: { contains: eq, mode: "insensitive" },
+        });
       if (diff) Object.assign(where, { difficulty: { equals: diff } });
       return ctx.db.exercise.count({ where });
     }),
@@ -85,15 +146,23 @@ export const exerciseRouter = createTRPCRouter({
       return ex;
     }),
   createMany: publicProcedure
-    .input(z.object({ items: z.array(z.object({
-      name: z.string().min(1),
-      muscleGroup: z.string().min(1),
-      equipment: z.string().optional(),
-      difficulty: z.string().optional(),
-      description: z.string().optional(),
-      howTo: z.string().optional(),
-      imageUrl: z.string().url().optional(),
-    })).min(1) }))
+    .input(
+      z.object({
+        items: z
+          .array(
+            z.object({
+              name: z.string().min(1),
+              muscleGroup: z.string().min(1),
+              equipment: z.string().optional(),
+              difficulty: z.string().optional(),
+              description: z.string().optional(),
+              howTo: z.string().optional(),
+              imageUrl: z.string().url().optional(),
+            }),
+          )
+          .min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const data = input.items.map((i) => ({ ...i }));
       await ctx.db.exercise.createMany({ data });
