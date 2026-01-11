@@ -198,11 +198,13 @@ export function CalendarTab({ userId }: CalendarTabProps) {
                     {(() => {
                       const date = new Date(log.date);
                       // Extract UTC date components to avoid timezone shifts
-                      const utcDate = new Date(Date.UTC(
-                        date.getUTCFullYear(),
-                        date.getUTCMonth(),
-                        date.getUTCDate()
-                      ));
+                      const utcDate = new Date(
+                        Date.UTC(
+                          date.getUTCFullYear(),
+                          date.getUTCMonth(),
+                          date.getUTCDate(),
+                        ),
+                      );
                       return format(utcDate, "EEEE, MMM d");
                     })()}
                   </p>

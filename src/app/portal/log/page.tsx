@@ -179,7 +179,7 @@ export default function LogPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="workouts" className="mt-4 space-y-4">
+        <TabsContent value="workouts" className="space-y-4">
           <WorkoutLogList />
         </TabsContent>
 
@@ -196,15 +196,15 @@ export default function LogPage() {
           recentWorkout={recentWorkoutCheck.data?.workout ?? null}
         />
 
-        <TabsContent value="progress" className="mt-4 space-y-4">
+        <TabsContent value="progress" className="space-y-4">
           <ProgressView />
         </TabsContent>
 
-        <TabsContent value="analytics" className="mt-4 space-y-4">
+        <TabsContent value="analytics" className="space-y-4">
           <AnalyticsTab userId={userId} />
         </TabsContent>
 
-        <TabsContent value="calendar" className="mt-4 space-y-4">
+        <TabsContent value="calendar" className="space-y-4">
           <CalendarTab userId={userId} />
         </TabsContent>
       </Tabs>
