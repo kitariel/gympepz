@@ -406,37 +406,44 @@ export default function ActiveWorkoutPage({
 
     // Otherwise, use exercises (WorkoutLogExercise[]) and create mock sets
     if (w.exercises && Array.isArray(w.exercises)) {
-      return w.exercises.reduce(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (acc: Record<string, ExerciseGroup>, exerciseLog: any) => {
-          // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
-          const key = exerciseLog.id;
-          acc[key] = {
-            exercise: exerciseLog.exercise,
-            sets: [],
-            exerciseLogId: exerciseLog.id,
-          };
-          // Create mock sets from exercise data
-          for (let i = 0; i < exerciseLog.sets; i++) {
-            acc[key].sets.push({
-              id: `mock-${exerciseLog.id}-${i}`,
-              exerciseId: exerciseLog.exerciseId,
-              exerciseLogId: exerciseLog.id,
-              setNumber: i + 1,
-              targetReps: exerciseLog.reps,
-              targetWeight: exerciseLog.weight,
-              actualReps: exerciseLog.reps ?? 0,
-              actualWeight: exerciseLog.weight,
-              rpe: exerciseLog.rpe,
-              completed: false,
+      return w.exercises
+        .filter((exerciseLog: any) => exerciseLog.exercise != null) // Filter out exercises with null relation
+        .reduce(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (acc: Record<string, ExerciseGroup>, exerciseLog: any) => {
+            // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+            const key = exerciseLog.id;
+            // Double-check exercise exists before creating group
+            if (!exerciseLog.exercise) {
+              return acc;
+            }
+            acc[key] = {
               exercise: exerciseLog.exercise,
-              isMock: true,
-            });
-          }
-          return acc;
-        },
-        {} as Record<string, ExerciseGroup>,
-      );
+              sets: [],
+              exerciseLogId: exerciseLog.id,
+            };
+            // Create mock sets from exercise data
+            const numSets = Math.max(1, exerciseLog.sets || 1); // Ensure at least 1 set
+            for (let i = 0; i < numSets; i++) {
+              acc[key].sets.push({
+                id: `mock-${exerciseLog.id}-${i}`,
+                exerciseId: exerciseLog.exerciseId,
+                exerciseLogId: exerciseLog.id,
+                setNumber: i + 1,
+                targetReps: exerciseLog.reps ?? 0,
+                targetWeight: exerciseLog.weight ?? null,
+                actualReps: exerciseLog.reps ?? 0,
+                actualWeight: exerciseLog.weight ?? null,
+                rpe: exerciseLog.rpe ?? null,
+                completed: false,
+                exercise: exerciseLog.exercise,
+                isMock: true,
+              });
+            }
+            return acc;
+          },
+          {} as Record<string, ExerciseGroup>,
+        );
     }
 
     return {} as Record<string, ExerciseGroup>;
@@ -474,14 +481,34 @@ export default function ActiveWorkoutPage({
     const set = allSets.find((s) => s.id === setId);
     if (!set) return;
 
-    if (set.isMock && set.exerciseLogId) {
-      // Update via workoutLogExercise
-      updateExerciseMutation.mutate({
-        id: set.exerciseLogId,
-        reps: data.actualReps ?? set.actualReps ?? 0,
-        weight: data.actualWeight ?? set.actualWeight ?? undefined,
-        rpe: data.rpe ?? set.rpe ?? undefined,
-      });
+    // Check if this exercise is from plan (not logged yet)
+    const exerciseLog = (workout as any)?.exercises?.find(
+      (e: any) => e.exerciseId === set.exerciseId,
+    );
+    const isFromPlan = exerciseLog?.isFromPlan || exerciseLog?.id?.startsWith("plan-");
+
+    if (set.isMock) {
+      if (set.exerciseLogId && !isFromPlan) {
+        // Update existing workoutLogExercise
+        updateExerciseMutation.mutate({
+          id: set.exerciseLogId,
+          reps: data.actualReps ?? (set.actualReps ?? 0),
+          weight: data.actualWeight ?? set.actualWeight ?? undefined,
+          rpe: data.rpe ?? set.rpe ?? undefined,
+        });
+      } else if (isFromPlan || !set.exerciseLogId) {
+        // Exercise is from plan - convert it to a logged exercise first
+        // Create a workoutLogExercise entry
+        const actualRepsValue = data.actualReps ?? exerciseLog?.reps ?? (set.actualReps ?? 0);
+        addExerciseMutation.mutate({
+          workoutLogId: logId,
+          exerciseId: set.exerciseId,
+          sets: exerciseLog?.sets ?? (actualRepsValue > 0 ? Math.max(1, actualRepsValue) : 1),
+          reps: actualRepsValue,
+          weight: data.actualWeight ?? exerciseLog?.weight ?? set.actualWeight ?? undefined,
+          rpe: data.rpe ?? set.rpe ?? undefined,
+        });
+      }
     } else {
       // Real sets - workoutSet router is disabled, so show message
       setError(
@@ -762,14 +789,20 @@ export default function ActiveWorkoutPage({
             }}
           >
             <SortableContext
-              items={(workout as any)?.exercises?.map((ex: any) => ex.id) ?? []}
+              items={
+                ((workout as any)?.exercises ?? [])
+                  .filter((ex: any) => ex.exercise != null)
+                  .map((ex: any) => ex.id) ?? []
+              }
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-3 sm:space-y-4 md:space-y-5">
-                {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
-                  // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
-                  const group = exerciseGroups[exerciseLog.id];
-                  if (!group) return null;
+                {((workout as any)?.exercises ?? [])
+                  .filter((exerciseLog: any) => exerciseLog.exercise != null)
+                  .map((exerciseLog: any) => {
+                    // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+                    const group = exerciseGroups[exerciseLog.id];
+                    if (!group || !group.exercise) return null;
                   
                   const exerciseId = exerciseLog.exerciseId;
 
@@ -855,10 +888,12 @@ export default function ActiveWorkoutPage({
           </DndContext>
         ) : (
           <div className="space-y-3 sm:space-y-4 md:space-y-5">
-            {((workout as any)?.exercises ?? []).map((exerciseLog: any) => {
-              // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
-              const group = exerciseGroups[exerciseLog.id];
-              if (!group) return null;
+            {((workout as any)?.exercises ?? [])
+              .filter((exerciseLog: any) => exerciseLog.exercise != null)
+              .map((exerciseLog: any) => {
+                // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
+                const group = exerciseGroups[exerciseLog.id];
+                if (!group || !group.exercise) return null;
               
               const exerciseId = exerciseLog.exerciseId;
 

@@ -58,7 +58,7 @@ export function OnboardingWizard({
 
   return (
     <div className="from-primary/5 via-background to-secondary/5 flex min-h-screen items-center justify-center bg-gradient-to-br p-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="py-4 w-full max-w-2xl">
         <CardHeader>
           <div className="mb-2 flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">

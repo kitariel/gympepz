@@ -56,24 +56,34 @@ export const workoutLogRouter = createTRPCRouter({
       if (input.planDayId) {
         const planDay = await ctx.db.planDay.findUnique({
           where: { id: input.planDayId },
-          include: { items: true },
+          include: {
+            items: {
+              include: { exercise: true }, // Include exercise relation to check if it exists
+            },
+          },
         });
 
         if (planDay && planDay.items.length > 0) {
-          // Sort items by order before creating
-          const sortedItems = [...planDay.items].sort(
+          // Filter out items with deleted/missing exercises and sort by order
+          const validItems = planDay.items.filter(
+            (item) => item.exercise != null,
+          );
+          const sortedItems = [...validItems].sort(
             (a, b) => (a.order ?? 0) - (b.order ?? 0),
           );
-          await ctx.db.workoutLogExercise.createMany({
-            data: sortedItems.map((item, index) => ({
-              workoutLogId: log.id,
-              exerciseId: item.exerciseId,
-              sets: item.sets,
-              reps: item.reps,
-              weight: item.weight,
-              order: index,
-            })),
-          });
+          
+          if (sortedItems.length > 0) {
+            await ctx.db.workoutLogExercise.createMany({
+              data: sortedItems.map((item, index) => ({
+                workoutLogId: log.id,
+                exerciseId: item.exerciseId,
+                sets: item.sets,
+                reps: item.reps,
+                weight: item.weight,
+                order: index,
+              })),
+            });
+          }
         }
       }
 
@@ -385,15 +395,21 @@ export const workoutLogRouter = createTRPCRouter({
         const validItems = targetDay.items.filter(
           (item) => item.exercise !== null,
         );
+        
+        // Sort items by order before creating
+        const sortedItems = [...validItems].sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0),
+        );
 
-        if (validItems.length > 0) {
+        if (sortedItems.length > 0) {
           await ctx.db.workoutLogExercise.createMany({
-            data: validItems.map((item) => ({
+            data: sortedItems.map((item, index) => ({
               workoutLogId: log.id,
               exerciseId: item.exerciseId,
               sets: item.sets,
               reps: item.reps,
               weight: item.weight,
+              order: index, // Preserve order from plan
             })),
           });
         }
@@ -421,13 +437,43 @@ export const workoutLogRouter = createTRPCRouter({
             include: { exercise: true },
             orderBy: { order: "asc" },
           },
-          planDay: true,
+          planDay: {
+            include: {
+              items: {
+                include: { exercise: true },
+                orderBy: { order: "asc" },
+              },
+            },
+          },
           // Note: sets relation will be available after migration
           // Frontend handles fallback to exercises if sets don't exist
         },
       });
 
       if (!workout) return null;
+
+      // Get plan day exercises (always available from the active plan)
+      const planDayExercises = workout.planDay?.items
+        ?.filter((item) => item.exercise != null)
+        .map((item, index) => ({
+          id: `plan-${item.id}`, // Temporary ID for plan items
+          workoutLogId: workout.id,
+          exerciseId: item.exerciseId,
+          exercise: item.exercise!,
+          sets: item.sets,
+          reps: item.reps,
+          weight: item.weight,
+          rpe: null,
+          notes: null,
+          order: item.order ?? index,
+          createdAt: workout.createdAt,
+          isFromPlan: true, // Flag to indicate this is from plan, not logged yet
+        })) ?? [];
+
+      // Use logged exercises if they exist, otherwise use plan exercises
+      // This ensures exercises are always available from the active plan
+      const exercisesToDisplay =
+        workout.exercises.length > 0 ? workout.exercises : planDayExercises;
 
       let lastWorkout = null;
       if (input.includeLastWorkout && workout.planDayId) {
@@ -450,6 +496,9 @@ export const workoutLogRouter = createTRPCRouter({
 
       return {
         ...workout,
+        // Always use exercises (from plan if no logged exercises exist)
+        exercises: exercisesToDisplay,
+        planDayExercises, // Also provide plan exercises separately for reference
         lastWorkout,
       };
     }),
@@ -721,7 +770,9 @@ export const workoutLogRouter = createTRPCRouter({
       const sourceLog = await ctx.db.workoutLog.findUnique({
         where: { id: input.id },
         include: {
-          exercises: true,
+          exercises: {
+            include: { exercise: true }, // Include exercise relation to check if it exists
+          },
           planDay: true,
         },
       });
@@ -743,17 +794,25 @@ export const workoutLogRouter = createTRPCRouter({
 
       // Copy exercises
       if (sourceLog.exercises.length > 0) {
-        await ctx.db.workoutLogExercise.createMany({
-          data: sourceLog.exercises.map((ex) => ({
-            workoutLogId: newLog.id,
-            exerciseId: ex.exerciseId,
-            sets: ex.sets,
-            reps: ex.reps,
-            weight: ex.weight,
-            rpe: ex.rpe,
-            notes: ex.notes,
-          })),
-        });
+        // Filter out exercises with null exercise relation and preserve order
+        const validExercises = sourceLog.exercises
+          .filter((ex) => ex.exercise != null)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        
+        if (validExercises.length > 0) {
+          await ctx.db.workoutLogExercise.createMany({
+            data: validExercises.map((ex, index) => ({
+              workoutLogId: newLog.id,
+              exerciseId: ex.exerciseId,
+              sets: ex.sets,
+              reps: ex.reps,
+              weight: ex.weight,
+              rpe: ex.rpe,
+              notes: ex.notes,
+              order: ex.order ?? index, // Preserve original order or use index
+            })),
+          });
+        }
       }
 
       return newLog;
