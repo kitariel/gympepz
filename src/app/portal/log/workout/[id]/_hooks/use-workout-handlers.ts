@@ -3,6 +3,7 @@
  */
 
 import { useMemo } from "react";
+import type React from "react";
 import type { SetUpdateData } from "../_types";
 
 interface UseWorkoutHandlersParams {
@@ -16,6 +17,8 @@ interface UseWorkoutHandlersParams {
   restTimer: {
     start: (seconds: number) => void;
   };
+  completedSets: Set<string>;
+  setCompletedSets: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export function useWorkoutHandlers({
@@ -27,6 +30,8 @@ export function useWorkoutHandlers({
   deleteExercise,
   setError,
   restTimer,
+  completedSets,
+  setCompletedSets,
 }: UseWorkoutHandlersParams) {
   const allSets = useMemo(() => {
     if (!workout) return [];
@@ -91,6 +96,25 @@ export function useWorkoutHandlers({
     if (!set) return;
 
     if (set.isMock) {
+      // Mark set as completed in local state
+      setCompletedSets((prev) => {
+        const next = new Set(prev);
+        next.add(setId);
+        return next;
+      });
+
+      // For mock sets, we need to update the exercise log with the set's data
+      // The actual completion is tracked at the exercise level
+      // We'll update the exercise with the current set values
+      if (set.exerciseLogId) {
+        updateExerciseMutation.mutate({
+          id: set.exerciseLogId,
+          reps: set.actualReps ?? set.targetReps ?? 0,
+          weight: set.actualWeight ?? set.targetWeight ?? undefined,
+          rpe: set.rpe ?? undefined,
+        });
+      }
+      // Start rest timer after marking set as complete
       restTimer.start(180);
     } else {
       setError("Set completion requires database migration.");

@@ -172,6 +172,7 @@ export default function ActiveWorkoutPage({
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(
     new Set(),
   );
+  const [completedSets, setCompletedSets] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const [isArrangeMode, setIsArrangeMode] = useState(false);
 
@@ -349,18 +350,26 @@ export default function ActiveWorkoutPage({
     [exerciseGroups],
   );
 
-  const { totalVolume, completedSets, totalSets } = useMemo(() => {
-    const volume = allSets.reduce((sum, set) => {
+  // Merge completed sets from state with sets that have completed flag
+  const allSetsWithCompletion = useMemo(() => {
+    return allSets.map((set) => ({
+      ...set,
+      completed: completedSets.has(set.id) || set.completed,
+    }));
+  }, [allSets, completedSets]);
+
+  const { totalVolume, completedSetsCount, totalSets } = useMemo(() => {
+    const volume = allSetsWithCompletion.reduce((sum, set) => {
       return (
         sum +
         (set.actualWeight ?? set.targetWeight ?? 0) *
           (set.actualReps ?? set.targetReps ?? 0)
       );
     }, 0);
-    const completed = allSets.filter((s) => s.completed).length;
-    const total = allSets.length;
-    return { totalVolume: volume, completedSets: completed, totalSets: total };
-  }, [allSets]);
+    const completed = allSetsWithCompletion.filter((s) => s.completed).length;
+    const total = allSetsWithCompletion.length;
+    return { totalVolume: volume, completedSetsCount: completed, totalSets: total };
+  }, [allSetsWithCompletion]);
 
   // Use handlers hook for workout actions
   // Must be called before any early returns to follow Rules of Hooks
@@ -373,6 +382,8 @@ export default function ActiveWorkoutPage({
     deleteExercise,
     setError,
     restTimer,
+    completedSets,
+    setCompletedSets,
   });
 
   const handleFinish = () => {
@@ -517,7 +528,7 @@ export default function ActiveWorkoutPage({
                   Sets
                 </p>
                 <p className="text-base font-bold sm:text-lg md:text-xl">
-                  {completedSets}/{totalSets}
+                  {completedSetsCount}/{totalSets}
                 </p>
               </div>
               <div className="text-center sm:text-left">
@@ -649,7 +660,7 @@ export default function ActiveWorkoutPage({
                         actualReps: s.actualReps ?? 0,
                         actualWeight: s.actualWeight ?? undefined,
                         rpe: s.rpe ?? undefined,
-                        completed: s.completed ?? false,
+                        completed: completedSets.has(s.id) || s.completed ?? false,
                       }))}
                       lastWorkoutData={
                         lastWorkoutSet
@@ -736,7 +747,7 @@ export default function ActiveWorkoutPage({
                     actualReps: s.actualReps ?? 0,
                     actualWeight: s.actualWeight ?? undefined,
                     rpe: s.rpe ?? undefined,
-                    completed: s.completed ?? false,
+                    completed: completedSets.has(s.id) || s.completed ?? false,
                   }))}
                   lastWorkoutData={
                     lastWorkoutSet
