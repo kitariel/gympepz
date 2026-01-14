@@ -149,7 +149,6 @@ function SortableExerciseItem({
           onStartRestTimer={onStartRestTimer}
           isCollapsed={isArrangeMode}
           isDragging={isDragging}
-          isFirstExercise={isFirstExercise}
         />
       </div>
     </div>
@@ -662,7 +661,7 @@ export default function ActiveWorkoutPage({
                         actualReps: s.actualReps ?? 0,
                         actualWeight: s.actualWeight ?? undefined,
                         rpe: s.rpe ?? undefined,
-                        completed: completedSets.has(s.id) || s.completed ?? false,
+                        completed: completedSets.has(s.id) || (s.completed ?? false),
                       }))}
                       lastWorkoutData={
                         lastWorkoutSet
@@ -754,7 +753,7 @@ export default function ActiveWorkoutPage({
                     actualReps: s.actualReps ?? 0,
                     actualWeight: s.actualWeight ?? undefined,
                     rpe: s.rpe ?? undefined,
-                    completed: completedSets.has(s.id) || s.completed ?? false,
+                    completed: completedSets.has(s.id) || (s.completed ?? false),
                   }))}
                   lastWorkoutData={
                     lastWorkoutSet
