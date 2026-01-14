@@ -1,22 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ExerciseCard } from "./_components/exercise-card";
 import { ExerciseFilters } from "./_components/exercise-filters";
 import { ExerciseDetailModal } from "./_components/exercise-detail-modal";
 import { AddToPlanDialog } from "./_components/add-to-plan-dialog";
-import { Dumbbell, Heart, Plus, TrendingUp, Library } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import type { Exercise } from "@/types/exercise";
 
 export default function ExercisesPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id ?? "";
-
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState("All");
@@ -43,15 +38,7 @@ export default function ExercisesPage() {
     take: 1000, // Increased to show all exercises
   });
 
-  const exerciseCountQuery = api.exercise.count.useQuery({
-    q: searchQuery,
-    muscleGroup: selectedMuscle !== "All" ? selectedMuscle : undefined,
-    equipment: selectedEquipment !== "All" ? selectedEquipment : undefined,
-    difficulty: selectedDifficulty !== "All" ? selectedDifficulty : undefined,
-  });
-
   const exercises = exercisesQuery.data ?? [];
-  const totalCount = exerciseCountQuery.data ?? 0;
 
   // Filter exercises by tab
   const filteredExercises = useMemo(() => {
@@ -60,15 +47,6 @@ export default function ExercisesPage() {
     }
     return exercises;
   }, [exercises, selectedTab, favorites]);
-
-  // Group exercises by muscle group for stats
-  const exercisesByMuscle = useMemo(() => {
-    const grouped: Record<string, number> = {};
-    exercises.forEach((ex) => {
-      grouped[ex.muscleGroup] = (grouped[ex.muscleGroup] ?? 0) + 1;
-    });
-    return grouped;
-  }, [exercises]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;

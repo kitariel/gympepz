@@ -71,7 +71,7 @@ export const workoutLogRouter = createTRPCRouter({
           const sortedItems = [...validItems].sort(
             (a, b) => (a.order ?? 0) - (b.order ?? 0),
           );
-          
+
           if (sortedItems.length > 0) {
             await ctx.db.workoutLogExercise.createMany({
               data: sortedItems.map((item, index) => ({
@@ -395,7 +395,7 @@ export const workoutLogRouter = createTRPCRouter({
         const validItems = targetDay.items.filter(
           (item) => item.exercise !== null,
         );
-        
+
         // Sort items by order before creating
         const sortedItems = [...validItems].sort(
           (a, b) => (a.order ?? 0) - (b.order ?? 0),
@@ -453,22 +453,23 @@ export const workoutLogRouter = createTRPCRouter({
       if (!workout) return null;
 
       // Get plan day exercises (always available from the active plan)
-      const planDayExercises = workout.planDay?.items
-        ?.filter((item) => item.exercise != null)
-        .map((item, index) => ({
-          id: `plan-${item.id}`, // Temporary ID for plan items
-          workoutLogId: workout.id,
-          exerciseId: item.exerciseId,
-          exercise: item.exercise!,
-          sets: item.sets,
-          reps: item.reps,
-          weight: item.weight,
-          rpe: null,
-          notes: null,
-          order: item.order ?? index,
-          createdAt: workout.createdAt,
-          isFromPlan: true, // Flag to indicate this is from plan, not logged yet
-        })) ?? [];
+      const planDayExercises =
+        workout.planDay?.items
+          ?.filter((item) => item.exercise != null)
+          .map((item, index) => ({
+            id: `plan-${item.id}`, // Temporary ID for plan items
+            workoutLogId: workout.id,
+            exerciseId: item.exerciseId,
+            exercise: item.exercise,
+            sets: item.sets,
+            reps: item.reps,
+            weight: item.weight,
+            rpe: null,
+            notes: null,
+            order: item.order ?? index,
+            createdAt: workout.createdAt,
+            isFromPlan: true, // Flag to indicate this is from plan, not logged yet
+          })) ?? [];
 
       // Use logged exercises if they exist, otherwise use plan exercises
       // This ensures exercises are always available from the active plan
@@ -798,7 +799,7 @@ export const workoutLogRouter = createTRPCRouter({
         const validExercises = sourceLog.exercises
           .filter((ex) => ex.exercise != null)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        
+
         if (validExercises.length > 0) {
           await ctx.db.workoutLogExercise.createMany({
             data: validExercises.map((ex, index) => ({

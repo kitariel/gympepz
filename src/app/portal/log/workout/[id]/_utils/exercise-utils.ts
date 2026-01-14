@@ -7,17 +7,15 @@ import type { Exercise, ExerciseGroup, WorkoutSet } from "../_types";
 /**
  * Creates mock sets from exercise log data
  */
-export function createMockSetsFromExercise(
-  exerciseLog: {
-    id: string;
-    exerciseId: string;
-    sets: number;
-    reps: number | null;
-    weight: number | null;
-    rpe: number | null;
-    exercise: Exercise | null;
-  },
-): WorkoutSet[] {
+export function createMockSetsFromExercise(exerciseLog: {
+  id: string;
+  exerciseId: string;
+  sets: number;
+  reps: number | null;
+  weight: number | null;
+  rpe: number | null;
+  exercise: Exercise | null;
+}): WorkoutSet[] {
   if (!exerciseLog.exercise) {
     return [];
   }
@@ -53,13 +51,13 @@ export function groupExercisesFromSets(
 ): Record<string, ExerciseGroup> {
   return sets.reduce(
     (acc: Record<string, ExerciseGroup>, set: WorkoutSet) => {
-      const key = (set as any).exerciseLogId ?? set.exerciseId;
+      const key = set.exerciseLogId ?? set.exerciseId;
       acc[key] ??= {
         exercise: set.exercise,
         sets: [],
-        exerciseLogId: (set as any).exerciseLogId ?? null,
+        exerciseLogId: set.exerciseLogId ?? null,
       };
-      acc[key]!.sets.push(set);
+      acc[key].sets.push(set);
       return acc;
     },
     {} as Record<string, ExerciseGroup>,

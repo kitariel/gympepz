@@ -369,7 +369,11 @@ export default function ActiveWorkoutPage({
     }, 0);
     const completed = allSetsWithCompletion.filter((s) => s.completed).length;
     const total = allSetsWithCompletion.length;
-    return { totalVolume: volume, completedSetsCount: completed, totalSets: total };
+    return {
+      totalVolume: volume,
+      completedSetsCount: completed,
+      totalSets: total,
+    };
   }, [allSetsWithCompletion]);
 
   // Use handlers hook for workout actions
@@ -626,87 +630,93 @@ export default function ActiveWorkoutPage({
                   .map((exerciseLog: any) => {
                     // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
                     const group = exerciseGroups[exerciseLog.id];
-                    if (!group || !group.exercise) return null;
-                  
-                  const exerciseId = exerciseLog.exerciseId;
+                    if (!group?.exercise) return null;
 
-                  const { exercise, sets, exerciseLogId } = group;
-                  // Find last workout data for this exercise
-                  const w = workout as any;
-                  const lastWorkoutSet =
-                    w.lastWorkout?.sets?.find(
-                      (s: any) => s.exerciseId === exerciseId && s.completed,
-                    ) ??
-                    w.lastWorkout?.exercises?.find(
-                      (e: any) => e.exerciseId === exerciseId,
-                    );
+                    const exerciseId = exerciseLog.exerciseId;
 
-                  const isMarkedDone = completedExercises.has(exerciseId);
+                    const { exercise, sets, exerciseLogId } = group;
+                    // Find last workout data for this exercise
+                    const w = workout as any;
+                    const lastWorkoutSet =
+                      w.lastWorkout?.sets?.find(
+                        (s: any) => s.exerciseId === exerciseId && s.completed,
+                      ) ??
+                      w.lastWorkout?.exercises?.find(
+                        (e: any) => e.exerciseId === exerciseId,
+                      );
 
-                  // Check if this exercise is being dragged
-                  const isDragging = false; // Will be set by useSortable in the wrapper
+                    const isMarkedDone = completedExercises.has(exerciseId);
 
-                  return (
-                    <SortableExerciseItem
-                      key={exerciseLog.id}
-                      id={exerciseLog.id}
-                      exerciseName={exercise.name}
-                      muscleGroup={exercise.muscleGroup}
-                      exerciseId={exerciseId}
-                      sets={sets.map((s) => ({
-                        id: s.id,
-                        setNumber: s.setNumber,
-                        targetReps: s.targetReps,
-                        targetWeight: s.targetWeight ?? undefined,
-                        actualReps: s.actualReps ?? 0,
-                        actualWeight: s.actualWeight ?? undefined,
-                        rpe: s.rpe ?? undefined,
-                        completed: completedSets.has(s.id) || (s.completed ?? false),
-                      }))}
-                      lastWorkoutData={
-                        lastWorkoutSet
-                          ? {
-                              weight:
-                                lastWorkoutSet.actualWeight ??
-                                lastWorkoutSet.weight ??
-                                0,
-                              reps:
-                                lastWorkoutSet.actualReps ??
-                                lastWorkoutSet.reps ??
-                                0,
-                              date: w.lastWorkout!.date,
-                            }
-                          : undefined
-                      }
-                      isMarkedDone={isMarkedDone}
-                      onToggleDone={() => {
-                        const newCompleted = new Set(completedExercises);
-                        if (isMarkedDone) {
-                          newCompleted.delete(exerciseId);
-                        } else {
-                          newCompleted.add(exerciseId);
+                    // Check if this exercise is being dragged
+                    const isDragging = false; // Will be set by useSortable in the wrapper
+
+                    return (
+                      <SortableExerciseItem
+                        key={exerciseLog.id}
+                        id={exerciseLog.id}
+                        exerciseName={exercise.name}
+                        muscleGroup={exercise.muscleGroup}
+                        exerciseId={exerciseId}
+                        sets={sets.map((s) => ({
+                          id: s.id,
+                          setNumber: s.setNumber,
+                          targetReps: s.targetReps,
+                          targetWeight: s.targetWeight ?? undefined,
+                          actualReps: s.actualReps ?? 0,
+                          actualWeight: s.actualWeight ?? undefined,
+                          rpe: s.rpe ?? undefined,
+                          completed:
+                            completedSets.has(s.id) || (s.completed ?? false),
+                        }))}
+                        lastWorkoutData={
+                          lastWorkoutSet
+                            ? {
+                                weight:
+                                  lastWorkoutSet.actualWeight ??
+                                  lastWorkoutSet.weight ??
+                                  0,
+                                reps:
+                                  lastWorkoutSet.actualReps ??
+                                  lastWorkoutSet.reps ??
+                                  0,
+                                date: w.lastWorkout!.date,
+                              }
+                            : undefined
                         }
-                        setCompletedExercises(newCompleted);
-                      }}
-                      onUpdateSet={(setId, data) =>
-                        handlers.handleUpdateSet(setId, data)
-                      }
-                      onCompleteSet={(setId) => {
-                        handlers.handleCompleteSet(setId);
-                        restTimer.start(180);
-                      }}
-                      onAddSet={() => handlers.handleAddSet(exerciseId, exerciseLogId)}
-                      onDeleteSet={(setId) =>
-                        handlers.handleDeleteSet(setId, exerciseLogId)
-                      }
-                      onDeleteExercise={() =>
-                        handlers.handleDeleteExercise(exerciseId, exerciseLogId)
-                      }
-                      onStartRestTimer={() => restTimer.start(180)}
-                      isArrangeMode={isArrangeMode}
-                    />
-                  );
-                })}
+                        isMarkedDone={isMarkedDone}
+                        onToggleDone={() => {
+                          const newCompleted = new Set(completedExercises);
+                          if (isMarkedDone) {
+                            newCompleted.delete(exerciseId);
+                          } else {
+                            newCompleted.add(exerciseId);
+                          }
+                          setCompletedExercises(newCompleted);
+                        }}
+                        onUpdateSet={(setId, data) =>
+                          handlers.handleUpdateSet(setId, data)
+                        }
+                        onCompleteSet={(setId) => {
+                          handlers.handleCompleteSet(setId);
+                          restTimer.start(180);
+                        }}
+                        onAddSet={() =>
+                          handlers.handleAddSet(exerciseId, exerciseLogId)
+                        }
+                        onDeleteSet={(setId) =>
+                          handlers.handleDeleteSet(setId, exerciseLogId)
+                        }
+                        onDeleteExercise={() =>
+                          handlers.handleDeleteExercise(
+                            exerciseId,
+                            exerciseLogId,
+                          )
+                        }
+                        onStartRestTimer={() => restTimer.start(180)}
+                        isArrangeMode={isArrangeMode}
+                      />
+                    );
+                  })}
               </div>
             </SortableContext>
           </DndContext>
@@ -717,86 +727,94 @@ export default function ActiveWorkoutPage({
               .map((exerciseLog: any) => {
                 // Use exerciseLog.id as the key (not exerciseId) to handle duplicate exercises
                 const group = exerciseGroups[exerciseLog.id];
-                if (!group || !group.exercise) return null;
-              
-              const exerciseId = exerciseLog.exerciseId;
+                if (!group?.exercise) return null;
 
-              const { exercise, sets, exerciseLogId } = group;
-              // Find last workout data for this exercise
-              const w = workout as any;
-              const lastWorkoutSet =
-                w.lastWorkout?.sets?.find(
-                  (s: any) => s.exerciseId === exerciseId && s.completed,
-                ) ??
-                w.lastWorkout?.exercises?.find(
-                  (e: any) => e.exerciseId === exerciseId,
-                );
+                const exerciseId = exerciseLog.exerciseId;
 
-              const isMarkedDone = completedExercises.has(exerciseId);
-              
-              // Check if this is the first exercise
-              const isFirstExercise = workoutExercises
-                .filter((ex: any) => ex.exercise != null)
-                .findIndex((ex: any) => ex.id === exerciseLog.id) === 0;
+                const { exercise, sets, exerciseLogId } = group;
+                // Find last workout data for this exercise
+                const w = workout as any;
+                const lastWorkoutSet =
+                  w.lastWorkout?.sets?.find(
+                    (s: any) => s.exerciseId === exerciseId && s.completed,
+                  ) ??
+                  w.lastWorkout?.exercises?.find(
+                    (e: any) => e.exerciseId === exerciseId,
+                  );
 
-              return (
-                <ExerciseCard
-                  key={exerciseLog.id}
-                  exerciseName={exercise.name}
-                  muscleGroup={exercise.muscleGroup}
-                  exerciseId={exerciseId}
-                  sets={sets.map((s) => ({
-                    id: s.id,
-                    setNumber: s.setNumber,
-                    targetReps: s.targetReps,
-                    targetWeight: s.targetWeight ?? undefined,
-                    actualReps: s.actualReps ?? 0,
-                    actualWeight: s.actualWeight ?? undefined,
-                    rpe: s.rpe ?? undefined,
-                    completed: completedSets.has(s.id) || (s.completed ?? false),
-                  }))}
-                  lastWorkoutData={
-                    lastWorkoutSet
-                      ? {
-                          weight:
-                            lastWorkoutSet.actualWeight ??
-                            lastWorkoutSet.weight ??
-                            0,
-                          reps:
-                            lastWorkoutSet.actualReps ??
-                            lastWorkoutSet.reps ??
-                            0,
-                          date: w.lastWorkout!.date,
-                        }
-                      : undefined
-                  }
-                  isMarkedDone={isMarkedDone}
-                  onToggleDone={() => {
-                    const newCompleted = new Set(completedExercises);
-                    if (isMarkedDone) {
-                      newCompleted.delete(exerciseId);
-                    } else {
-                      newCompleted.add(exerciseId);
+                const isMarkedDone = completedExercises.has(exerciseId);
+
+                // Check if this is the first exercise
+                const isFirstExercise =
+                  workoutExercises
+                    .filter((ex: any) => ex.exercise != null)
+                    .findIndex((ex: any) => ex.id === exerciseLog.id) === 0;
+
+                return (
+                  <ExerciseCard
+                    key={exerciseLog.id}
+                    exerciseName={exercise.name}
+                    muscleGroup={exercise.muscleGroup}
+                    exerciseId={exerciseId}
+                    sets={sets.map((s) => ({
+                      id: s.id,
+                      setNumber: s.setNumber,
+                      targetReps: s.targetReps,
+                      targetWeight: s.targetWeight ?? undefined,
+                      actualReps: s.actualReps ?? 0,
+                      actualWeight: s.actualWeight ?? undefined,
+                      rpe: s.rpe ?? undefined,
+                      completed:
+                        completedSets.has(s.id) || (s.completed ?? false),
+                    }))}
+                    lastWorkoutData={
+                      lastWorkoutSet
+                        ? {
+                            weight:
+                              lastWorkoutSet.actualWeight ??
+                              lastWorkoutSet.weight ??
+                              0,
+                            reps:
+                              lastWorkoutSet.actualReps ??
+                              lastWorkoutSet.reps ??
+                              0,
+                            date: w.lastWorkout!.date,
+                          }
+                        : undefined
                     }
-                    setCompletedExercises(newCompleted);
-                  }}
-                  onUpdateSet={(setId, data) => handlers.handleUpdateSet(setId, data)}
-                  onCompleteSet={(setId) => {
-                    handlers.handleCompleteSet(setId);
-                    restTimer.start(180);
-                  }}
-                  onAddSet={() => handlers.handleAddSet(exerciseId, exerciseLogId)}
-                  onDeleteSet={(setId) => handlers.handleDeleteSet(setId, exerciseLogId)}
-                  onDeleteExercise={() =>
-                    handlers.handleDeleteExercise(exerciseId, exerciseLogId)
-                  }
-                  onStartRestTimer={() => restTimer.start(180)}
-                  isCollapsed={false}
-                  isDragging={false}
-                  isFirstExercise={isFirstExercise}
-                />
-              );
-            })}
+                    isMarkedDone={isMarkedDone}
+                    onToggleDone={() => {
+                      const newCompleted = new Set(completedExercises);
+                      if (isMarkedDone) {
+                        newCompleted.delete(exerciseId);
+                      } else {
+                        newCompleted.add(exerciseId);
+                      }
+                      setCompletedExercises(newCompleted);
+                    }}
+                    onUpdateSet={(setId, data) =>
+                      handlers.handleUpdateSet(setId, data)
+                    }
+                    onCompleteSet={(setId) => {
+                      handlers.handleCompleteSet(setId);
+                      restTimer.start(180);
+                    }}
+                    onAddSet={() =>
+                      handlers.handleAddSet(exerciseId, exerciseLogId)
+                    }
+                    onDeleteSet={(setId) =>
+                      handlers.handleDeleteSet(setId, exerciseLogId)
+                    }
+                    onDeleteExercise={() =>
+                      handlers.handleDeleteExercise(exerciseId, exerciseLogId)
+                    }
+                    onStartRestTimer={() => restTimer.start(180)}
+                    isCollapsed={false}
+                    isDragging={false}
+                    isFirstExercise={isFirstExercise}
+                  />
+                );
+              })}
           </div>
         )}
 

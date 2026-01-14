@@ -4,15 +4,26 @@
 
 import { useMemo } from "react";
 import type React from "react";
-import type { SetUpdateData } from "../_types";
+import type { RouterInputs, RouterOutputs } from "@/trpc/react";
+import type { ExerciseGroup, SetUpdateData, WorkoutSet } from "../_types";
+
+type WorkoutWithHistory = RouterOutputs["workoutLog"]["getWithHistory"];
+
+type WorkoutWithOptionalSets = WorkoutWithHistory & {
+  sets?: WorkoutSet[];
+};
+
+type UpdateExerciseInput = RouterInputs["workoutLog"]["updateExercise"];
+type AddExerciseInput = RouterInputs["workoutLog"]["addExercise"];
+type DeleteExerciseInput = RouterInputs["workoutLog"]["deleteExercise"];
 
 interface UseWorkoutHandlersParams {
   logId: string;
-  workout: any;
-  exerciseGroups: Record<string, any>;
-  updateExerciseMutation: any;
-  addExerciseMutation: any;
-  deleteExercise: any;
+  workout: WorkoutWithOptionalSets | null | undefined;
+  exerciseGroups: Record<string, ExerciseGroup>;
+  updateExerciseMutation: { mutate: (input: UpdateExerciseInput) => void };
+  addExerciseMutation: { mutate: (input: AddExerciseInput) => void };
+  deleteExercise: { mutate: (input: DeleteExerciseInput) => void };
   setError: (error: string | null) => void;
   restTimer: {
     start: (seconds: number) => void;
@@ -30,45 +41,48 @@ export function useWorkoutHandlers({
   deleteExercise,
   setError,
   restTimer,
-  completedSets,
+  completedSets: _completedSets,
   setCompletedSets,
 }: UseWorkoutHandlersParams) {
-  const allSets = useMemo(() => {
+  const allSets = useMemo<WorkoutSet[]>(() => {
     if (!workout) return [];
 
-    const w = workout as any;
-    if (w.sets && Array.isArray(w.sets) && w.sets.length > 0) {
-      return w.sets;
+    if (
+      workout.sets &&
+      Array.isArray(workout.sets) &&
+      workout.sets.length > 0
+    ) {
+      return workout.sets;
     }
     // Flatten sets from exercise groups
     return Object.values(exerciseGroups ?? {}).flatMap(
-      (group: any) => group?.sets || [],
+      (group) => group.sets || [],
     );
   }, [workout, exerciseGroups]);
 
   const handleUpdateSet = (setId: string, data: SetUpdateData) => {
-    const set = allSets.find((s: any) => s.id === setId);
+    const set = allSets.find((s) => s.id === setId);
     if (!set) return;
 
-    const exerciseLog = (workout as any)?.exercises?.find(
-      (e: any) => e.exerciseId === set.exerciseId,
+    const exerciseLog = workout?.exercises?.find(
+      (e) => e.exerciseId === set.exerciseId,
     );
     const isFromPlan =
-      exerciseLog?.isFromPlan || exerciseLog?.id?.startsWith("plan-");
+      typeof exerciseLog?.id === "string" && exerciseLog.id.startsWith("plan-");
 
     if (set.isMock) {
       if (set.exerciseLogId && !isFromPlan) {
         // Update existing workoutLogExercise
         updateExerciseMutation.mutate({
           id: set.exerciseLogId,
-          reps: data.actualReps ?? (set.actualReps ?? 0),
+          reps: data.actualReps ?? set.actualReps ?? 0,
           weight: data.actualWeight ?? set.actualWeight ?? undefined,
           rpe: data.rpe ?? set.rpe ?? undefined,
         });
       } else if (isFromPlan || !set.exerciseLogId) {
         // Exercise is from plan - convert it to a logged exercise first
         const actualRepsValue =
-          data.actualReps ?? exerciseLog?.reps ?? (set.actualReps ?? 0);
+          data.actualReps ?? exerciseLog?.reps ?? set.actualReps ?? 0;
         addExerciseMutation.mutate({
           workoutLogId: logId,
           exerciseId: set.exerciseId,
@@ -92,7 +106,7 @@ export function useWorkoutHandlers({
   };
 
   const handleCompleteSet = (setId: string) => {
-    const set = allSets.find((s: any) => s.id === setId);
+    const set = allSets.find((s) => s.id === setId);
     if (!set) return;
 
     if (set.isMock) {
@@ -121,10 +135,10 @@ export function useWorkoutHandlers({
     }
   };
 
-  const handleAddSet = (exerciseId: string, exerciseLogId: string | null) => {
+  const handleAddSet = (_exerciseId: string, exerciseLogId: string | null) => {
     if (exerciseLogId) {
-      const exerciseLog = (workout as any)?.exercises?.find(
-        (e: any) => e.id === exerciseLogId,
+      const exerciseLog = workout?.exercises?.find(
+        (e) => e.id === exerciseLogId,
       );
       if (exerciseLog) {
         updateExerciseMutation.mutate({
@@ -138,12 +152,12 @@ export function useWorkoutHandlers({
   };
 
   const handleDeleteSet = (setId: string, exerciseLogId: string | null) => {
-    const set = allSets.find((s: any) => s.id === setId);
+    const set = allSets.find((s) => s.id === setId);
     if (!set) return;
 
     if (set.isMock && exerciseLogId) {
-      const exerciseLog = (workout as any)?.exercises?.find(
-        (e: any) => e.id === exerciseLogId,
+      const exerciseLog = workout?.exercises?.find(
+        (e) => e.id === exerciseLogId,
       );
       if (exerciseLog && exerciseLog.sets > 1) {
         updateExerciseMutation.mutate({
@@ -157,7 +171,7 @@ export function useWorkoutHandlers({
   };
 
   const handleDeleteExercise = (
-    exerciseId: string,
+    _exerciseId: string,
     exerciseLogId: string | null,
   ) => {
     if (exerciseLogId) {

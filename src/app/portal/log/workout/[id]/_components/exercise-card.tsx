@@ -73,25 +73,26 @@ export function ExerciseCard({
   isFirstExercise = false,
 }: ExerciseCardProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
-  
+
   const completedSets = sets.filter((s) => s.completed).length;
   const totalSets = sets.length;
   const allCompleted = completedSets === totalSets && totalSets > 0;
   const isDone = isMarkedDone || allCompleted;
-  
+
   // Auto-expand if: first exercise OR all sets completed
   // Otherwise collapsed
   const shouldAutoExpand = isFirstExercise || allCompleted;
-  
+
   // Use controlled expansion if provided, otherwise use auto-expand logic
-  const finalIsExpanded = controlledExpanded !== undefined 
-    ? controlledExpanded 
-    : (shouldAutoExpand || internalExpanded);
-  
-  const handleToggleExpand = onToggleExpand || (() => {
-    // If using internal state, toggle it
-    setInternalExpanded((prev: boolean) => !prev);
-  });
+  const finalIsExpanded =
+    controlledExpanded ?? (shouldAutoExpand || internalExpanded);
+
+  const handleToggleExpand =
+    onToggleExpand ??
+    (() => {
+      // If using internal state, toggle it
+      setInternalExpanded((prev: boolean) => !prev);
+    });
 
   // Collapsed view for sortable mode
   if (isCollapsed) {
@@ -105,7 +106,7 @@ export function ExerciseCard({
       >
         <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1 flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               {onToggleDone && (
                 <button
                   onClick={onToggleDone}
@@ -125,13 +126,13 @@ export function ExerciseCard({
               )}
               <CardTitle
                 className={cn(
-                  "min-w-0 text-sm font-semibold tracking-tight truncate sm:text-base",
+                  "min-w-0 truncate text-sm font-semibold tracking-tight sm:text-base",
                   isMarkedDone && "text-muted-foreground line-through",
                 )}
               >
                 {exerciseName}
               </CardTitle>
-              <span className="text-muted-foreground text-xs shrink-0">
+              <span className="text-muted-foreground shrink-0 text-xs">
                 {muscleGroup}
               </span>
             </div>
@@ -233,7 +234,7 @@ export function ExerciseCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-1 md:gap-1.5">
-            {(onToggleExpand || !shouldAutoExpand) && (
+            {(onToggleExpand ?? !shouldAutoExpand) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -263,19 +264,17 @@ export function ExerciseCard({
         <CardContent className="space-y-2 px-3 pb-3 sm:px-4 sm:pb-4 md:space-y-3 md:px-5 md:pb-5">
           {sets.map((set, index) => {
             // Find the first uncompleted set
-            const firstUncompletedIndex = sets.findIndex(
-              (s) => !s.completed,
-            );
-            
+            const firstUncompletedIndex = sets.findIndex((s) => !s.completed);
+
             // Show only the first uncompleted set (or all if all are completed)
             // This creates a progressive disclosure: only one set visible at a time
-            const isVisible = 
+            const isVisible =
               firstUncompletedIndex === -1 // All sets completed - show all
                 ? true
                 : index === firstUncompletedIndex; // Show only the next uncompleted set
-            
+
             if (!isVisible) return null;
-            
+
             return (
               <SetRow
                 key={set.id}

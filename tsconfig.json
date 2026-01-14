@@ -38,5 +38,11 @@
     "**/*.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "generated", "src/env.js", "sample.ts"]
+  "exclude": [
+    "node_modules",
+    "generated",
+    "src/env.js",
+    "sample.ts",
+    "public/**/*"
+  ]
 }
