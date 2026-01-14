@@ -299,10 +299,10 @@ export function WorkoutLogList() {
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-4">
             {/* Exercises List */}
-            {todaysWorkout.data.todayWorkout.items &&
-            todaysWorkout.data.todayWorkout.items.length > 0 ? (
+            {todaysWorkout.data.todayWorkout.exercises &&
+            todaysWorkout.data.todayWorkout.exercises.length > 0 ? (
               <div className="space-y-2 rounded-lg bg-muted/30 p-3">
-                {todaysWorkout.data.todayWorkout.items.map((item, idx) => (
+                {todaysWorkout.data.todayWorkout.exercises.map((item, idx) => (
                   <div
                     key={item.id ?? idx}
                     className="flex items-center gap-3 text-sm"
@@ -312,16 +312,16 @@ export function WorkoutLogList() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-medium">
-                        {item.exercise?.name ?? "Unknown Exercise"}
+                        {item.exerciseName ?? "Unknown Exercise"}
                       </div>
                       <div className="text-muted-foreground flex items-center gap-2 text-xs">
                         <span>
                           {item.sets}x{item.reps} reps
                         </span>
-                        {item.exercise?.muscleGroup && (
+                        {item.muscleGroup && (
                           <>
                             <span>•</span>
-                            <span>{item.exercise.muscleGroup}</span>
+                            <span>{item.muscleGroup}</span>
                           </>
                         )}
                       </div>
@@ -340,7 +340,7 @@ export function WorkoutLogList() {
                 }
                 await createLog.mutateAsync({
                   userId,
-                  planDayId: todaysWorkout.data.todayWorkout.id,
+                  planDayId: todaysWorkout.data?.todayWorkout?.id,
                   date: new Date(),
                 });
               }}
