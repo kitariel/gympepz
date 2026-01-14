@@ -47,6 +47,9 @@ interface ExerciseCardProps {
   exerciseId?: string;
   isCollapsed?: boolean; // For sortable mode - show only title
   isDragging?: boolean; // When actively being dragged
+  isExpanded?: boolean; // Controlled expansion state
+  onToggleExpand?: () => void; // Toggle expansion
+  isFirstExercise?: boolean; // Whether this is the first exercise
 }
 
 export function ExerciseCard({
@@ -65,13 +68,30 @@ export function ExerciseCard({
   exerciseId,
   isCollapsed = false,
   isDragging = false,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
+  isFirstExercise = false,
 }: ExerciseCardProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  
   const completedSets = sets.filter((s) => s.completed).length;
   const totalSets = sets.length;
   const allCompleted = completedSets === totalSets && totalSets > 0;
   const isDone = isMarkedDone || allCompleted;
+  
+  // Auto-expand if: first exercise OR all sets completed
+  // Otherwise collapsed
+  const shouldAutoExpand = isFirstExercise || allCompleted;
+  
+  // Use controlled expansion if provided, otherwise use auto-expand logic
+  const finalIsExpanded = controlledExpanded !== undefined 
+    ? controlledExpanded 
+    : (shouldAutoExpand || internalExpanded);
+  
+  const handleToggleExpand = onToggleExpand || (() => {
+    // If using internal state, toggle it
+    setInternalExpanded((prev: boolean) => !prev);
+  });
 
   // Collapsed view for sortable mode
   if (isCollapsed) {
@@ -213,18 +233,20 @@ export function ExerciseCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-1 md:gap-1.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 touch-manipulation sm:h-8 sm:w-8 md:h-9 md:w-9"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4 md:h-5 md:w-5" />
-              ) : (
-                <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />
-              )}
-            </Button>
+            {(onToggleExpand || !shouldAutoExpand) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 touch-manipulation sm:h-8 sm:w-8 md:h-9 md:w-9"
+                onClick={handleToggleExpand}
+              >
+                {finalIsExpanded ? (
+                  <ChevronUp className="h-4 w-4 md:h-5 md:w-5" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />
+                )}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -237,26 +259,42 @@ export function ExerciseCard({
         </div>
       </CardHeader>
 
-      {isExpanded && (
+      {finalIsExpanded && (
         <CardContent className="space-y-2 px-3 pb-3 sm:px-4 sm:pb-4 md:space-y-3 md:px-5 md:pb-5">
-          {sets.map((set) => (
-            <SetRow
-              key={set.id}
-              setNumber={set.setNumber}
-              targetReps={set.targetReps}
-              targetWeight={set.targetWeight}
-              actualReps={set.actualReps}
-              actualWeight={set.actualWeight}
-              rpe={set.rpe}
-              completed={set.completed}
-              onUpdate={(data) => onUpdateSet(set.id, data)}
-              onComplete={() => {
-                onCompleteSet(set.id);
-                onStartRestTimer?.();
-              }}
-              onDelete={() => onDeleteSet(set.id)}
-            />
-          ))}
+          {sets.map((set, index) => {
+            // Find the first uncompleted set
+            const firstUncompletedIndex = sets.findIndex(
+              (s) => !s.completed,
+            );
+            
+            // Show only the first uncompleted set (or all if all are completed)
+            // This creates a progressive disclosure: only one set visible at a time
+            const isVisible = 
+              firstUncompletedIndex === -1 // All sets completed - show all
+                ? true
+                : index === firstUncompletedIndex; // Show only the next uncompleted set
+            
+            if (!isVisible) return null;
+            
+            return (
+              <SetRow
+                key={set.id}
+                setNumber={set.setNumber}
+                targetReps={set.targetReps}
+                targetWeight={set.targetWeight}
+                actualReps={set.actualReps}
+                actualWeight={set.actualWeight}
+                rpe={set.rpe}
+                completed={set.completed}
+                onUpdate={(data) => onUpdateSet(set.id, data)}
+                onComplete={() => {
+                  onCompleteSet(set.id);
+                  onStartRestTimer?.();
+                }}
+                onDelete={() => onDeleteSet(set.id)}
+              />
+            );
+          })}
 
           <Button
             variant="outline"

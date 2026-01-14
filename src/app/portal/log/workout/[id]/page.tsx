@@ -101,6 +101,7 @@ function SortableExerciseItem({
   onDeleteExercise: () => void;
   onStartRestTimer: () => void;
   isArrangeMode: boolean;
+  isFirstExercise?: boolean;
 }) {
   const {
     attributes,
@@ -148,6 +149,7 @@ function SortableExerciseItem({
           onStartRestTimer={onStartRestTimer}
           isCollapsed={isArrangeMode}
           isDragging={isDragging}
+          isFirstExercise={isFirstExercise}
         />
       </div>
     </div>
@@ -732,6 +734,11 @@ export default function ActiveWorkoutPage({
                 );
 
               const isMarkedDone = completedExercises.has(exerciseId);
+              
+              // Check if this is the first exercise
+              const isFirstExercise = workoutExercises
+                .filter((ex: any) => ex.exercise != null)
+                .findIndex((ex: any) => ex.id === exerciseLog.id) === 0;
 
               return (
                 <ExerciseCard
@@ -787,6 +794,7 @@ export default function ActiveWorkoutPage({
                   onStartRestTimer={() => restTimer.start(180)}
                   isCollapsed={false}
                   isDragging={false}
+                  isFirstExercise={isFirstExercise}
                 />
               );
             })}
