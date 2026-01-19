@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
 
 function getDayNumberForToday(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   // Convert JS day (Sun=0..Sat=6) -> template day (Mon=1..Sun=7)
@@ -19,10 +20,9 @@ export function ProgramOverview() {
   const { activeProgram, hydrated, clearActiveProgram } = useActiveProgram();
 
   const today = useMemo(() => getDayNumberForToday(), []);
-  const todaysPlan = useMemo(() => {
+  const picked = useMemo(() => {
     if (!activeProgram) return null;
-    const byDay = activeProgram.plan.days.find((d) => d.day === today) ?? null;
-    return byDay ?? activeProgram.plan.days[0] ?? null;
+    return pickWorkoutDayForWeekday(activeProgram.plan.days, today);
   }, [activeProgram, today]);
 
   if (!hydrated) {
@@ -68,25 +68,27 @@ export function ProgramOverview() {
         </div>
       </div>
 
-      {todaysPlan ? (
+      {picked?.day ? (
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-4 pt-4 pb-2">
             <div className="flex items-start justify-between gap-3">
-              <CardTitle className="text-base">Today</CardTitle>
+              <CardTitle className="text-base">
+                {picked.isExactMatch ? "Today" : "Next workout"}
+              </CardTitle>
               <Badge variant="outline" className="text-[10px]">
-                Day {todaysPlan.day}
+                Day {picked.day.day}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4">
-            <p className="text-sm font-medium">{todaysPlan.label}</p>
+            <p className="text-sm font-medium">{picked.day.label}</p>
             <ul className="space-y-1">
-              {todaysPlan.items
+              {picked.day.items
                 .slice()
                 .sort((a, b) => a.order - b.order)
                 .map((it) => (
                   <li
-                    key={`${todaysPlan.label}-${it.order}`}
+                    key={`${picked.day.label}-${it.order}`}
                     className="flex items-center justify-between gap-3 text-sm"
                   >
                     <span className="truncate">{it.nameFallback ?? "Exercise"}</span>

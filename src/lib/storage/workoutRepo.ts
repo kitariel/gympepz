@@ -3,15 +3,24 @@ import { STORAGE_KEYS } from "./keys";
 
 export type WorkoutSetEntry = {
   id: string;
+  exerciseId: string;
   exerciseName: string;
   setNumber: number;
-  reps: number;
-  weight: number | null;
+  targetReps: string | null;
+  actualReps: string;
+  targetWeight: string | null;
+  actualWeight: string | null;
+  completed: boolean;
   createdAt: string; // ISO
 };
 
 export type ActiveWorkoutDraft = {
   id: string;
+  /**
+   * Which template this workout was generated from.
+   * Used to avoid showing stale drafts after switching templates.
+   */
+  templateId?: string;
   programName: string;
   date: string; // ISO (workout day)
   startedAt: string; // ISO
@@ -20,6 +29,9 @@ export type ActiveWorkoutDraft = {
     id: string;
     name: string;
     order: number;
+    targetSets: number | null;
+    targetReps: string | null;
+    targetWeight: string | null;
   }>;
   sets: WorkoutSetEntry[];
   notes: string | null;

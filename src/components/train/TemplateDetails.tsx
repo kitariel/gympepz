@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTemplateById } from "@/lib/program-templates/templates";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -17,6 +18,7 @@ function nowIso(): string {
 export function TemplateDetails({ templateId }: { templateId: string }) {
   const router = useRouter();
   const { selectTemplate, saveActiveProgram } = useActiveProgram();
+  const { clearDraft } = useWorkoutDraft();
 
   const template = useMemo(() => getTemplateById(templateId), [templateId]);
 
@@ -92,6 +94,8 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
         <Button
           className="h-10 flex-1"
           onClick={() => {
+            // Switching programs should reset the active workout draft
+            clearDraft();
             selectTemplate(template.id);
             saveActiveProgram({
               templateId: template.id,
