@@ -18,6 +18,13 @@ function normalizeDraft(raw: ActiveWorkoutDraft | null): ActiveWorkoutDraft | nu
 
   const templateId =
     (raw as unknown as { templateId?: string | null }).templateId ?? undefined;
+  const programRef =
+    (raw as unknown as { programRef?: { type: "template" | "custom"; id: string } | null })
+      .programRef ?? undefined;
+  const programDayIndex =
+    (raw as unknown as { programDayIndex?: number | null }).programDayIndex ?? undefined;
+  const programDayLabel =
+    (raw as unknown as { programDayLabel?: string | null }).programDayLabel ?? undefined;
 
   const exercises =
     raw.exercises?.map((ex) => ({
@@ -76,6 +83,11 @@ function normalizeDraft(raw: ActiveWorkoutDraft | null): ActiveWorkoutDraft | nu
   return {
     ...raw,
     templateId,
+    programRef,
+    programDayIndex: (programDayIndex && programDayIndex >= 1 && programDayIndex <= 7
+      ? (programDayIndex as 1 | 2 | 3 | 4 | 5 | 6 | 7)
+      : undefined),
+    programDayLabel,
     exercises,
     sets,
   };
@@ -149,8 +161,8 @@ export function useWorkoutDraft() {
     [draft, saveDraft],
   );
 
-  const finish = useCallback(() => {
-    if (!draft) return;
+  const finish = useCallback((): string | null => {
+    if (!draft) return null;
     const finished: WorkoutHistoryItem = {
       ...draft,
       completed: true,
@@ -161,6 +173,7 @@ export function useWorkoutDraft() {
     workoutRepo.clearActiveWorkoutDraft();
     setDraft(null);
     setHistory(workoutRepo.getHistory());
+    return finished.id;
   }, [draft]);
 
   const summary = useMemo(() => {

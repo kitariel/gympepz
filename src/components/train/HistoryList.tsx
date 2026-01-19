@@ -22,6 +22,13 @@ function formatDate(iso: string): string {
 export function HistoryList() {
   const { history, hydrated, clearHistory, summary } = useWorkoutDraft();
 
+  const grouped = history.reduce<Record<string, typeof history>>((acc, item) => {
+    const key = item.programName || "Program";
+    acc[key] = acc[key] ?? [];
+    acc[key]!.push(item);
+    return acc;
+  }, {});
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -61,32 +68,49 @@ export function HistoryList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
-          {history.map((h) => {
-            const exercisesCount = new Set(h.sets.map((s) => s.exerciseName)).size;
-            return (
-              <Card key={h.id} className="border-0 shadow-sm">
-                <CardContent className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-medium">
-                        {formatDate(h.date)}
-                      </p>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {h.completed ? "Completed" : "Saved"}
-                      </Badge>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {exercisesCount} exercises • {h.sets.length} sets
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-xs text-muted-foreground">{h.programName}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="space-y-4">
+          {Object.entries(grouped).map(([programName, items]) => (
+            <div key={programName} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">{programName}</p>
+                <Badge variant="secondary" className="text-[10px]">
+                  {items.length} sessions
+                </Badge>
+              </div>
+              <div className="grid gap-3">
+                {items.map((h) => {
+                  const exercisesCount = new Set(h.sets.map((s) => s.exerciseName)).size;
+                  const dayLabel =
+                    h.programDayLabel ??
+                    (h.programDayIndex ? `Day ${h.programDayIndex}` : null);
+                  return (
+                    <Card key={h.id} className="border-0 shadow-sm">
+                      <CardContent className="flex items-center justify-between gap-3 p-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-medium">
+                              {formatDate(h.date)}
+                            </p>
+                            {dayLabel ? (
+                              <Badge variant="outline" className="text-[10px]">
+                                {dayLabel}
+                              </Badge>
+                            ) : null}
+                            <Badge variant="secondary" className="text-[10px]">
+                              {h.completed ? "Completed" : "Saved"}
+                            </Badge>
+                          </div>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {exercisesCount} exercises • {h.sets.length} sets
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

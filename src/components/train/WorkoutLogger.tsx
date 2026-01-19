@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
 
@@ -28,7 +29,9 @@ function makeId(prefix: string): string {
 
 export function WorkoutLogger() {
   const router = useRouter();
-  const { activeProgram, hydrated: programHydrated } = useActiveProgram();
+  const searchParams = useSearchParams();
+  const { activeProgram, currentProgramRef, hydrated: programHydrated } = useActiveProgram();
+  const { hydrated: prefsHydrated, selectedWorkoutDay } = useTrainPrefs();
   const {
     draft,
     saveDraft,
@@ -40,30 +43,41 @@ export function WorkoutLogger() {
   } =
     useWorkoutDraft();
 
-  const hydrated = programHydrated && draftHydrated;
+  const hydrated = programHydrated && draftHydrated && prefsHydrated;
+
+  const overrideDay = useMemo(() => {
+    const raw = searchParams.get("day");
+    if (!raw) return null;
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 1 && n <= 7) return n as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    return null;
+  }, [searchParams]);
+
+  const autoStart = useMemo(() => searchParams.get("autostart") === "1", [searchParams]);
+  const autoStartedRef = useRef(false);
 
   const today = useMemo(() => getDayNumberForToday(), []);
   const todaysPlan = useMemo(() => {
     if (!activeProgram) return null;
-    return pickWorkoutDayForWeekday(activeProgram.plan.days, today)?.day ?? null;
-  }, [activeProgram, today]);
+    if (overrideDay != null) {
+      return activeProgram.plan.days.find((d) => d.day === overrideDay) ?? null;
+    }
+    if (selectedWorkoutDay === "auto") {
+      return pickWorkoutDayForWeekday(activeProgram.plan.days, today)?.day ?? null;
+    }
+    return (
+      activeProgram.plan.days.find((d) => d.day === selectedWorkoutDay) ??
+      pickWorkoutDayForWeekday(activeProgram.plan.days, today)?.day ??
+      null
+    );
+  }, [activeProgram, today, selectedWorkoutDay, overrideDay]);
 
-  // If user switched templates, drop the stale draft so we regenerate from the new program.
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!activeProgram) return;
-    if (!draft) return;
-    if (!draft.templateId) return;
-    if (draft.templateId === activeProgram.templateId) return;
-    clearDraft();
-  }, [hydrated, activeProgram, draft, clearDraft]);
-
-  // If there's no draft but we have an active program, create a fresh draft for today.
-  useEffect(() => {
+  const createDraftForDay = useCallback(() => {
     if (!hydrated) return;
     if (!activeProgram) return;
     if (draft) return;
     if (!todaysPlan) return;
+    if (todaysPlan.isRestDay || todaysPlan.items.length === 0) return;
 
     const exercises = todaysPlan.items
       .slice()
@@ -94,9 +108,13 @@ export function WorkoutLogger() {
       }));
     });
 
+    autoStartedRef.current = true;
     saveDraft({
       id: makeId("workout"),
       templateId: activeProgram.templateId,
+      programRef: currentProgramRef ?? undefined,
+      programDayIndex: todaysPlan.day,
+      programDayLabel: todaysPlan.label,
       programName: activeProgram.name,
       date: nowIso(),
       startedAt: nowIso(),
@@ -106,7 +124,27 @@ export function WorkoutLogger() {
       notes: null,
       updatedAt: nowIso(),
     });
-  }, [hydrated, activeProgram, draft, todaysPlan]);
+  }, [hydrated, activeProgram, currentProgramRef, draft, todaysPlan, saveDraft]);
+
+  // If user switched templates, drop the stale draft so we regenerate from the new program.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!activeProgram) return;
+    if (!draft) return;
+    // Prefer programRef when available; fall back to templateId.
+    const draftProgramId = draft.programRef?.id ?? draft.templateId;
+    if (!draftProgramId) return;
+    if (draftProgramId === activeProgram.templateId) return;
+    clearDraft();
+  }, [hydrated, activeProgram, draft, clearDraft]);
+
+  // Only auto-create a draft when explicitly requested via query param.
+  useEffect(() => {
+    if (!autoStart) return;
+    if (autoStartedRef.current) return;
+    if (draft) return;
+    createDraftForDay();
+  }, [autoStart, draft, createDraftForDay]);
 
   if (!hydrated) {
     return (
@@ -133,7 +171,40 @@ export function WorkoutLogger() {
   if (!draft) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-3 p-6 pt-4">
-        <p className="text-sm text-muted-foreground">Preparing workout…</p>
+        {todaysPlan?.isRestDay || (todaysPlan && todaysPlan.items.length === 0) ? (
+          <>
+            <h1 className="text-2xl font-bold tracking-tight">Rest day</h1>
+            <p className="text-sm text-muted-foreground">
+              {todaysPlan.label} is a rest day. Choose another day or view your overview.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                className="h-10 flex-1"
+                onClick={() => router.push("/train/overview")}
+              >
+                Back to overview
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 flex-1"
+                onClick={() => router.push("/train/log")}
+              >
+                Use auto day
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold tracking-tight">Ready to start</h1>
+            <p className="text-sm text-muted-foreground">
+              {activeProgram.name}
+              {todaysPlan ? ` • ${todaysPlan.label}` : ""}
+            </p>
+            <Button className="h-10" onClick={createDraftForDay} disabled={!todaysPlan}>
+              Start workout
+            </Button>
+          </>
+        )}
       </div>
     );
   }
@@ -257,8 +328,8 @@ export function WorkoutLogger() {
         <Button
           className="h-10 flex-1"
           onClick={() => {
-            finish();
-            router.push("/train/history");
+            const id = finish();
+            router.push(id ? `/train/summary?logId=${encodeURIComponent(id)}` : "/train/history");
           }}
           disabled={draft.sets.length === 0}
         >

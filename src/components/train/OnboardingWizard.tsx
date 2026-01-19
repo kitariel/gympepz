@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTrainingProfile } from "@/hooks/useTrainingProfile";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import type { TrainingEquipment, TrainingExperience, TrainingGoal } from "@/lib/training-profile/types";
 
 export function OnboardingWizard() {
   const router = useRouter();
   const { profile, save, hydrated } = useTrainingProfile();
+
+  const initializedRef = useRef(false);
 
   const [experience, setExperience] = useState<TrainingExperience>(
     profile?.experience ?? "newbie",
@@ -28,6 +31,40 @@ export function OnboardingWizard() {
   );
 
   const canSubmit = useMemo(() => hydrated, [hydrated]);
+
+  // Restore-on-load: once we have a profile, sync local UI state once.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (initializedRef.current) return;
+    if (!profile) {
+      initializedRef.current = true;
+      return;
+    }
+    setExperience(profile.experience);
+    setGoal(profile.goal);
+    setEquipment(profile.equipment);
+    setDaysPerWeek(profile.daysPerWeek);
+    initializedRef.current = true;
+  }, [hydrated, profile]);
+
+  const { debounced: debouncedAutosave } = useDebouncedCallback(
+    (next: {
+      experience: TrainingExperience;
+      goal: TrainingGoal;
+      equipment: TrainingEquipment;
+      daysPerWeek: 2 | 3 | 4 | 5 | 6;
+    }) => {
+      save(next);
+    },
+    500,
+  );
+
+  // Autosave-on-change (debounced).
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!initializedRef.current) return;
+    debouncedAutosave({ experience, goal, equipment, daysPerWeek });
+  }, [hydrated, experience, goal, equipment, daysPerWeek, debouncedAutosave]);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">

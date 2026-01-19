@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useCustomPrograms } from "@/hooks/useCustomPrograms";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { useTrainBuilderDraft } from "@/hooks/useTrainBuilderDraft";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { api } from "@/trpc/react";
 import type { ProgramTemplateDay, ProgramTemplateItem, TemplateDayNumber } from "@/lib/program-templates/types";
@@ -56,10 +58,13 @@ export function CustomProgramBuilder() {
   const { saveActiveProgram, selectTemplate } = useActiveProgram();
   const { clearDraft } = useWorkoutDraft();
   const { get: getCustomProgram, upsert: upsertCustomProgram } = useCustomPrograms();
+  const { hydrated: draftHydrated, draft, save: saveDraft, clear: clearDraftStorage } =
+    useTrainBuilderDraft();
 
   const [programName, setProgramName] = useState("My 7-day plan");
   const [days, setDays] = useState<BuilderDay[]>(() => defaultDays());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [restoredNotice, setRestoredNotice] = useState(false);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDay, setPickerDay] = useState<TemplateDayNumber | null>(null);
@@ -80,6 +85,18 @@ export function CustomProgramBuilder() {
     },
     { enabled: isOnline && pickerOpen && pickerTab === "library" },
   );
+
+  // Offline-safe: if offline or the library request fails, force Manual tab.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    if (!isOnline) {
+      setPickerTab("manual");
+      return;
+    }
+    if (pickerTab === "library" && exercisesQuery.isError) {
+      setPickerTab("manual");
+    }
+  }, [pickerOpen, isOnline, pickerTab, exercisesQuery.isError]);
 
   const openPicker = (day: TemplateDayNumber) => {
     setPickerDay(day);
@@ -116,6 +133,22 @@ export function CustomProgramBuilder() {
         if (d.day !== day) return d;
         const nextItems = d.items.filter((it) => it.order !== order).map((it, idx) => ({ ...it, order: idx }));
         return { ...d, items: nextItems };
+      }),
+    );
+  };
+
+  const moveItem = (day: TemplateDayNumber, fromIndex: number, toIndex: number) => {
+    setDays((prev) =>
+      prev.map((d) => {
+        if (d.day !== day) return d;
+        const items = d.items.slice().sort((a, b) => a.order - b.order);
+        if (fromIndex < 0 || fromIndex >= items.length) return d;
+        if (toIndex < 0 || toIndex >= items.length) return d;
+        const next = items.slice();
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved!);
+        const normalized = next.map((it, idx) => ({ ...it, order: idx }));
+        return { ...d, items: normalized };
       }),
     );
   };
@@ -173,6 +206,18 @@ export function CustomProgramBuilder() {
     router.push("/train/overview");
   };
 
+  const { debounced: debouncedSaveDraft } = useDebouncedCallback(
+    (next: { editingId: string | null; programName: string; days: BuilderDay[] }) => {
+      saveDraft({
+        editingId: next.editingId,
+        programName: next.programName,
+        days: next.days,
+        updatedAt: nowIso(),
+      });
+    },
+    600,
+  );
+
   // If editing, load plan from storage via ?id=
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -198,6 +243,39 @@ export function CustomProgramBuilder() {
     });
     setDays(merged);
   }, [getCustomProgram]);
+
+  // Restore-on-load for "new plan": if there's an unsaved builder draft, restore it.
+  useEffect(() => {
+    if (!draftHydrated) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (id) return; // editing flow handled above
+    if (!draft) return;
+    if (draft.editingId != null) return; // don't apply edit-drafts on new plan
+
+    setEditingId(null);
+    setProgramName(draft.programName);
+    const seeded = defaultDays();
+    const merged = seeded.map((seed) => {
+      const found = draft.days.find((d) => d.day === seed.day);
+      if (!found) return seed;
+      return {
+        day: found.day,
+        label: found.label,
+        isRestDay: Boolean(found.isRestDay),
+        items: (found.items ?? []).slice().sort((a, b) => a.order - b.order),
+      };
+    });
+    setDays(merged);
+    setRestoredNotice(true);
+  }, [draftHydrated, draft]);
+
+  // Autosave draft (debounced) whenever builder state changes.
+  useEffect(() => {
+    if (!draftHydrated) return;
+    debouncedSaveDraft({ editingId, programName, days });
+  }, [draftHydrated, editingId, programName, days, debouncedSaveDraft]);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 p-6 pt-4">
@@ -228,6 +306,29 @@ export function CustomProgramBuilder() {
           <Input value={programName} onChange={(e) => setProgramName(e.target.value)} />
         </CardContent>
       </Card>
+
+      {restoredNotice ? (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="text-base">Draft restored</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 px-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              We restored your unsaved draft. You can keep editing or clear it.
+            </p>
+            <Button
+              variant="outline"
+              className="h-10"
+              onClick={() => {
+                clearDraftStorage();
+                setRestoredNotice(false);
+              }}
+            >
+              Clear draft
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-3 md:grid-cols-2">
         {days.map((d) => (
@@ -274,7 +375,7 @@ export function CustomProgramBuilder() {
                   {d.items
                     .slice()
                     .sort((a, b) => a.order - b.order)
-                    .map((it) => (
+                    .map((it, idx, arr) => (
                       <div key={`${d.day}-${it.order}`} className="rounded-lg border p-3">
                         <div className="flex items-center justify-between gap-2">
                           <Input
@@ -282,14 +383,34 @@ export function CustomProgramBuilder() {
                             onChange={(e) => updateItem(d.day, it.order, { nameFallback: e.target.value })}
                             className="flex-1"
                           />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9"
-                            onClick={() => removeItem(d.day, it.order)}
-                          >
-                            Remove
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9"
+                              disabled={idx === 0}
+                              onClick={() => moveItem(d.day, idx, idx - 1)}
+                            >
+                              Up
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9"
+                              disabled={idx === arr.length - 1}
+                              onClick={() => moveItem(d.day, idx, idx + 1)}
+                            >
+                              Down
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9"
+                              onClick={() => removeItem(d.day, it.order)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
                         </div>
                         <div className="mt-2 grid grid-cols-12 gap-2">
                           <div className="col-span-4">
@@ -377,6 +498,26 @@ export function CustomProgramBuilder() {
                 </Card>
               ) : (
                 <>
+                  {exercisesQuery.isError ? (
+                    <Card className="border-0 shadow-sm">
+                      <CardHeader className="px-4 pt-4 pb-2">
+                        <CardTitle className="text-base">Exercise library unavailable</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 px-4 pb-4">
+                        <p className="text-sm text-muted-foreground">
+                          We couldn’t load exercises right now. You can still add exercises manually.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="h-10 w-full sm:w-auto"
+                          onClick={() => setPickerTab("manual")}
+                        >
+                          Switch to Manual
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : null}
+
                   <div className="space-y-2">
                     <Label>Search</Label>
                     <Input

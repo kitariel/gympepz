@@ -64,6 +64,9 @@ export function TrainEntryScreen() {
                 <Button asChild variant="outline" className="h-10 w-full">
                   <Link href="/train/overview">View program overview</Link>
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  Current program: <span className="font-medium">{activeProgram?.name}</span>
+                </p>
               </div>
             ) : hasProfile ? (
               <Button asChild className="h-10 w-full">

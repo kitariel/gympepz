@@ -21,6 +21,9 @@ export type ActiveWorkoutDraft = {
    * Used to avoid showing stale drafts after switching templates.
    */
   templateId?: string;
+  programRef?: { type: "template" | "custom"; id: string };
+  programDayIndex?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  programDayLabel?: string;
   programName: string;
   date: string; // ISO (workout day)
   startedAt: string; // ISO

@@ -14,7 +14,7 @@ export function LoginHero() {
           className="w-full h-full  object-cover ob"
         /> */}
         <Image
-          src="/GPT_Image_1_A_realistic_premium_fitness_brand_image_for_a_mode_0.png"
+          src="/GymImage.png"
           alt="Fit athletes in a modern gym setting"
           width={1000}
           height={1000}
