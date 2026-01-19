@@ -55,7 +55,7 @@ function migrateFromLegacy(): CurrentProgramSnapshot | null {
     programName: legacy.name,
     createdAt: legacy.createdAt ?? nowIso(),
     updatedAt: legacy.updatedAt ?? nowIso(),
-    plan: { days: normalizeTo7Days(legacy.plan.days as ProgramTemplateDay[]) },
+    plan: { days: normalizeTo7Days(legacy.plan.days) },
   };
   // Persist new keys so next load is fast.
   setJSON(STORAGE_KEYS.currentProgramRef, ref);
@@ -93,4 +93,3 @@ export const currentProgramRepo = {
   },
   normalizeTo7Days,
 };
-

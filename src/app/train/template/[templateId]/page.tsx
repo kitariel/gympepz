@@ -1,12 +1,10 @@
-"use client";
-
 import { TemplateDetails } from "@/components/train/TemplateDetails";
 
-export default function TrainTemplateDetailPage({
+export default async function TrainTemplateDetailPage({
   params,
 }: {
-  params: { templateId: string };
+  params: Promise<{ templateId: string }>;
 }) {
-  return <TemplateDetails templateId={params.templateId} />;
+  const { templateId } = await params;
+  return <TemplateDetails templateId={templateId} />;
 }
-

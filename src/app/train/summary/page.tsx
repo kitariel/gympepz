@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ function parseNumberMaybe(v: string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export default function TrainSummaryPage() {
+function TrainSummaryPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const logId = searchParams.get("logId");
@@ -204,3 +204,16 @@ export default function TrainSummaryPage() {
   );
 }
 
+export default function TrainSummaryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-3xl space-y-3 p-6 pt-4">
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </div>
+      }
+    >
+      <TrainSummaryPageInner />
+    </Suspense>
+  );
+}

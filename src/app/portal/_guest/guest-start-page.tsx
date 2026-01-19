@@ -1,18 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { GuestModeBanner } from "@/app/portal/_guest/guest-mode-banner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   appendOfflineWorkoutLog,
   createSampleWeeklyPlanSnapshot,
   getWeekId,
   readGuestWorkoutSession,
-  readWeeklyPlanSnapshot,
   uuid,
   writeGuestWorkoutSession,
   writeWeeklyPlanSnapshot,
@@ -33,17 +30,10 @@ import { BuilderDetailsStep } from "@/app/portal/_guest/start/builder-details";
 import { BuilderExercisesStep } from "@/app/portal/_guest/start/builder-exercises";
 import { WorkoutOverview } from "@/app/portal/_guest/start/workout-overview";
 import { WorkoutLogger } from "@/app/portal/_guest/start/workout-logger";
-import { LeaveGuardDialog, type LeaveGuardChoice } from "@/app/portal/_guest/start/leave-guard-dialog";
-
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const;
+import {
+  LeaveGuardDialog,
+  type LeaveGuardChoice,
+} from "@/app/portal/_guest/start/leave-guard-dialog";
 
 function nowIso() {
   return new Date().toISOString();
@@ -60,7 +50,9 @@ function buildEmptyDraft(): GuestWorkoutBuilderDraft {
   };
 }
 
-function buildSession(partial?: Partial<GuestWorkoutSession>): GuestWorkoutSession {
+function buildSession(
+  partial?: Partial<GuestWorkoutSession>,
+): GuestWorkoutSession {
   return {
     phase: "home",
     builder: null,
@@ -72,13 +64,13 @@ function buildSession(partial?: Partial<GuestWorkoutSession>): GuestWorkoutSessi
 
 export function GuestStartPage() {
   const router = useRouter();
-  const [snapshot, setSnapshot] = useState<WeeklyPlanSnapshot | null>(null);
-  const [sessionState, setSessionState] = useState<GuestWorkoutSession>(() => buildSession());
+  const [sessionState, setSessionState] = useState<GuestWorkoutSession>(() =>
+    buildSession(),
+  );
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
-    setSnapshot(readWeeklyPlanSnapshot());
     const persisted = readGuestWorkoutSession();
     const persistedDraft = readWorkoutBuilderDraft();
     if (persisted) {
@@ -89,7 +81,9 @@ export function GuestStartPage() {
       };
       setSessionState(merged);
     } else if (persistedDraft) {
-      setSessionState(buildSession({ phase: "overview", builder: persistedDraft }));
+      setSessionState(
+        buildSession({ phase: "overview", builder: persistedDraft }),
+      );
     }
   }, []);
 
@@ -100,9 +94,9 @@ export function GuestStartPage() {
   }, [sessionState]);
 
   const canResume = Boolean(
-    sessionState.activeLog ||
-      sessionState.builder ||
-      readGuestWorkoutSession() ||
+    sessionState.activeLog ??
+      sessionState.builder ??
+      readGuestWorkoutSession() ??
       readWorkoutBuilderDraft(),
   );
 
@@ -117,11 +111,11 @@ export function GuestStartPage() {
   const useSamplePlan = () => {
     const sample = createSampleWeeklyPlanSnapshot(getWeekId());
     writeWeeklyPlanSnapshot(sample);
-    setSnapshot(sample);
 
     // Pick first non-rest day with items; fallback first day.
     const pick =
-      sample.days.find((d) => !d.isRestDay && d.items.length > 0) ?? sample.days[0];
+      sample.days.find((d) => !d.isRestDay && d.items.length > 0) ??
+      sample.days[0];
     const exercises =
       pick?.items
         .slice()
@@ -186,7 +180,9 @@ export function GuestStartPage() {
     setSessionState((s) => ({ ...s, activeLog: next }));
   };
 
-  const hasLoggedSets = Boolean(sessionState.activeLog && sessionState.activeLog.sets.length > 0);
+  const hasLoggedSets = Boolean(
+    sessionState.activeLog && sessionState.activeLog.sets.length > 0,
+  );
 
   const requestLeave = (href?: string) => {
     if (hasLoggedSets) {
@@ -232,7 +228,9 @@ export function GuestStartPage() {
     appendOfflineWorkoutLog(finished);
     clearGuestWorkoutSession();
     clearWorkoutBuilderDraft();
-    setSessionState(buildSession({ phase: "home", builder: null, activeLog: null }));
+    setSessionState(
+      buildSession({ phase: "home", builder: null, activeLog: null }),
+    );
     router.push("/train/history");
   };
 
@@ -292,7 +290,9 @@ export function GuestStartPage() {
         />
       ) : null}
 
-      {sessionState.phase === "logging" && sessionState.builder && sessionState.activeLog ? (
+      {sessionState.phase === "logging" &&
+      sessionState.builder &&
+      sessionState.activeLog ? (
         <WorkoutLogger
           builder={sessionState.builder}
           log={sessionState.activeLog}
@@ -305,7 +305,11 @@ export function GuestStartPage() {
 
       {/* Simple footer nav (guarded) */}
       <div className="pt-2">
-        <Button variant="ghost" className="w-full" onClick={() => requestLeave("/portal")}>
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => requestLeave("/portal")}
+        >
           Back to dashboard
         </Button>
       </div>
@@ -318,4 +322,3 @@ export function GuestStartPage() {
     </div>
   );
 }
-

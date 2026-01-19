@@ -32,9 +32,18 @@ import { api } from "@/trpc/react";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+function getInitials(input: string): string {
+  const display = input.toString().trim();
+  if (!display) return "?";
+  const parts = display.split(" ").filter(Boolean);
+  if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
+  const first = (parts[0]?.[0] ?? "").toUpperCase();
+  const second = (parts[1]?.[0] ?? "").toUpperCase();
+  return `${first}${second}`;
+}
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -58,7 +67,8 @@ export function NavUser() {
 
   const name =
     user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
-  const avatarSrc: string | undefined = user?.image ?? session?.user?.image ?? undefined;
+  const avatarSrc: string | undefined =
+    user?.image ?? session?.user?.image ?? undefined;
 
   const isGuest = !session?.user;
 
@@ -66,14 +76,14 @@ export function NavUser() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <div className="space-y-2 rounded-lg border bg-sidebar-accent/30 p-3">
+          <div className="bg-sidebar-accent/30 space-y-2 rounded-lg border p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Guest mode</span>
               <Badge variant="secondary" className="text-[10px]">
                 Guest
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Saved locally on this device. Login to sync and back up.
             </p>
             <Button asChild size="sm" className="h-9 w-full">
@@ -88,15 +98,7 @@ export function NavUser() {
   // if has name or first name and last name then use if dont have use email split by @ and use first part
   // if one word use 2 letter of the word
   // if two words use first letter of each word
-  const initials = useMemo(() => {
-    const display = (name ?? email ?? "").toString();
-    if (!display) return "?";
-    const parts = display.split(" ").filter(Boolean);
-    if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
-    const first = (parts[0]?.[0] ?? "").toUpperCase();
-    const second = (parts[1]?.[0] ?? "").toUpperCase();
-    return `${first}${second}`;
-  }, [name, email]);
+  const initials = getInitials(name || email);
 
   return (
     <SidebarMenu>
