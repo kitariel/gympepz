@@ -26,6 +26,14 @@ export type WorkoutLoggerViewProps =
       onBrowseTemplates: () => void;
     }
   | {
+      kind: "completedToday";
+      programName: string;
+      dayLabel: string | null;
+      onTakeRestDay: () => void;
+      onRepeat: () => void;
+      onBackToOverview: () => void;
+    }
+  | {
       kind: "noDraft";
       programName: string;
       dayLabel: string | null;

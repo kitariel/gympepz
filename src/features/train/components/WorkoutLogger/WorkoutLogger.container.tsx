@@ -6,18 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
-import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
+import {
+  getDayNumberForToday,
+  getEffectivePlanDay,
+  isWorkoutCompletedTodayForDay,
+} from "@/features/train/domain/workoutSessionState";
 import type {
   WorkoutLoggerExerciseVM,
   WorkoutLoggerViewProps,
 } from "./WorkoutLogger.types";
 import { WorkoutLoggerView } from "./WorkoutLogger.view";
-
-function getDayNumberForToday(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
-  const d = new Date().getDay();
-  if (d === 0) return 7;
-  return d as 1 | 2 | 3 | 4 | 5 | 6;
-}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -43,6 +41,7 @@ export function WorkoutLogger() {
     addSet,
     updateSet,
     finish,
+    history: workoutHistory,
     hydrated: draftHydrated,
   } = useWorkoutDraft();
 
@@ -69,16 +68,12 @@ export function WorkoutLogger() {
     if (overrideDay != null) {
       return activeProgram.plan.days.find((d) => d.day === overrideDay) ?? null;
     }
-    if (selectedWorkoutDay === "auto") {
-      return (
-        pickWorkoutDayForWeekday(activeProgram.plan.days, today)?.day ?? null
-      );
-    }
-    return (
-      activeProgram.plan.days.find((d) => d.day === selectedWorkoutDay) ??
-      pickWorkoutDayForWeekday(activeProgram.plan.days, today)?.day ??
-      null
-    );
+
+    return getEffectivePlanDay({
+      days: activeProgram.plan.days,
+      selectedWorkoutDay,
+      today,
+    });
   }, [activeProgram, today, selectedWorkoutDay, overrideDay]);
 
   const createDraftForDay = useCallback(() => {
@@ -174,6 +169,28 @@ export function WorkoutLogger() {
         todaysPlan?.isRestDay ??
           (todaysPlan ? todaysPlan.items.length === 0 : false),
       );
+
+      const programId = currentProgramRef?.id ?? activeProgram.templateId;
+      const isCompletedToday =
+        !isRestDay &&
+        todaysPlan?.day != null &&
+        isWorkoutCompletedTodayForDay({
+          history: workoutHistory,
+          programId,
+          dayIndex: todaysPlan.day,
+        });
+
+      if (isCompletedToday) {
+        return {
+          kind: "completedToday",
+          programName: activeProgram.name,
+          dayLabel: todaysPlan?.label ?? null,
+          onTakeRestDay: () => router.push("/train/overview"),
+          onRepeat: createDraftForDay,
+          onBackToOverview: () => router.push("/train/overview"),
+        };
+      }
+
       return {
         kind: "noDraft",
         programName: activeProgram.name,
@@ -259,6 +276,8 @@ export function WorkoutLogger() {
   }, [
     hydrated,
     activeProgram,
+    currentProgramRef,
+    workoutHistory,
     draft,
     todaysPlan,
     router,
