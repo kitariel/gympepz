@@ -3,21 +3,39 @@ import { env } from "@/env";
 
 export type SendResult = { delivered: boolean; id?: string };
 
-// Type-safe SMTP transport configuration
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: Number(env.SMTP_PORT),
-  secure: Number(env.SMTP_PORT) === 465, // true for 465, false for other ports
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+function getTransporter() {
+  if (
+    !env.SMTP_HOST ||
+    !env.SMTP_PORT ||
+    !env.SMTP_USER ||
+    !env.SMTP_PASS ||
+    !env.SMTP_FROM
+  ) {
+    return null;
+  }
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: Number(env.SMTP_PORT),
+    secure: Number(env.SMTP_PORT) === 465, // true for 465, false for other ports
+    auth: {
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
+    },
+  });
+}
 
 export async function sendOtpEmail(to: string, code: string): Promise<SendResult> {
   try {
+    const transporter = getTransporter();
+    if (!transporter) {
+      console.warn(
+        "SMTP is not configured; skipping OTP email delivery. Set SMTP_* env vars to enable email.",
+      );
+      return { delivered: false };
+    }
+
     const info = await transporter.sendMail({
-      from: env.SMTP_FROM,
+      from: env.SMTP_FROM!,
       to,
       subject: "Your verification code",
       text: `Your OTP is ${code}. Expires in 10 minutes.`,

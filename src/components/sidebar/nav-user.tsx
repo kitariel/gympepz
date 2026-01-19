@@ -74,10 +74,10 @@ export function NavUser() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Your session is temporary. Create an account to save progress.
+              Saved locally on this device. Login to sync and back up.
             </p>
             <Button asChild size="sm" className="h-9 w-full">
-              <Link href="/login">Save your progress</Link>
+              <Link href="/login">Sync & back up</Link>
             </Button>
           </div>
         </SidebarMenuItem>

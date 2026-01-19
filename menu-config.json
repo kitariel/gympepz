@@ -1,46 +1,5 @@
 {
-  "navMain": [
-
-    {
-      "title": "Dashboard",
-      "url": "/portal",
-      "iconName": "Home",
-      "iconPlatform": "lucide",
-      "enabled": true
-    },
-    {
-      "title": "Workouts",
-      "url": "#",
-      "iconName": "Dumbbell",
-      "iconPlatform": "lucide",
-      "enabled": true,
-      "items": [
-        { "title": "My Plans", "url": "/portal/plans", "enabled": true },
-        {
-          "title": "Exercise Library",
-          "url": "/portal/exercises",
-          "enabled": true
-        }
-      ]
-    },
-    {
-      "title": "Logs",
-      "url": "/portal/log",
-      "iconName": "NotebookPen",
-      "iconPlatform": "lucide",
-      "enabled": true
-    },
-    {
-      "title": "Settings",
-      "url": "#",
-      "iconName": "Settings",
-      "iconPlatform": "lucide",
-      "enabled": true,
-      "items": [
-        { "title": "Account", "url": "/portal/account", "enabled": true }
-      ]
-    }
-  ],
+  "navMain": [],
   "navSecondary": [],
   "projects": []
 }

@@ -5,7 +5,7 @@ import BetaNotice from "@/components/landing/BetaNotice";
 import FinalCTA from "@/components/landing/FinalCTA";
 
 export default function HomePage() {
-  const ctaHref = "/portal";
+  const ctaHref = "/train";
 
   return (
     <main className="min-h-screen bg-background text-foreground">

@@ -17,13 +17,13 @@ export function GuestModeBanner() {
           <p className="text-sm font-medium">Using GymPepz without an account</p>
           <p className="text-xs text-muted-foreground">
             {isOnline
-              ? "Your session is temporary. Create an account to save your progress."
-              : "Offline • You can keep logging in this session."}
+              ? "Saved locally on this device. Create an account to sync and back up."
+              : "Offline • Saved locally on this device."}
           </p>
         </div>
       </div>
       <Button asChild size="sm" className="h-9">
-        <Link href="/login">Save your progress</Link>
+        <Link href="/login">Sync & back up</Link>
       </Button>
     </div>
   );

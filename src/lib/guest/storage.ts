@@ -1,12 +1,16 @@
 import type {
   OfflineWorkoutLog,
   OfflineWorkoutLogQueue,
+  GuestWorkoutBuilderDraft,
+  GuestWorkoutSession,
   WeeklyPlanSnapshot,
 } from "@/lib/guest/types";
 
 const KEYS = {
   weeklyPlanSnapshot: "gympepz.weeklyPlanSnapshot",
   offlineWorkoutLogQueue: "gympepz.offlineWorkoutLogQueue",
+  workoutBuilderDraft: "gympepz.workoutBuilderDraft",
+  guestWorkoutSession: "gympepz.guestWorkoutSession",
 } as const;
 
 function isBrowser() {
@@ -15,8 +19,8 @@ function isBrowser() {
 
 function getStore(): Storage | null {
   if (!isBrowser()) return null;
-  // Guest Mode demo is session-only: data should not persist after the session ends.
-  return window.sessionStorage;
+  // Offline-first guest mode: persist to this device.
+  return window.localStorage;
 }
 
 function safeJsonParse<T>(raw: string | null): T | null {
@@ -200,5 +204,41 @@ export function clearOfflineWorkoutLogQueue() {
   const store = getStore();
   if (!store) return;
   store.removeItem(KEYS.offlineWorkoutLogQueue);
+}
+
+export function readWorkoutBuilderDraft(): GuestWorkoutBuilderDraft | null {
+  const store = getStore();
+  if (!store) return null;
+  return safeJsonParse<GuestWorkoutBuilderDraft>(store.getItem(KEYS.workoutBuilderDraft));
+}
+
+export function writeWorkoutBuilderDraft(draft: GuestWorkoutBuilderDraft) {
+  const store = getStore();
+  if (!store) return;
+  store.setItem(KEYS.workoutBuilderDraft, JSON.stringify(draft));
+}
+
+export function clearWorkoutBuilderDraft() {
+  const store = getStore();
+  if (!store) return;
+  store.removeItem(KEYS.workoutBuilderDraft);
+}
+
+export function readGuestWorkoutSession(): GuestWorkoutSession | null {
+  const store = getStore();
+  if (!store) return null;
+  return safeJsonParse<GuestWorkoutSession>(store.getItem(KEYS.guestWorkoutSession));
+}
+
+export function writeGuestWorkoutSession(session: GuestWorkoutSession) {
+  const store = getStore();
+  if (!store) return;
+  store.setItem(KEYS.guestWorkoutSession, JSON.stringify(session));
+}
+
+export function clearGuestWorkoutSession() {
+  const store = getStore();
+  if (!store) return;
+  store.removeItem(KEYS.guestWorkoutSession);
 }
 

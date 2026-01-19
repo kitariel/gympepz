@@ -1,6 +1,6 @@
-import 'dotenv/config';
-import { createEnv } from '@t3-oss/env-nextjs';
-import { z } from 'zod';
+import "dotenv/config";
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
 
 export const env = createEnv({
   /**
@@ -8,20 +8,23 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    NODE_ENV: z.enum(['local', 'development', 'test', 'production']),
+    // Keep the true minimum required to boot the app.
+    NODE_ENV: z.enum(["local", "development", "test", "production"]),
     DATABASE_URL: z.string().url(),
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
     NEXTAUTH_URL: z.string().url(),
     NEXTAUTH_SECRET: z.string(),
-    SMTP_HOST: z.string(),
-    SMTP_PORT: z.string(),
-    SMTP_USER: z.string().email(),
-    SMTP_PASSWORD: z.string(),
-    SMTP_FROM: z.string().email(),
-    SMTP_PASS: z.string(),
-    UPLOADTHING_TOKEN: z.string(),
-    OPENAI_API_KEY: z.string(),
+
+    // Optional providers / integrations (offline-first /train doesn't need these)
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.string().optional(),
+    SMTP_USER: z.string().email().optional(),
+    SMTP_PASSWORD: z.string().optional(),
+    SMTP_FROM: z.string().email().optional(),
+    SMTP_PASS: z.string().optional(),
+    UPLOADTHING_TOKEN: z.string().optional(),
+    OPENAI_API_KEY: z.string().optional(),
   },
 
   /**
@@ -30,7 +33,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string(),
+    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().optional(),
   },
 
   /**
