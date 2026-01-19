@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { LoadingView } from "./_components/loading-view";
 import { NoPlanView } from "./_components/no-plan-view";
@@ -9,11 +9,22 @@ import { RestDayDialog } from "./_components/rest-day-dialog";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import { useStartWorkout } from "./_hooks/use-start-workout";
 import { useWorkoutStartHandlers } from "./_hooks/use-workout-start-handlers";
+import { resolveAppMode } from "@/lib/app-mode";
+import { GuestStartPage } from "@/app/portal/_guest/guest-start-page";
 
 export default function StartWorkoutPage() {
   const { data: session } = useSession();
-  const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
-  
+  const mode = resolveAppMode(session);
+
+  if (mode === "guest") {
+    return <GuestStartPage />;
+  }
+
+  const userId = session?.user?.id ?? "";
+  return <AuthenticatedStartWorkoutPage userId={userId} />;
+}
+
+function AuthenticatedStartWorkoutPage({ userId }: { userId: string }) {
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 

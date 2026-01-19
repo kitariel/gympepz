@@ -33,6 +33,8 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -57,6 +59,31 @@ export function NavUser() {
   const name =
     user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
   const avatarSrc: string | undefined = user?.image ?? session?.user?.image ?? undefined;
+
+  const isGuest = !session?.user;
+
+  if (isGuest) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <div className="space-y-2 rounded-lg border bg-sidebar-accent/30 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Guest mode</span>
+              <Badge variant="secondary" className="text-[10px]">
+                Guest
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your session is temporary. Create an account to save progress.
+            </p>
+            <Button asChild size="sm" className="h-9 w-full">
+              <Link href="/login">Save your progress</Link>
+            </Button>
+          </div>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   // if has name or first name and last name then use if dont have use email split by @ and use first part
   // if one word use 2 letter of the word

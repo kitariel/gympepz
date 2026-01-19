@@ -12,6 +12,7 @@ import { Dumbbell, TrendingUp, BarChart3, Calendar } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
+import { GuestLogPage } from "@/app/portal/_guest/guest-log-page";
 
 export default function LogPage() {
   const { data: session } = useSession();
@@ -138,13 +139,7 @@ export default function LogPage() {
   ]);
 
   if (!userId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          Please log in to view your logs.
-        </p>
-      </div>
-    );
+    return <GuestLogPage />;
   }
 
   return (

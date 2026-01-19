@@ -47,6 +47,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -78,6 +79,7 @@ export function PortalHeader() {
   const name =
     user?.name ?? session?.user?.name ?? session?.user?.email ?? "Guest";
   const avatarSrc = user?.image ?? session?.user?.image ?? undefined;
+  const isGuest = !session?.user;
 
   const initials = useMemo(() => {
     if (!name && !email) return "?";
@@ -307,8 +309,14 @@ export function PortalHeader() {
 
       {/* Quick Actions */}
       <div className="ml-auto flex items-center gap-2">
+        {isGuest ? (
+          <Badge variant="secondary" className="hidden sm:inline text-[10px]">
+            Guest mode
+          </Badge>
+        ) : null}
         {/* Quick Start Workout Button */}
-        {activePlanData &&
+        {!isGuest &&
+          activePlanData &&
           (() => {
             const todayWorkout = todaysWorkout.data?.todayWorkout;
             const exercises = todayWorkout?.exercises;
@@ -374,15 +382,17 @@ export function PortalHeader() {
           })()}
 
         {/* AI Planner Button */}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => router.push("/portal/ai-planner")}
-          className="h-8 w-8 p-0"
-          title="AI Planner"
-        >
-          <Sparkles className="h-4 w-4" />
-        </Button>
+        {!isGuest ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push("/portal/ai-planner")}
+            className="h-8 w-8 p-0"
+            title="AI Planner"
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        ) : null}
 
         {/* Profile Sidebar Button - Mobile/Tablet */}
         {isMobile && (
@@ -438,26 +448,37 @@ export function PortalHeader() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/portal/account" className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
-                Account
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/portal/account" className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => void signOut()}
-              className="text-destructive focus:text-destructive cursor-pointer"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
+            {isGuest ? (
+              <DropdownMenuItem asChild>
+                <Link href="/login" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Save your progress
+                </Link>
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/portal/account" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/portal/account" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => void signOut()}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

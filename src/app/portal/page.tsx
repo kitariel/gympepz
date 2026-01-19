@@ -51,6 +51,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { GuestDashboard } from "@/app/portal/_guest/guest-dashboard";
 
 export default function PortalPage() {
   const { data: session } = useSession();
@@ -233,13 +234,7 @@ export default function PortalPage() {
   };
 
   if (!userId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          Please log in to view your dashboard.
-        </p>
-      </div>
-    );
+    return <GuestDashboard />;
   }
 
   return (

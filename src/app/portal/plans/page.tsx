@@ -17,8 +17,21 @@ import { usePlanHandlers } from "./_hooks/use-plan-handlers";
 import { useTemplateCreation } from "./_hooks/use-template-creation";
 import { TEMPLATE_DEFINITIONS } from "./_components/template-exercises";
 import { Folder, Star, Sparkles } from "lucide-react";
+import { resolveAppMode } from "@/lib/app-mode";
+import { GuestPlansPage } from "./_guest/guest-plans-page";
 
 export default function PlansPage() {
+  const { data: session } = useSession();
+  const mode = resolveAppMode(session);
+
+  if (mode === "guest") {
+    return <GuestPlansPage />;
+  }
+
+  return <AuthenticatedPlansPage />;
+}
+
+function AuthenticatedPlansPage() {
   const { data: session } = useSession();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   const router = useRouter();

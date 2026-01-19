@@ -7,17 +7,13 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { auth } from "@/server/auth";
-import { redirect } from "next/navigation";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import type { ReactNode } from "react";
 
 export default async function Layout({ children }: { children: ReactNode }) {
   const session = await auth();
-  if (!session) {
-    redirect("/login");
-  }
 
-  // Session is used for server-side protection; user details are shown from NavUser in the sidebar footer.
+  // Session is optional: we support Guest Mode throughout /portal.
 
   return (
     <AuthSessionProvider session={session}>

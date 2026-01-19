@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
 import Link from "next/link";
+import { readWeeklyPlanSnapshot } from "@/lib/guest/storage";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   // Global toggle for editing UI (super admin mode)
@@ -113,6 +114,7 @@ export function AppSidebar({
   const { data: session } = useSession();
   const pathname = usePathname();
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
+  const isGuest = !userId;
 
   // Get today's workout for badge
   // Pass day based on local timezone to avoid UTC timezone issues
@@ -132,8 +134,20 @@ export function AppSidebar({
     { enabled: !!userId },
   );
 
-  const hasActiveWorkout =
-    todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout;
+  const [guestHasTodayWorkout, setGuestHasTodayWorkout] = useState(false);
+
+  React.useEffect(() => {
+    if (!isGuest) return;
+    const snapshot = readWeeklyPlanSnapshot();
+    const today = snapshot?.days?.find((d) => d.dayLabel === localDayName);
+    const has =
+      Boolean(today) && !Boolean(today?.isRestDay) && (today?.items?.length ?? 0) > 0;
+    setGuestHasTodayWorkout(has);
+  }, [isGuest, localDayName]);
+
+  const hasActiveWorkout = isGuest
+    ? guestHasTodayWorkout
+    : Boolean(todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -173,7 +187,7 @@ export function AppSidebar({
 
   // Filter menu items based on search
   const navMain = useMemo(() => {
-    const items = (menu?.navMain ?? []).map((item) => {
+    const base = (menu?.navMain ?? []).map((item) => {
       const IconComp = getIconForItem(item.title, SquareTerminal);
       return {
         title: item.title,
@@ -184,6 +198,45 @@ export function AppSidebar({
         enabled: item.enabled,
       };
     });
+
+    const items = isGuest
+      ? base
+          .map((item) => {
+            // Hide settings/account in guest mode
+            if ((item.url ?? "").startsWith("/portal/account")) return null;
+            if (item.title.toLowerCase() === "settings") return null;
+
+            // Replace "Workouts" children with a single "This Week" item
+            if (item.title.toLowerCase() === "workouts") {
+              return {
+                ...item,
+                url: "#",
+                items: [
+                  { title: "This Week", url: "/portal" },
+                  { title: "Gym Discovery", url: "/portal/gyms" },
+                ],
+              };
+            }
+
+            // Hide plan editor + exercises in guest mode
+            const children =
+              item.items?.filter((c) => {
+                const u = (c.url ?? "").toString();
+                if (u.startsWith("/portal/plans")) return false;
+                if (u.startsWith("/portal/exercises")) return false;
+                if (u.startsWith("/portal/account")) return false;
+                return true;
+              }) ?? item.items;
+
+            // Keep Dashboard + Logs
+            const url = (item.url ?? "").toString();
+            if (url.startsWith("/portal/plans")) return null;
+            if (url.startsWith("/portal/exercises")) return null;
+
+            return { ...item, items: children };
+          })
+          .filter((i): i is NonNullable<typeof i> => Boolean(i))
+      : base;
 
     if (!searchQuery.trim()) return items;
 
@@ -206,7 +259,7 @@ export function AppSidebar({
         return null;
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [menu?.navMain, searchQuery, getIconForItem]);
+  }, [menu?.navMain, searchQuery, getIconForItem, isGuest]);
 
   const navSecondary = (menu?.navSecondary ?? []).map((item) => {
     const IconComp = getIconForItem(item.title, SquareTerminal);
@@ -292,6 +345,16 @@ export function AppSidebar({
             </SidebarMenuItem>
           )}
         </SidebarMenu>
+        {isGuest && !enableEditing ? (
+          <div className="px-2 pt-2">
+            <Badge variant="secondary" className="text-[10px]">
+              Guest mode
+            </Badge>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Login to sync and back up.
+            </p>
+          </div>
+        ) : null}
       </SidebarHeader>
       <SidebarContent>
         {/* Search Bar */}
@@ -355,18 +418,20 @@ export function AppSidebar({
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip="Ask AI Coach (⌘I)"
-                    isActive={pathname?.startsWith("/portal/ai-planner")}
-                  >
-                    <Link href="/portal/ai-planner">
-                      <Sparkles className="size-4" />
-                      <span>Ask AI Coach</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {!isGuest ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip="Ask AI Coach (⌘I)"
+                      isActive={pathname?.startsWith("/portal/ai-planner")}
+                    >
+                      <Link href="/portal/ai-planner">
+                        <Sparkles className="size-4" />
+                        <span>Ask AI Coach</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
                 <InstallPWAButton variant="sidebar" />
               </SidebarMenu>
             </SidebarGroupContent>

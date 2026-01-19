@@ -10,8 +10,36 @@ import { ExerciseDetailModal } from "./_components/exercise-detail-modal";
 import { AddToPlanDialog } from "./_components/add-to-plan-dialog";
 import { Dumbbell } from "lucide-react";
 import type { Exercise } from "@/types/exercise";
+import { useSession } from "next-auth/react";
+import { resolveAppMode } from "@/lib/app-mode";
+import Link from "next/link";
 
 export default function ExercisesPage() {
+  const { data: session } = useSession();
+  const mode = resolveAppMode(session);
+
+  if (mode === "guest") {
+    return (
+      <div className="flex-1 space-y-4 p-6 pt-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="space-y-3 p-6">
+            <h2 className="text-xl font-semibold">Exercise Library</h2>
+            <p className="text-sm text-muted-foreground">
+              Login to browse the full exercise library and add exercises to your plans.
+            </p>
+            <Button asChild className="h-9">
+              <Link href="/login">Login to sync</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <AuthenticatedExercisesPage />;
+}
+
+function AuthenticatedExercisesPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState("All");

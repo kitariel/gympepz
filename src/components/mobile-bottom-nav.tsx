@@ -2,29 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Calendar, NotebookPen } from "lucide-react";
+import { Sparkles, Calendar, NotebookPen, Home, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  {
-    label: "AI",
-    href: "/portal/ai-planner",
-    icon: Sparkles,
-  },
-  {
-    label: "Plans",
-    href: "/portal/plans",
-    icon: Calendar,
-  },
-  {
-    label: "Logs",
-    href: "/portal/log",
-    icon: NotebookPen,
-  },
-];
+import { useSession } from "next-auth/react";
+import { resolveAppMode } from "@/lib/app-mode";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const mode = resolveAppMode(session);
+
+  const navItems =
+    mode === "guest"
+      ? [
+          { label: "Home", href: "/portal", icon: Home },
+          { label: "Start", href: "/portal/start", icon: Play },
+          { label: "Logs", href: "/portal/log", icon: NotebookPen },
+        ]
+      : [
+          { label: "AI", href: "/portal/ai-planner", icon: Sparkles },
+          { label: "Plans", href: "/portal/plans", icon: Calendar },
+          { label: "Logs", href: "/portal/log", icon: NotebookPen },
+        ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg md:hidden">
