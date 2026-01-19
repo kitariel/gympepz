@@ -168,7 +168,7 @@ export function AppSidebar({
       ) {
         e.preventDefault();
         if (hasActiveWorkout) {
-          window.location.href = "/portal/start";
+          window.location.href = "/train/log";
         }
       }
       // Escape: Clear search
@@ -213,24 +213,22 @@ export function AppSidebar({
                 url: "#",
                 items: [
                   { title: "This Week", url: "/portal" },
-                  { title: "Gym Discovery", url: "/portal/gyms" },
+                  { title: "Train", url: "/train" },
                 ],
               };
             }
 
-            // Hide plan editor + exercises in guest mode
+            // Hide exercises + account in guest mode
             const children =
               item.items?.filter((c) => {
                 const u = (c.url ?? "").toString();
-                if (u.startsWith("/portal/plans")) return false;
                 if (u.startsWith("/portal/exercises")) return false;
                 if (u.startsWith("/portal/account")) return false;
                 return true;
               }) ?? item.items;
 
-            // Keep Dashboard + Logs
+            // Hide exercises in guest mode
             const url = (item.url ?? "").toString();
-            if (url.startsWith("/portal/plans")) return null;
             if (url.startsWith("/portal/exercises")) return null;
 
             return { ...item, items: children };
@@ -395,8 +393,8 @@ export function AppSidebar({
                     asChild
                     tooltip="Start today's workout (⌘W)"
                     isActive={
-                      pathname?.startsWith("/portal/start") ||
-                      pathname?.includes("/portal/log/workout/")
+                      pathname?.startsWith("/train/log") ||
+                      pathname?.startsWith("/train/overview")
                     }
                     className={
                       hasActiveWorkout
@@ -404,7 +402,7 @@ export function AppSidebar({
                         : undefined
                     }
                   >
-                    <Link href="/portal/start">
+                    <Link href="/train/log">
                       <Command className="size-4" />
                       <span>Start Workout</span>
                       {hasActiveWorkout && (

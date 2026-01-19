@@ -65,7 +65,7 @@ function LoginPageContent() {
     } | null;
     if (!u) return;
     if (u.hasPassword) {
-      router.replace("/portal/start");
+      router.replace("/train");
       router.refresh();
     } else {
       setStep("password_set");
@@ -159,7 +159,7 @@ function LoginPageContent() {
 
       if (res?.ok) {
         // Navigate to start workout page on success
-        router.replace("/portal/start");
+        router.replace("/train");
         // Ensure server components read the new auth cookies
         router.refresh();
         return;
@@ -217,7 +217,7 @@ function LoginPageContent() {
         await signIn("credentials", {
           email: eLower,
           password,
-          callbackUrl: "/portal/start",
+          callbackUrl: "/train",
           redirect: true,
         });
       } else {

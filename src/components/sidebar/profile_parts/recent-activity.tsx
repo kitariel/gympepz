@@ -43,7 +43,7 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
               variant="ghost"
               size="sm"
               className="text-primary hover:text-primary/80 h-auto p-0 text-[10px]"
-              onClick={() => router.push("/portal/log?tab=workouts")}
+              onClick={() => router.push("/train/history")}
             >
               View All
               <ChevronRight className="ml-0.5 h-3 w-3" />
@@ -55,7 +55,7 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
               <div
                 key={workout.id}
                 className="bg-primary/5 hover:bg-primary/10 group flex cursor-pointer items-center gap-1.5 rounded-lg p-1.5 transition-all"
-                onClick={() => router.push(`/portal/log/workout/${workout.id}`)}
+                onClick={() => router.push("/train/history")}
               >
                 <div className="bg-primary/10 shrink-0 rounded-full p-1 transition-transform group-hover:scale-110">
                   <Dumbbell className="text-primary h-2.5 w-2.5" />

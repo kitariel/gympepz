@@ -51,9 +51,7 @@ import { Badge } from "@/components/ui/badge";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
-  "/portal/log": "Workout Logs",
   "/portal/exercises": "Exercises",
-  "/portal/plans": "Plans",
   "/portal/ai-planner": "AI Planner",
   "/portal/workout-builder": "Workout Builder",
   "/portal/account": "Account",
@@ -174,23 +172,23 @@ export function PortalHeader() {
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 
   const quickStart = api.workoutLog.quickStart.useMutation({
-    onSuccess: (log) => router.push(`/portal/log/workout/${log.id}`),
+    onSuccess: () => router.push("/train/log"),
   });
 
   const handleQuickStart = () => {
     if (!userId) {
-      router.push("/portal/log");
+      router.push("/train");
       return;
     }
 
     if (!activePlanData) {
-      router.push("/portal/log");
+      router.push("/train/templates");
       return;
     }
 
     // Check if there's already an active workout - redirect to it (match quick-actions behavior)
     if (activeWorkout.data && !activeWorkout.data.completed) {
-      router.push(`/portal/log/workout/${activeWorkout.data.id}`);
+      router.push("/train/log");
       return;
     }
 
@@ -243,10 +241,8 @@ export function PortalHeader() {
       }
       return;
     } else {
-      // User wants to add exercises - redirect to plan editor
-      if (activePlanData) {
-        router.push(`/portal/plans/${activePlanData.id}`);
-      }
+      // Fresh-start flow: go to templates
+      router.push("/train/templates");
     }
   };
 
@@ -255,7 +251,7 @@ export function PortalHeader() {
     if (activePlanData && userId) {
       quickStart.mutate({ userId });
     } else {
-      router.push("/portal/log");
+      router.push("/train");
     }
   };
   return (

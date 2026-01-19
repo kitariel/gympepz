@@ -370,14 +370,14 @@ export function NavMain({
                   if (pathname === url) return true;
                   
                   // Special case: if URL is exactly "/portal", only match exactly "/portal"
-                  // Don't match "/portal/log", "/portal/plans", etc.
+                  // Don't match other nested routes (keep base exact).
                   if (url === "/portal" || url === "/") {
                     return pathname === url;
                   }
                   
                   // Prefix match for other routes (not root/base paths)
-                  // e.g., "/portal/log" should match "/portal/log/workout/123"
-                  // But NOT "/portal" matching "/portal/log"
+                  // e.g., "/train/log" should match "/train/log"
+                  // but base pages should not match nested paths.
                   if (pathname.startsWith(url + "/") || pathname.startsWith(url + "?")) {
                     return true;
                   }
@@ -528,8 +528,8 @@ export function NavMain({
                                     if (pathname === childUrl) return true;
                                     
                                     // Prefix match for nested routes
-                                    // e.g., "/portal/log" should match "/portal/log/workout/123"
-                                    // but "/portal" should NOT match "/portal/log"
+                                    // e.g., "/train/log" should match nested /train/log/...
+                                    // but base pages should not match other sections.
                                     if (childUrl !== "/" && 
                                         (pathname.startsWith(childUrl + "/") || 
                                          pathname.startsWith(childUrl + "?"))) {

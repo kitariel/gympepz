@@ -75,7 +75,7 @@ export type GuestWorkoutSessionPhase =
   | "logging";
 
 /**
- * Persisted state for /portal/start guest flow.
+ * Persisted state for the guest workout flow (legacy).
  * - `builder` is the "planned workout" (Notes/Sheets style)
  * - `activeLog` is only set after user presses "Start workout"
  */

@@ -82,7 +82,7 @@ export function GuestDashboard() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button asChild variant="outline" className="h-9">
-                <Link href="/portal/gyms">Browse gyms (read-only)</Link>
+                <Link href="/train">Start training (home-first)</Link>
               </Button>
               <Button asChild variant="outline" className="h-9">
                 <Link href="/login">Unlock AI planning</Link>
@@ -100,7 +100,7 @@ export function GuestDashboard() {
               </p>
             </div>
             <Button asChild className="h-9">
-              <Link href="/portal/start">
+              <Link href="/train/log">
                 {todaysDay && !todaysDay.isRestDay ? "Log today’s workout" : "Start workout"}
               </Link>
             </Button>
@@ -160,7 +160,7 @@ export function GuestDashboard() {
 
                       {isToday && !day.isRestDay ? (
                         <Button asChild size="sm" className="h-9 w-full">
-                          <Link href="/portal/start">Open today</Link>
+                          <Link href="/train/log">Open today</Link>
                         </Button>
                       ) : null}
                     </CardContent>
@@ -193,7 +193,7 @@ export function GuestDashboard() {
                   See strength and performance trends when workouts are saved.
                 </p>
                 <Button asChild variant="outline" size="sm" className="h-9 w-full">
-                  <Link href="/portal/log">View demo analytics</Link>
+                  <Link href="/train/history">View history</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -207,7 +207,7 @@ export function GuestDashboard() {
                   Browse nearby gyms. Save favorites with an account.
                 </p>
                 <Button asChild variant="outline" size="sm" className="h-9 w-full">
-                  <Link href="/portal/gyms">Browse gyms</Link>
+                  <Link href="/train/templates">Browse templates</Link>
                 </Button>
               </CardContent>
             </Card>

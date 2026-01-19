@@ -59,10 +59,7 @@ export function AddToPlanDialog({
       onOpenChange(false);
       setSelectedPlanId("");
       setSelectedDayId("");
-      // Optionally navigate to the plan
-      if (selectedPlanId) {
-        router.push(`/portal/plans/${selectedPlanId}`);
-      }
+      // Fresh-start: no plans pages; keep user in place.
     },
   });
 
@@ -114,7 +111,7 @@ export function AddToPlanDialog({
                 <Button
                   variant="link"
                   className="h-auto p-0 text-xs"
-                  onClick={() => router.push("/portal/workout-builder")}
+                  onClick={() => router.push("/train/templates")}
                 >
                   Create one now
                 </Button>
@@ -148,7 +145,7 @@ export function AddToPlanDialog({
                     variant="link"
                     className="h-auto p-0 text-xs"
                     onClick={() =>
-                      router.push(`/portal/plans/${selectedPlanId}`)
+                      router.push("/train/templates")
                     }
                   >
                     Add a day

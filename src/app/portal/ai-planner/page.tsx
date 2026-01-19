@@ -69,8 +69,8 @@ export default function AIPlannerPage() {
         experience={initialData?.experience ?? "Beginner"}
         equipment={initialData?.equipment ?? "Full Gym"}
         onPlanCreated={(id) => {
-          // Navigate to the plan detail page
-          router.push(`/portal/plans/${id}`);
+          // Fresh-start flow: send user to the offline-first overview
+          router.push("/train/overview");
         }}
       />
     </div>

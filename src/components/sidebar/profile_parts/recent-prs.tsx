@@ -40,7 +40,7 @@ export function RecentPRs({ prs }: RecentPRsProps) {
               variant="ghost"
               size="sm"
               className="h-auto p-0 text-[10px] text-primary hover:text-primary/80"
-              onClick={() => router.push("/portal/log?tab=analytics")}
+              onClick={() => router.push("/train/history")}
             >
               View All
               <ChevronRight className="h-3 w-3 ml-0.5" />
@@ -52,7 +52,7 @@ export function RecentPRs({ prs }: RecentPRsProps) {
               <div
                 key={pr.id}
                 className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 hover:from-yellow-100/70 hover:to-amber-100/70 dark:hover:from-yellow-950/30 dark:hover:to-amber-950/30 transition-all cursor-pointer group"
-                onClick={() => router.push("/portal/log?tab=analytics")}
+                onClick={() => router.push("/train/history")}
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold truncate text-foreground">

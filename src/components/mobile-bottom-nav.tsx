@@ -16,13 +16,13 @@ export function MobileBottomNav() {
     mode === "guest"
       ? [
           { label: "Home", href: "/portal", icon: Home },
-          { label: "Start", href: "/portal/start", icon: Play },
-          { label: "Logs", href: "/portal/log", icon: NotebookPen },
+          { label: "Train", href: "/train", icon: Play },
+          { label: "History", href: "/train/history", icon: NotebookPen },
         ]
       : [
           { label: "AI", href: "/portal/ai-planner", icon: Sparkles },
-          { label: "Plans", href: "/portal/plans", icon: Calendar },
-          { label: "Logs", href: "/portal/log", icon: NotebookPen },
+          { label: "Templates", href: "/train/templates", icon: Calendar },
+          { label: "History", href: "/train/history", icon: NotebookPen },
         ];
 
   return (
