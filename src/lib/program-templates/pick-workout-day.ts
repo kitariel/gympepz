@@ -15,7 +15,9 @@ export function pickWorkoutDayForWeekday(
 ): PickedWorkoutDay | null {
   if (!days.length) return null;
 
-  const sorted = days.slice().sort((a, b) => a.day - b.day);
+  // Prefer actual training days (skip rest days or empty days if present).
+  const candidates = days.filter((d) => !d.isRestDay && d.items.length > 0);
+  const sorted = (candidates.length ? candidates : days).slice().sort((a, b) => a.day - b.day);
 
   const exact = sorted.find((d) => d.day === today);
   if (exact) return { day: exact, isExactMatch: true };
