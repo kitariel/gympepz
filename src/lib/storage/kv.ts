@@ -23,11 +23,23 @@ export function setJSON<T>(key: string, value: T): void {
   const store = getStore();
   if (!store) return;
   store.setItem(key, JSON.stringify(value));
+
+  // Dispatch custom event for same-page updates (storage event doesn't fire in same window)
+  if (isBrowser()) {
+    console.log('[kv.setJSON] Dispatching workout-storage-changed for:', key);
+    window.dispatchEvent(new CustomEvent("workout-storage-changed", { detail: { key } }));
+  }
 }
 
 export function remove(key: string): void {
   const store = getStore();
   if (!store) return;
   store.removeItem(key);
+
+  // Dispatch custom event for same-page updates (storage event doesn't fire in same window)
+  if (isBrowser()) {
+    console.log('[kv.remove] Dispatching workout-storage-changed for:', key);
+    window.dispatchEvent(new CustomEvent("workout-storage-changed", { detail: { key } }));
+  }
 }
 

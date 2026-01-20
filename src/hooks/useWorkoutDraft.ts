@@ -102,6 +102,36 @@ export function useWorkoutDraft() {
     setDraft(normalizeDraft(workoutRepo.getActiveWorkoutDraft()));
     setHistory(workoutRepo.getHistory());
     setHydrated(true);
+
+    // Listen for storage changes from other components/tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      // Only update if the relevant keys changed
+      if (e.key === "gympepz.activeWorkoutDraft" || e.key === "gympepz.history") {
+        setDraft(normalizeDraft(workoutRepo.getActiveWorkoutDraft()));
+        setHistory(workoutRepo.getHistory());
+      }
+    };
+
+    // Listen for custom events from same-page updates
+    const handleCustomStorageChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ key: string }>;
+      const key = customEvent.detail?.key;
+
+      // Only update if the relevant keys changed
+      if (key === "gympepz.activeWorkoutDraft" || key === "gympepz.history") {
+        console.log('[useWorkoutDraft] Storage changed:', key);
+        setDraft(normalizeDraft(workoutRepo.getActiveWorkoutDraft()));
+        setHistory(workoutRepo.getHistory());
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("workout-storage-changed", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("workout-storage-changed", handleCustomStorageChange);
+    };
   }, []);
 
   const saveDraft = useCallback((next: ActiveWorkoutDraft) => {
