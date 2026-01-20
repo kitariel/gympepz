@@ -20,6 +20,24 @@ function formatDurationMs(ms: number): string {
   return `${min}m ${sec}s`;
 }
 
+function formatDateTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const date = new Intl.DateTimeFormat(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }).format(d);
+    const time = new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d);
+    return `${date} • ${time}`;
+  } catch {
+    return iso;
+  }
+}
+
 function parseNumberMaybe(v: string | null | undefined): number | null {
   if (!v) return null;
   const n = Number(String(v).trim());
@@ -96,6 +114,7 @@ function TrainSummaryPageInner() {
 
   const dayLabel =
     item.programDayLabel ?? (item.programDayIndex ? `Day ${item.programDayIndex}` : "Day");
+  const finishedAtIso = item.endedAt ?? item.updatedAt ?? item.date;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
@@ -104,6 +123,7 @@ function TrainSummaryPageInner() {
         <p className="text-sm text-muted-foreground">
           {item.programName} • {dayLabel}
         </p>
+        <p className="text-sm text-muted-foreground">Finished {formatDateTime(finishedAtIso)}</p>
       </div>
 
       <Card className="border-0 shadow-sm">

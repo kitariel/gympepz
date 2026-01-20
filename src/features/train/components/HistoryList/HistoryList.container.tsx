@@ -7,13 +7,19 @@ import { groupHistoryByProgram } from "@/features/train/domain/groupHistoryByPro
 import type { HistoryListGroupVM, HistoryListItemVM, HistoryListViewProps } from "./HistoryList.types";
 import { HistoryListView } from "./HistoryList.view";
 
-function formatDate(iso: string): string {
+function formatDateTime(iso: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    const d = new Date(iso);
+    const date = new Intl.DateTimeFormat(undefined, {
       weekday: "short",
       month: "short",
       day: "numeric",
-    }).format(new Date(iso));
+    }).format(d);
+    const time = new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d);
+    return `${date} • ${time}`;
   } catch {
     return iso;
   }
@@ -46,7 +52,7 @@ export function HistoryList() {
         const dayLabel = h.programDayLabel ?? (h.programDayIndex ? `Day ${h.programDayIndex}` : null);
         return {
           id: h.id,
-          dateText: formatDate(h.date),
+          dateText: formatDateTime(h.endedAt ?? h.date),
           dayLabel,
           statusText: h.completed ? "Completed" : "Saved",
           exercisesCount,
@@ -68,4 +74,3 @@ export function HistoryList() {
 
   return <HistoryListView {...viewProps} />;
 }
-
