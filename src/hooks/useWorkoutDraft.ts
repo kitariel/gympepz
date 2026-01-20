@@ -7,6 +7,7 @@ import {
   type ActiveWorkoutDraft,
   type WorkoutHistoryItem,
   type WorkoutSetEntry,
+  type RestTimerState,
 } from "@/lib/storage/workoutRepo";
 
 function nowIso(): string {
@@ -80,6 +81,10 @@ function normalizeDraft(raw: ActiveWorkoutDraft | null): ActiveWorkoutDraft | nu
       return normalized;
     }) ?? [];
 
+  // Normalize restTimer - default to idle if missing
+  const rawRestTimer = (raw as { restTimer?: RestTimerState }).restTimer;
+  const restTimer: RestTimerState = rawRestTimer ?? { status: "idle" };
+
   return {
     ...raw,
     templateId,
@@ -90,8 +95,15 @@ function normalizeDraft(raw: ActiveWorkoutDraft | null): ActiveWorkoutDraft | nu
     programDayLabel,
     exercises,
     sets,
+    restTimer,
   };
 }
+
+export type DraftStatus =
+  | "none"
+  | "active-current"
+  | "active-other"
+  | "completed-today";
 
 export function useWorkoutDraft() {
   const [draft, setDraft] = useState<ActiveWorkoutDraft | null>(null);
@@ -140,6 +152,11 @@ export function useWorkoutDraft() {
   }, []);
 
   const clearDraft = useCallback(() => {
+    workoutRepo.clearActiveWorkoutDraft();
+    setDraft(null);
+  }, []);
+
+  const discardDraft = useCallback(() => {
     workoutRepo.clearActiveWorkoutDraft();
     setDraft(null);
   }, []);
@@ -212,11 +229,75 @@ export function useWorkoutDraft() {
     return { total, completed };
   }, [history]);
 
+  const getDraftStatus = useCallback(
+    (programRef: { type: "template" | "custom"; id: string }, dayIndex: 1 | 2 | 3 | 4 | 5 | 6 | 7): DraftStatus => {
+      if (!draft) {
+        // Check if already completed today for this program/day
+        const todayKey = new Date().toISOString().split("T")[0];
+        const completedToday = history.some((h) => {
+          if (!h.completed) return false;
+          const historyDate = new Date(h.date).toISOString().split("T")[0];
+          if (historyDate !== todayKey) return false;
+          const historyProgramId = h.programRef?.id ?? h.templateId;
+          if (historyProgramId !== programRef.id) return false;
+          return h.programDayIndex === dayIndex;
+        });
+
+        if (completedToday) return "completed-today";
+        return "none";
+      }
+
+      // Check if draft matches this program/day
+      const draftProgramId = draft.programRef?.id ?? draft.templateId;
+      const matchesProgram = draftProgramId === programRef.id;
+      const matchesDay = draft.programDayIndex === dayIndex;
+
+      if (matchesProgram && matchesDay) return "active-current";
+      return "active-other";
+    },
+    [draft, history],
+  );
+
+  const isCompletedToday = useCallback(
+    (programRef: { type: "template" | "custom"; id: string }, dayIndex: 1 | 2 | 3 | 4 | 5 | 6 | 7): boolean => {
+      const todayKey = new Date().toISOString().split("T")[0];
+      return history.some((h) => {
+        if (!h.completed) return false;
+        const historyDate = new Date(h.date).toISOString().split("T")[0];
+        if (historyDate !== todayKey) return false;
+        const historyProgramId = h.programRef?.id ?? h.templateId;
+        if (historyProgramId !== programRef.id) return false;
+        return h.programDayIndex === dayIndex;
+      });
+    },
+    [history],
+  );
+
+  const startRestTimer = useCallback(
+    (durationMs: number) => {
+      if (!draft) return;
+      const restTimer: RestTimerState = {
+        status: "running",
+        startedAt: Date.now(),
+        durationMs,
+      };
+      saveDraft({ ...draft, restTimer, updatedAt: nowIso() });
+    },
+    [draft, saveDraft],
+  );
+
+  const stopRestTimer = useCallback(() => {
+    if (!draft) return;
+    const restTimer: RestTimerState = { status: "idle" };
+    saveDraft({ ...draft, restTimer, updatedAt: nowIso() });
+  }, [draft, saveDraft]);
+
   return {
     hydrated,
     draft,
     saveDraft,
     clearDraft,
+    discardDraft,
     addSet,
     updateSet,
     finish,
@@ -224,6 +305,10 @@ export function useWorkoutDraft() {
     refreshHistory,
     clearHistory,
     summary,
+    getDraftStatus,
+    isCompletedToday,
+    startRestTimer,
+    stopRestTimer,
   };
 }
 

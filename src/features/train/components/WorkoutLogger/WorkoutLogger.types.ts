@@ -1,10 +1,19 @@
-import type { WorkoutSetEntry } from "@/lib/storage/workoutRepo";
+import type { WorkoutSetEntry, RestTimerState } from "@/lib/storage/workoutRepo";
+
+export type PreviousSetData = {
+  weight: string | null;
+  reps: string;
+  relativeDate: string; // "3d ago", "1w ago"
+  programName: string;
+  isSameProgram: boolean;
+};
 
 export type WorkoutLoggerExerciseVM = {
   id: string;
   name: string;
   targetLabel: string | null;
   targetText: string | null;
+  previousPerformance: PreviousSetData | null;
   setRows: Array<{
     id: string;
     setNumber: number;
@@ -13,6 +22,7 @@ export type WorkoutLoggerExerciseVM = {
     weightValue: string;
     weightPlaceholder: string;
     completed: boolean;
+    canCopyLastSet: boolean;
   }>;
   canAddExtraSet: boolean;
 };
@@ -24,6 +34,16 @@ export type WorkoutLoggerViewProps =
   | {
       kind: "noProgram";
       onBrowseTemplates: () => void;
+    }
+  | {
+      kind: "draftConflict";
+      activeDraftProgram: string;
+      activeDraftDay: string | null;
+      requestedProgram: string;
+      requestedDay: string | null;
+      onResume: () => void;
+      onDiscard: () => void;
+      onCancel: () => void;
     }
   | {
       kind: "completedToday";
@@ -49,6 +69,7 @@ export type WorkoutLoggerViewProps =
       setsDone: number;
       setsTotal: number;
       exercises: WorkoutLoggerExerciseVM[];
+      restTimer: RestTimerState;
       onAddSet: (exerciseId: string) => void;
       onUpdateSet: (
         setId: string,
@@ -56,6 +77,10 @@ export type WorkoutLoggerViewProps =
           Pick<WorkoutSetEntry, "actualReps" | "actualWeight" | "completed">
         >,
       ) => void;
+      onCopyPrevious: (exerciseId: string, setId: string) => void;
+      onCopyLastSet: (exerciseId: string, setId: string) => void;
+      onStartRestTimer: (durationMs: number) => void;
+      onStopRestTimer: () => void;
       onFinish: () => void;
       finishDisabled: boolean;
       onSaveExit: () => void;

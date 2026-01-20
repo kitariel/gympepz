@@ -14,6 +14,11 @@ export type WorkoutSetEntry = {
   createdAt: string; // ISO
 };
 
+export type RestTimerState =
+  | { status: "idle" }
+  | { status: "running"; startedAt: number; durationMs: number }
+  | { status: "finished"; completedAt: number };
+
 export type ActiveWorkoutDraft = {
   id: string;
   /**
@@ -38,6 +43,7 @@ export type ActiveWorkoutDraft = {
   }>;
   sets: WorkoutSetEntry[];
   notes: string | null;
+  restTimer: RestTimerState;
   updatedAt: string; // ISO
 };
 

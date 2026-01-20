@@ -9,8 +9,11 @@ import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import {
   getDayNumberForToday,
   getEffectivePlanDay,
-  isWorkoutCompletedTodayForDay,
 } from "@/features/train/domain/workoutSessionState";
+import {
+  getPreviousPerformance,
+  formatRelativeDate,
+} from "@/features/train/domain/previousPerformance";
 import type {
   WorkoutLoggerExerciseVM,
   WorkoutLoggerViewProps,
@@ -38,11 +41,16 @@ export function WorkoutLogger() {
     draft,
     saveDraft,
     clearDraft,
+    discardDraft,
     addSet,
     updateSet,
     finish,
     history: workoutHistory,
     hydrated: draftHydrated,
+    getDraftStatus,
+    isCompletedToday,
+    startRestTimer,
+    stopRestTimer,
   } = useWorkoutDraft();
 
   const hydrated = programHydrated && draftHydrated && prefsHydrated;
@@ -126,6 +134,7 @@ export function WorkoutLogger() {
       exercises,
       sets,
       notes: null,
+      restTimer: { status: "idle" },
       updatedAt: nowIso(),
     });
   }, [
@@ -154,6 +163,61 @@ export function WorkoutLogger() {
     createDraftForDay();
   }, [autoStart, draft, createDraftForDay]);
 
+  const copyPrevious = useCallback(
+    (exerciseId: string, setId: string) => {
+      if (!draft) return;
+      const exercise = draft.exercises.find((e) => e.id === exerciseId);
+      if (!exercise) return;
+
+      const currentProgramId = currentProgramRef?.id ?? activeProgram?.templateId;
+      const previous = getPreviousPerformance({
+        exerciseName: exercise.name,
+        history: workoutHistory,
+        currentProgramId,
+      });
+
+      if (!previous) return;
+
+      const nextSets = draft.sets.map((s) =>
+        s.id === setId
+          ? {
+              ...s,
+              actualReps: previous.reps,
+              actualWeight: previous.weight,
+            }
+          : s,
+      );
+      saveDraft({ ...draft, sets: nextSets, updatedAt: nowIso() });
+    },
+    [draft, currentProgramRef, activeProgram, workoutHistory, saveDraft],
+  );
+
+  const copyLastSet = useCallback(
+    (exerciseId: string, setId: string) => {
+      if (!draft) return;
+
+      // Find all completed sets for this exercise in current session
+      const completedSets = draft.sets
+        .filter((s) => s.exerciseId === exerciseId && s.completed)
+        .sort((a, b) => b.setNumber - a.setNumber); // Sort descending to get last one first
+
+      const lastCompletedSet = completedSets[0];
+      if (!lastCompletedSet) return;
+
+      const nextSets = draft.sets.map((s) =>
+        s.id === setId
+          ? {
+              ...s,
+              actualReps: lastCompletedSet.actualReps,
+              actualWeight: lastCompletedSet.actualWeight,
+            }
+          : s,
+      );
+      saveDraft({ ...draft, sets: nextSets, updatedAt: nowIso() });
+    },
+    [draft, saveDraft],
+  );
+
   const viewProps: WorkoutLoggerViewProps = useMemo(() => {
     if (!hydrated) return { kind: "loading" };
 
@@ -164,23 +228,40 @@ export function WorkoutLogger() {
       };
     }
 
+    // Check for draft conflicts before showing other states
+    if (currentProgramRef && todaysPlan?.day) {
+      const status = getDraftStatus(currentProgramRef, todaysPlan.day);
+
+      if (status === "active-other" && draft) {
+        return {
+          kind: "draftConflict",
+          activeDraftProgram: draft.programName,
+          activeDraftDay: draft.programDayLabel ?? null,
+          requestedProgram: activeProgram.name,
+          requestedDay: todaysPlan.label ?? null,
+          onResume: () => router.push("/train/log"),
+          onDiscard: () => {
+            discardDraft();
+            createDraftForDay();
+          },
+          onCancel: () => router.push("/train/overview"),
+        };
+      }
+    }
+
     if (!draft) {
       const isRestDay = Boolean(
         todaysPlan?.isRestDay ??
           (todaysPlan ? todaysPlan.items.length === 0 : false),
       );
 
-      const programId = currentProgramRef?.id ?? activeProgram.templateId;
-      const isCompletedToday =
+      const completedTodayCheck =
         !isRestDay &&
         todaysPlan?.day != null &&
-        isWorkoutCompletedTodayForDay({
-          history: workoutHistory,
-          programId,
-          dayIndex: todaysPlan.day,
-        });
+        currentProgramRef != null &&
+        isCompletedToday(currentProgramRef, todaysPlan.day);
 
-      if (isCompletedToday) {
+      if (completedTodayCheck) {
         return {
           kind: "completedToday",
           programName: activeProgram.name,
@@ -236,20 +317,44 @@ export function WorkoutLogger() {
             ? `Target:${ex.targetSets != null ? ` ${ex.targetSets} sets` : ""}${ex.targetReps ? ` • ${ex.targetReps}` : ""}${ex.targetWeight ? ` • ${ex.targetWeight}` : ""}`
             : null;
 
+        const currentProgramId = currentProgramRef?.id ?? activeProgram.templateId;
+        const previousPerformance = getPreviousPerformance({
+          exerciseName: ex.name,
+          history: workoutHistory,
+          currentProgramId,
+        });
+
         return {
           id: ex.id,
           name: ex.name,
           targetLabel,
           targetText,
-          setRows: setsForExercise.map((set) => ({
-            id: set.id,
-            setNumber: set.setNumber,
-            repsValue: set.actualReps,
-            repsPlaceholder: set.targetReps ?? "reps / time",
-            weightValue: set.actualWeight ?? "",
-            weightPlaceholder: set.targetWeight ?? "weight / notes",
-            completed: set.completed,
-          })),
+          previousPerformance: previousPerformance
+            ? {
+                weight: previousPerformance.weight,
+                reps: previousPerformance.reps,
+                relativeDate: formatRelativeDate(previousPerformance.date),
+                programName: previousPerformance.programName,
+                isSameProgram: previousPerformance.isSameProgram,
+              }
+            : null,
+          setRows: setsForExercise.map((set, setIndex) => {
+            // Can copy last set if there's at least one completed set before this one
+            const completedSetsBefore = setsForExercise
+              .slice(0, setIndex)
+              .filter((s) => s.completed);
+
+            return {
+              id: set.id,
+              setNumber: set.setNumber,
+              repsValue: set.actualReps,
+              repsPlaceholder: set.targetReps ?? "reps / time",
+              weightValue: set.actualWeight ?? "",
+              weightPlaceholder: set.targetWeight ?? "weight / notes",
+              completed: set.completed,
+              canCopyLastSet: completedSetsBefore.length > 0,
+            };
+          }),
           canAddExtraSet: targetSets != null && count >= targetSets,
         };
       });
@@ -260,8 +365,13 @@ export function WorkoutLogger() {
       setsDone,
       setsTotal,
       exercises,
+      restTimer: draft.restTimer,
       onAddSet: (exerciseId) => addSet(exerciseId),
       onUpdateSet: (setId, patch) => updateSet(setId, patch),
+      onCopyPrevious: (exerciseId, setId) => copyPrevious(exerciseId, setId),
+      onCopyLastSet: (exerciseId, setId) => copyLastSet(exerciseId, setId),
+      onStartRestTimer: (durationMs) => startRestTimer(durationMs),
+      onStopRestTimer: () => stopRestTimer(),
       onFinish: () => {
         const id = finish();
         router.push(
@@ -282,8 +392,15 @@ export function WorkoutLogger() {
     todaysPlan,
     router,
     createDraftForDay,
+    discardDraft,
+    getDraftStatus,
+    isCompletedToday,
     addSet,
     updateSet,
+    copyPrevious,
+    copyLastSet,
+    startRestTimer,
+    stopRestTimer,
     finish,
   ]);
 
