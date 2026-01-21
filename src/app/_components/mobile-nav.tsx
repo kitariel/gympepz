@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { X, Menu } from "lucide-react";
+import { InstallPWAButton } from "@/components/pwa-install-button";
 
 interface MobileNavProps {
   session: unknown;
@@ -78,6 +79,9 @@ export function MobileNav({ session }: MobileNavProps) {
               >
                 Contact
               </Link>
+              <div className="py-2">
+                <InstallPWAButton />
+              </div>
               <div className="border-border border-t pt-4">
                 {session ? (
                   <Link href="/portal" onClick={closeMenu}>

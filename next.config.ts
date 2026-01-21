@@ -8,6 +8,9 @@ const withPWA = withPWAInit({
   reloadOnOnline: true,
   // Enable PWA in development for testing
   disable: false,
+  fallbacks: {
+    document: "/~offline",
+  },
   workboxOptions: {
     disableDevLogs: true,
   },

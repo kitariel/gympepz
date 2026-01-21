@@ -29,5 +29,20 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    screenshots: [
+      {
+        src: "/gym-mobile-screenshot.png",
+        sizes: "1170x2532",
+        type: "image/png",
+        form_factor: "narrow",
+      },
+      {
+        src: "/GymImage.png",
+        sizes: "1920x1080",
+        type: "image/png",
+        form_factor: "wide",
+      },
+    ],
+    categories: ["fitness", "health", "lifestyle"],
   };
 }

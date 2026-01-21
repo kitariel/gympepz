@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
-import type { HistoryListViewProps, HistoryListItemVM } from "./HistoryList.types";
+import type {
+  HistoryListViewProps,
+  HistoryListItemVM,
+} from "./HistoryList.types";
 
 function SwipeableHistoryItem({
   item,
@@ -30,8 +33,8 @@ function SwipeableHistoryItem({
       {/* Delete action background */}
       <div
         className={cn(
-          "absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-destructive transition-opacity",
-          showDeleteIndicator ? "opacity-100" : "opacity-0"
+          "bg-destructive absolute inset-y-0 right-0 flex w-24 items-center justify-center transition-opacity",
+          showDeleteIndicator ? "opacity-100" : "opacity-0",
         )}
       >
         <Trash2 className="h-5 w-5 text-white" />
@@ -54,7 +57,7 @@ function SwipeableHistoryItem({
                   "flex h-10 w-10 items-center justify-center rounded-xl",
                   item.statusText === "Completed"
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-muted text-muted-foreground"
+                    : "bg-muted text-muted-foreground",
                 )}
               >
                 {item.statusText === "Completed" ? (
@@ -65,7 +68,9 @@ function SwipeableHistoryItem({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium">{item.programName}</p>
+                  <p className="truncate text-sm font-medium">
+                    {item.programName}
+                  </p>
                   {item.dayLabel ? (
                     <Badge variant="outline" className="shrink-0 text-[10px]">
                       {item.dayLabel}
@@ -73,7 +78,8 @@ function SwipeableHistoryItem({
                   ) : null}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  {item.dateText} · {item.exercisesCount} exercises · {item.setsCount} sets
+                  {item.dateText} · {item.exercisesCount} exercises ·{" "}
+                  {item.setsCount} sets
                 </p>
               </div>
             </div>
@@ -81,7 +87,8 @@ function SwipeableHistoryItem({
               variant="secondary"
               className={cn(
                 "shrink-0 text-[10px]",
-                item.statusText === "Completed" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                item.statusText === "Completed" &&
+                  "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
               )}
             >
               {item.statusText}
@@ -123,7 +130,7 @@ export function HistoryListView(props: HistoryListViewProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Finish a workout and it'll show up here.
+              Finish a workout and it&apos;ll show up here.
             </p>
             <Button asChild className="touch-target h-10">
               <Link href={props.goToTrainHref}>Go to Train</Link>
@@ -144,9 +151,7 @@ export function HistoryListView(props: HistoryListViewProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">History</h1>
-          <p className="text-muted-foreground text-sm">
-            Swipe left to delete
-          </p>
+          <p className="text-muted-foreground text-sm">Swipe left to delete</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{props.sessionsText}</Badge>

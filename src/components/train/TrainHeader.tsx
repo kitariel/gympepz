@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { InstallPWAButton } from "@/components/pwa-install-button";
 
 function useIsOnline(): boolean {
   const [isOnline, setIsOnline] = useState(true);
@@ -57,6 +58,7 @@ export function TrainHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <InstallPWAButton />
           <Badge variant="secondary">Offline-first</Badge>
           {!isOnline ? <Badge variant="outline">Offline</Badge> : null}
         </div>

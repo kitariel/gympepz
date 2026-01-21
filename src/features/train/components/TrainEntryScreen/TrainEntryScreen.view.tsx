@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronRight, Dumbbell, FolderOpen, History, Play, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  Dumbbell,
+  FolderOpen,
+  History,
+  Play,
+  Sparkles,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +44,11 @@ function CtaButton({
   );
 }
 
-function HeroCard({ startCard }: { startCard: TrainEntryScreenViewProps["startCard"] }) {
+function HeroCard({
+  startCard,
+}: {
+  startCard: TrainEntryScreenViewProps["startCard"];
+}) {
   if (startCard.kind === "loading") {
     return (
       <Card elevation="hero" className="animate-pulse">
@@ -86,12 +97,12 @@ function HeroCard({ startCard }: { startCard: TrainEntryScreenViewProps["startCa
     return (
       <Card elevation="hero" className="animate-fade-up overflow-hidden">
         <CardContent className="relative space-y-4 p-6">
-          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/10" />
+          <div className="bg-primary/10 absolute -top-8 -right-8 h-32 w-32 rounded-full" />
           <div className="relative">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
-                  <Dumbbell className="h-6 w-6 text-primary" />
+                <div className="bg-primary/15 flex h-12 w-12 items-center justify-center rounded-xl">
+                  <Dumbbell className="text-primary h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-semibold">{startCard.programName}</p>
@@ -131,16 +142,16 @@ function HeroCard({ startCard }: { startCard: TrainEntryScreenViewProps["startCa
     return (
       <Card elevation="hero" className="animate-fade-up overflow-hidden">
         <CardContent className="relative space-y-4 p-6">
-          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-accent/10" />
+          <div className="bg-accent/10 absolute -top-8 -right-8 h-32 w-32 rounded-full" />
           <div className="relative">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15">
-                <Sparkles className="h-6 w-6 text-accent" />
+              <div className="bg-accent/15 flex h-12 w-12 items-center justify-center rounded-xl">
+                <Sparkles className="text-accent h-6 w-6" />
               </div>
               <div>
                 <p className="font-semibold">Profile ready</p>
                 <p className="text-muted-foreground text-sm">
-                  Let's find you a program
+                  Let&apos;s find you a program
                 </p>
               </div>
             </div>
@@ -161,11 +172,11 @@ function HeroCard({ startCard }: { startCard: TrainEntryScreenViewProps["startCa
   return (
     <Card elevation="hero" className="animate-fade-up overflow-hidden">
       <CardContent className="relative space-y-4 p-6">
-        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/10" />
+        <div className="bg-primary/10 absolute -top-8 -right-8 h-32 w-32 rounded-full" />
         <div className="relative">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
-              <Dumbbell className="h-6 w-6 text-primary" />
+            <div className="bg-primary/15 flex h-12 w-12 items-center justify-center rounded-xl">
+              <Dumbbell className="text-primary h-6 w-6" />
             </div>
             <div>
               <p className="font-semibold">Welcome to GymPepz</p>
@@ -225,7 +236,9 @@ function RecentWorkoutsSection({
                 <div>
                   <p className="text-sm font-medium">{w.dateText}</p>
                   {w.dayLabel ? (
-                    <p className="text-muted-foreground text-xs">{w.dayLabel}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {w.dayLabel}
+                    </p>
                   ) : null}
                 </div>
               </div>
@@ -261,7 +274,7 @@ function ProgramsSection({
         <ChevronRight
           className={cn(
             "text-muted-foreground h-4 w-4 transition-transform",
-            expanded && "rotate-90"
+            expanded && "rotate-90",
           )}
         />
       </button>
@@ -272,7 +285,7 @@ function ProgramsSection({
             <CardContent className="p-0">
               <Link
                 href={templatesHref}
-                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+                className="hover:bg-muted/50 flex items-center gap-3 p-3 transition-colors"
               >
                 <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
                   <Sparkles className="text-muted-foreground h-4 w-4" />
@@ -292,7 +305,7 @@ function ProgramsSection({
             <CardContent className="p-0">
               <Link
                 href={buildHref}
-                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+                className="hover:bg-muted/50 flex items-center gap-3 p-3 transition-colors"
               >
                 <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
                   <Dumbbell className="text-muted-foreground h-4 w-4" />
@@ -312,7 +325,7 @@ function ProgramsSection({
             <CardContent className="p-0">
               <Link
                 href={plansHref}
-                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+                className="hover:bg-muted/50 flex items-center gap-3 p-3 transition-colors"
               >
                 <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
                   <FolderOpen className="text-muted-foreground h-4 w-4" />
@@ -333,7 +346,7 @@ function ProgramsSection({
           <CardContent className="p-0">
             <Link
               href={templatesHref}
-              className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+              className="hover:bg-muted/50 flex items-center gap-3 p-3 transition-colors"
             >
               <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
                 <Sparkles className="text-muted-foreground h-4 w-4" />
@@ -357,7 +370,9 @@ export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Train</h1>
-          <p className="text-muted-foreground text-sm">Offline-first workouts</p>
+          <p className="text-muted-foreground text-sm">
+            Offline-first workouts
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{props.statusText}</Badge>

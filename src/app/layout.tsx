@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "GymPepz",
   },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 const geist = Geist({

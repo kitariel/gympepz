@@ -18,7 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { ProgramOverviewViewProps, ProgramOverviewSelectedDay } from "./ProgramOverview.types";
+import type {
+  ProgramOverviewViewProps,
+  ProgramOverviewSelectedDay,
+} from "./ProgramOverview.types";
 
 const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
@@ -45,7 +48,7 @@ function HorizontalWeekPicker({
           onClick={() => onSelectedDayChange("auto")}
           className={cn(
             "h-7 text-xs",
-            selectedDay === "auto" && "text-primary"
+            selectedDay === "auto" && "text-primary",
           )}
         >
           Auto
@@ -67,16 +70,18 @@ function HorizontalWeekPicker({
                   ? "bg-primary text-primary-foreground shadow-md"
                   : isRestDay
                     ? "bg-muted/50 text-muted-foreground"
-                    : "bg-muted hover:bg-muted/80"
+                    : "bg-muted hover:bg-muted/80",
               )}
             >
               <span className="text-[10px] font-medium uppercase">
                 {WEEKDAY_LABELS[idx]}
               </span>
-              <span className={cn(
-                "text-lg font-bold",
-                isRestDay && !isSelected && "text-muted-foreground/50"
-              )}>
+              <span
+                className={cn(
+                  "text-lg font-bold",
+                  isRestDay && !isSelected && "text-muted-foreground/50",
+                )}
+              >
                 {isRestDay ? "R" : day.dayIndex}
               </span>
             </button>
@@ -97,7 +102,7 @@ function DayDetailsAccordion({
   onSelectedDayChange: (value: ProgramOverviewSelectedDay) => void;
 }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(
-    selectedDay === "auto" ? null : selectedDay
+    selectedDay === "auto" ? null : selectedDay,
   );
 
   return (
@@ -119,25 +124,31 @@ function DayDetailsAccordion({
                 className="flex w-full items-center justify-between p-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold",
-                    isRestDay
-                      ? "bg-muted text-muted-foreground"
-                      : "bg-primary/10 text-primary"
-                  )}>
+                  <div
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold",
+                      isRestDay
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-primary/10 text-primary",
+                    )}
+                  >
                     {isRestDay ? "R" : day.dayIndex}
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-medium">{day.label}</p>
                     <p className="text-muted-foreground text-xs">
-                      {isRestDay ? "Rest day" : `${day.exercisesCount} exercises`}
+                      {isRestDay
+                        ? "Rest day"
+                        : `${day.exercisesCount} exercises`}
                     </p>
                   </div>
                 </div>
-                <ChevronDown className={cn(
-                  "text-muted-foreground h-4 w-4 transition-transform",
-                  isExpanded && "rotate-180"
-                )} />
+                <ChevronDown
+                  className={cn(
+                    "text-muted-foreground h-4 w-4 transition-transform",
+                    isExpanded && "rotate-180",
+                  )}
+                />
               </button>
             </CardContent>
           </Card>
@@ -163,7 +174,9 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">No active program</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            No active program
+          </h1>
           <p className="text-muted-foreground">
             Select a template to generate your program.
           </p>
@@ -216,7 +229,7 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
       {picked ? (
         <Card elevation="hero" className="animate-fade-up overflow-hidden">
           <CardContent className="relative space-y-4 p-5">
-            <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/10" />
+            <div className="bg-primary/10 absolute -top-8 -right-8 h-32 w-32 rounded-full" />
             <div className="relative">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -228,7 +241,7 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
                     {picked.items.length} exercises
                   </p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-lg font-bold text-primary">
+                <div className="bg-primary/15 text-primary flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold">
                   {picked.dayIndex}
                 </div>
               </div>
@@ -292,8 +305,8 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Workout already completed</AlertDialogTitle>
             <AlertDialogDescription>
-              You've already finished a workout today. It's usually better to
-              rest and recover, but you can repeat if you feel good.
+              You&apos;ve already finished a workout today. It&apos;s usually
+              better to rest and recover, but you can repeat if you feel good.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

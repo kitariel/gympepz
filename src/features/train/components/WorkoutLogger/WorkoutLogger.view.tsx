@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, Pause, Play, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Pause,
+  Play,
+  AlertTriangle,
+  CheckCircle2,
+  Trash2,
+} from "lucide-react";
 
 import {
   AlertDialog,
@@ -19,7 +28,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { SwipeableSetRow } from "../SwipeableSetRow";
-import type { WorkoutLoggerViewProps, WorkoutLoggerExerciseVM } from "./WorkoutLogger.types";
+import type {
+  WorkoutLoggerViewProps,
+  WorkoutLoggerExerciseVM,
+} from "./WorkoutLogger.types";
 import type { RestTimerState } from "@/lib/storage/workoutRepo";
 
 type FinishDialogState = "closed" | "no-progress" | "partial" | "complete";
@@ -46,7 +58,10 @@ function RestTimerCompact({
 
     const updateRemaining = () => {
       const elapsed = Date.now() - restTimer.startedAt;
-      const remaining = Math.max(0, Math.ceil((restTimer.durationMs - elapsed) / 1000));
+      const remaining = Math.max(
+        0,
+        Math.ceil((restTimer.durationMs - elapsed) / 1000),
+      );
       setRemainingSeconds(remaining);
     };
 
@@ -64,7 +79,7 @@ function RestTimerCompact({
         onClick={onStopRestTimer}
         className={cn(
           "gap-2 tabular-nums",
-          isFinished && "animate-pulse bg-emerald-500 hover:bg-emerald-600"
+          isFinished && "animate-pulse bg-emerald-500 hover:bg-emerald-600",
         )}
       >
         <Clock className="h-4 w-4" />
@@ -123,8 +138,8 @@ function ExerciseNavigator({
             className={cn(
               "h-2 rounded-full transition-all",
               idx === currentIndex
-                ? "w-6 bg-primary"
-                : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                ? "bg-primary w-6"
+                : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2",
             )}
             aria-label={`Go to exercise ${idx + 1}`}
           />
@@ -153,7 +168,14 @@ function SingleExerciseView({
   onCopyLastSet,
 }: {
   exercise: WorkoutLoggerExerciseVM;
-  onUpdateSet: (setId: string, patch: { actualReps?: string; actualWeight?: string | null; completed?: boolean }) => void;
+  onUpdateSet: (
+    setId: string,
+    patch: {
+      actualReps?: string;
+      actualWeight?: string | null;
+      completed?: boolean;
+    },
+  ) => void;
   onAddSet: (exerciseId: string) => void;
   onCopyPrevious: (exerciseId: string, setId: string) => void;
   onCopyLastSet: (exerciseId: string, setId: string) => void;
@@ -214,9 +236,15 @@ function SingleExerciseView({
               weightValue={set.weightValue}
               weightPlaceholder={set.weightPlaceholder}
               completed={set.completed}
-              onUpdateReps={(value) => onUpdateSet(set.id, { actualReps: value })}
-              onUpdateWeight={(value) => onUpdateSet(set.id, { actualWeight: value })}
-              onToggleComplete={(completed) => onUpdateSet(set.id, { completed })}
+              onUpdateReps={(value) =>
+                onUpdateSet(set.id, { actualReps: value })
+              }
+              onUpdateWeight={(value) =>
+                onUpdateSet(set.id, { actualWeight: value })
+              }
+              onToggleComplete={(completed) =>
+                onUpdateSet(set.id, { completed })
+              }
               onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
             />
 
@@ -289,7 +317,7 @@ function FloatingActionBar({
   finishDisabled: boolean;
 }) {
   return (
-    <div className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed right-0 bottom-0 left-0 z-40 border-t px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3 backdrop-blur md:bottom-20">
+    <div className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed right-0 bottom-0 left-0 z-40 border-t px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] backdrop-blur md:bottom-20">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
         <RestTimerCompact
           restTimer={restTimer}
@@ -298,7 +326,12 @@ function FloatingActionBar({
         />
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onSaveExit} className="h-9">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSaveExit}
+            className="h-9"
+          >
             <Pause className="mr-1.5 h-4 w-4" />
             Save
           </Button>
@@ -332,7 +365,8 @@ function FinishConfirmationDialog({
   onFinish: () => void;
   onDiscard: () => void;
 }) {
-  const progressPercent = setsTotal > 0 ? Math.round((setsDone / setsTotal) * 100) : 0;
+  const progressPercent =
+    setsTotal > 0 ? Math.round((setsDone / setsTotal) * 100) : 0;
 
   if (state === "no-progress") {
     return (
@@ -342,9 +376,12 @@ function FinishConfirmationDialog({
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
-            <AlertDialogTitle className="text-center">No sets completed</AlertDialogTitle>
+            <AlertDialogTitle className="text-center">
+              No sets completed
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              You haven't logged any sets yet. Do you want to discard this workout?
+              You haven&apos;t logged any sets yet. Do you want to discard this
+              workout?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
@@ -372,10 +409,15 @@ function FinishConfirmationDialog({
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
-            <AlertDialogTitle className="text-center">Finish early?</AlertDialogTitle>
+            <AlertDialogTitle className="text-center">
+              Finish early?
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-center">
-                <p>You've completed {setsDone} of {setsTotal} sets ({progressPercent}%).</p>
+                <p>
+                  You&apos;ve completed {setsDone} of {setsTotal} sets (
+                  {progressPercent}%).
+                </p>
                 <div className="mx-auto max-w-[200px]">
                   <Progress value={progressPercent} className="h-2" />
                 </div>
@@ -410,10 +452,12 @@ function FinishConfirmationDialog({
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
               <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <AlertDialogTitle className="text-center">Great work!</AlertDialogTitle>
+            <AlertDialogTitle className="text-center">
+              Great work!
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-center">
-                <p>You've completed all {setsTotal} sets!</p>
+                <p>You&lsquo;ve completed all {setsTotal} sets!</p>
                 <div className="mx-auto max-w-[200px]">
                   <Progress value={100} className="h-2" />
                 </div>
@@ -445,13 +489,16 @@ function FinishConfirmationDialog({
 
 export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [finishDialogState, setFinishDialogState] = useState<FinishDialogState>("closed");
+  const [finishDialogState, setFinishDialogState] =
+    useState<FinishDialogState>("closed");
 
   // Reset index when exercises change
   useEffect(() => {
     if (props.kind === "logging") {
       setCurrentExerciseIndex((prev) =>
-        prev >= props.exercises.length ? Math.max(0, props.exercises.length - 1) : prev
+        prev >= props.exercises.length
+          ? Math.max(0, props.exercises.length - 1)
+          : prev,
       );
     }
   }, [props]);
@@ -484,10 +531,17 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">No active program</h1>
-          <p className="text-muted-foreground">Select a template to get started.</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            No active program
+          </h1>
+          <p className="text-muted-foreground">
+            Select a template to get started.
+          </p>
         </div>
-        <Button className="touch-target h-12 w-full sm:w-auto" onClick={props.onBrowseTemplates}>
+        <Button
+          className="touch-target h-12 w-full sm:w-auto"
+          onClick={props.onBrowseTemplates}
+        >
           Browse templates
         </Button>
       </div>
@@ -499,7 +553,9 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
       <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Active workout</h1>
-          <p className="text-muted-foreground">You have a workout in progress.</p>
+          <p className="text-muted-foreground">
+            You have a workout in progress.
+          </p>
         </div>
 
         <Card elevation="hero">
@@ -515,7 +571,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           <CardContent className="p-5">
             <p className="text-muted-foreground text-sm">
               Trying to start:{" "}
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 {props.requestedProgram}
                 {props.requestedDay ? ` - ${props.requestedDay}` : ""}
               </span>
@@ -527,11 +583,19 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           <Button className="touch-target h-12 flex-1" onClick={props.onResume}>
             Resume active
           </Button>
-          <Button variant="destructive" className="touch-target h-12 flex-1" onClick={props.onDiscard}>
+          <Button
+            variant="destructive"
+            className="touch-target h-12 flex-1"
+            onClick={props.onDiscard}
+          >
             Discard & start new
           </Button>
         </div>
-        <Button variant="ghost" className="h-10 w-full" onClick={props.onCancel}>
+        <Button
+          variant="ghost"
+          className="h-10 w-full"
+          onClick={props.onCancel}
+        >
           Cancel
         </Button>
       </div>
@@ -544,7 +608,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Great work!</h1>
           <p className="text-muted-foreground">
-            You've completed today's workout.
+            You&apos;ve completed today&apos;s workout.
           </p>
         </div>
 
@@ -558,14 +622,25 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         </Card>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button className="touch-target h-12 flex-1" onClick={props.onTakeRestDay}>
+          <Button
+            className="touch-target h-12 flex-1"
+            onClick={props.onTakeRestDay}
+          >
             Take a rest day
           </Button>
-          <Button variant="outline" className="touch-target h-12 flex-1" onClick={props.onRepeat}>
+          <Button
+            variant="outline"
+            className="touch-target h-12 flex-1"
+            onClick={props.onRepeat}
+          >
             Repeat workout
           </Button>
         </div>
-        <Button variant="ghost" className="h-10 w-full" onClick={props.onBackToOverview}>
+        <Button
+          variant="ghost"
+          className="h-10 w-full"
+          onClick={props.onBackToOverview}
+        >
           Back to overview
         </Button>
       </div>
@@ -583,10 +658,17 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button className="touch-target h-12 flex-1" onClick={props.onBackToOverview}>
+            <Button
+              className="touch-target h-12 flex-1"
+              onClick={props.onBackToOverview}
+            >
               View overview
             </Button>
-            <Button variant="outline" className="touch-target h-12 flex-1" onClick={props.onUseAutoDay}>
+            <Button
+              variant="outline"
+              className="touch-target h-12 flex-1"
+              onClick={props.onUseAutoDay}
+            >
               Change day
             </Button>
           </div>
@@ -620,7 +702,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const progressPercent = setsTotal > 0 ? (setsDone / setsTotal) * 100 : 0;
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 p-4 pb-36 pt-2">
+    <div className="mx-auto w-full max-w-3xl space-y-4 p-4 pt-2 pb-36">
       {/* Compact header with progress */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">

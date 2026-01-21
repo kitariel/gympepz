@@ -33,8 +33,10 @@ export default function ContactSection() {
         body: formData,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await response.json();
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (data.success) {
         setSubmitStatus("success");
         (e.target as HTMLFormElement).reset();
@@ -60,7 +62,7 @@ export default function ContactSection() {
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Get in touch
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground">
+              <p className="text-muted-foreground mt-4 text-lg">
                 Have questions or feedback? We&apos;d love to hear from you.
                 Send us a message and we&apos;ll respond as soon as possible.
               </p>
@@ -73,7 +75,7 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Email us</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     support@gympepz.com
                   </p>
                 </div>
@@ -85,7 +87,7 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Quick response</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     We typically respond within 24 hours
                   </p>
                 </div>
@@ -97,7 +99,7 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Beta feedback</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Your feedback helps us improve GymPepz
                   </p>
                 </div>
@@ -106,7 +108,7 @@ export default function ContactSection() {
           </div>
 
           {/* Right Column - Form */}
-          <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
+          <div className="bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
@@ -120,7 +122,7 @@ export default function ContactSection() {
                   id="name"
                   name="name"
                   required
-                  className="w-full rounded-lg border bg-background px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="bg-background w-full rounded-lg border px-4 py-3 text-sm transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   placeholder="Your name"
                 />
               </div>
@@ -137,7 +139,7 @@ export default function ContactSection() {
                   id="email"
                   name="email"
                   required
-                  className="w-full rounded-lg border bg-background px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="bg-background w-full rounded-lg border px-4 py-3 text-sm transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -154,7 +156,7 @@ export default function ContactSection() {
                   name="message"
                   required
                   rows={5}
-                  className="w-full rounded-lg border bg-background px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="bg-background w-full rounded-lg border px-4 py-3 text-sm transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   placeholder="Tell us what's on your mind..."
                 />
               </div>
