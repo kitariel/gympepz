@@ -112,51 +112,51 @@
    DARK MODE (BLUE/EMERALD PERFORMANCE)
 -------------------------------- */
 .dark {
-  /* Base - Deep Slate/Blue */
-  --background: #0f172a; /* Slate 900 */
-  --foreground: #ffffff;
+  /* Base - Balanced warmth with depth */
+  --background: #1a1f2e; /* Warmer dark blue (lighter than #0f172a) */
+  --foreground: #f8fafc; /* Softer white (easier on eyes) */
 
-  /* Cards - Subtle separation */
-  --card: #1e293b; /* Slate 800 */
-  --card-foreground: #ffffff;
+  /* Cards - Better separation with blue tint */
+  --card: #252f43; /* Warmer slate with subtle blue */
+  --card-foreground: #f8fafc;
 
   /* Popovers */
-  --popover: #1e293b;
-  --popover-foreground: #ffffff;
+  --popover: #252f43;
+  --popover-foreground: #f8fafc;
 
   /* Brand Primary - Vibrant Blue */
   --primary: #3b82f6; /* Blue 500 */
   --primary-foreground: #ffffff;
 
-  /* Secondary */
-  --secondary: #1e293b; /* Slate 800 */
-  --secondary-foreground: #ffffff;
+  /* Secondary - Enhanced depth */
+  --secondary: #2d3548; /* Lighter, warmer */
+  --secondary-foreground: #f8fafc;
 
-  /* Muted */
-  --muted: #1e293b; /* Slate 800 */
-  --muted-foreground: #94a3b8; /* Slate 400 */
+  /* Muted - Warmer grays */
+  --muted: #2d3548;
+  --muted-foreground: #a0aec0; /* Warmer gray-blue */
 
   /* Accent - Emerald */
   --accent: #10b981; /* Emerald 500 */
   --accent-foreground: #ffffff;
 
-  /* Borders & Inputs */
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.1);
+  /* Borders & Inputs - More visible */
+  --border: rgba(255, 255, 255, 0.15); /* Increased from 0.1 */
+  --input: rgba(255, 255, 255, 0.15);
   --ring: #3b82f6;
 
   /* Destructive */
   --destructive: #7f1d1d;
   --destructive-foreground: #ffffff;
 
-  /* Sidebar */
-  --sidebar: #0f172a;
-  --sidebar-foreground: #ffffff;
+  /* Sidebar - Consistent warmth */
+  --sidebar: #1a1f2e;
+  --sidebar-foreground: #f8fafc;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-accent: #252f43;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: rgba(255, 255, 255, 0.15);
 }
 
 /* -------------------------------

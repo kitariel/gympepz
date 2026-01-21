@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Dumbbell, History, BarChart3 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,11 +13,34 @@ type HeroProps = {
 
 export default function Hero({ ctaHref }: HeroProps) {
   return (
-    <header className="w-full">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+    <header className="relative w-full overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/GymImage.png"
+          alt="Gym background"
+          fill
+          className="object-cover"
+          priority
+          quality={90}
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-background/5 via-background/70 to-background/30" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-          <div className="flex flex-col justify-center space-y-8">
-            <div className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col justify-center space-y-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="space-y-4"
+            >
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 Train smarter.
                 <br />
@@ -24,9 +50,14 @@ export default function Hero({ ctaHref }: HeroProps) {
                 The workout tracker that remembers your last set, copies your
                 weights, and times your rest—so you can focus on lifting.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col gap-4 sm:flex-row"
+            >
               <Button asChild size="lg" className="h-14 px-8 text-base font-medium">
                 <Link href={ctaHref}>Start Training Free</Link>
               </Button>
@@ -38,10 +69,15 @@ export default function Hero({ ctaHref }: HeroProps) {
               >
                 <Link href="#features">See Features</Link>
               </Button>
-            </div>
+            </motion.div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="flex items-start gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="grid gap-4 sm:grid-cols-3"
+            >
+              <div className="flex items-start gap-3 rounded-lg bg-linear-to-b from-neutral-800 to-transparent p-4">
                 <div className="rounded-lg bg-emerald-500/10 p-2">
                   <Dumbbell className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -53,7 +89,7 @@ export default function Hero({ ctaHref }: HeroProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 rounded-lg bg-linear-to-b from-neutral-800 to-transparent p-4">
                 <div className="rounded-lg bg-emerald-500/10 p-2">
                   <History className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -65,7 +101,7 @@ export default function Hero({ ctaHref }: HeroProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 rounded-lg bg-linear-to-b from-neutral-800 to-transparent p-4">
                 <div className="rounded-lg bg-emerald-500/10 p-2">
                   <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -76,11 +112,21 @@ export default function Hero({ ctaHref }: HeroProps) {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="relative lg:justify-self-end">
-            <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-3xl border-2 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative lg:justify-self-end"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="relative mx-auto w-full max-w-sm overflow-hidden rounded-3xl border-2 shadow-2xl"
+            >
               <Image
                 src="/images/placeholder-mobile.png"
                 alt="GymPepz workout logging interface"
@@ -90,11 +136,10 @@ export default function Hero({ ctaHref }: HeroProps) {
                 priority
                 className="h-auto w-full"
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </header>
   );
 }
-
