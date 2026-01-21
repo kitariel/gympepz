@@ -82,6 +82,7 @@ export type WorkoutLoggerViewProps =
       onStartRestTimer: (durationMs: number) => void;
       onStopRestTimer: () => void;
       onFinish: () => void;
+      onDiscardWorkout: () => void;
       finishDisabled: boolean;
       onSaveExit: () => void;
     };

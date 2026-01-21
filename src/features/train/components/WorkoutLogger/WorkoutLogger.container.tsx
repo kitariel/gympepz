@@ -380,6 +380,10 @@ export function WorkoutLogger() {
             : "/train/history",
         );
       },
+      onDiscardWorkout: () => {
+        discardDraft();
+        router.push("/train");
+      },
       finishDisabled: draft.sets.length === 0,
       onSaveExit: () => router.push("/train"),
     };

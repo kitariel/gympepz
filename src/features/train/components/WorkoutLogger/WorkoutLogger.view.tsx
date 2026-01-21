@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Pause, Play, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { SwipeableSetRow } from "../SwipeableSetRow";
 import type { WorkoutLoggerViewProps, WorkoutLoggerExerciseVM } from "./WorkoutLogger.types";
 import type { RestTimerState } from "@/lib/storage/workoutRepo";
+
+type FinishDialogState = "closed" | "no-progress" | "partial" | "complete";
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -305,8 +317,135 @@ function FloatingActionBar({
   );
 }
 
+function FinishConfirmationDialog({
+  state,
+  setsDone,
+  setsTotal,
+  onClose,
+  onFinish,
+  onDiscard,
+}: {
+  state: FinishDialogState;
+  setsDone: number;
+  setsTotal: number;
+  onClose: () => void;
+  onFinish: () => void;
+  onDiscard: () => void;
+}) {
+  const progressPercent = setsTotal > 0 ? Math.round((setsDone / setsTotal) * 100) : 0;
+
+  if (state === "no-progress") {
+    return (
+      <AlertDialog open onOpenChange={(open) => !open && onClose()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <AlertDialogTitle className="text-center">No sets completed</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              You haven't logged any sets yet. Do you want to discard this workout?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel onClick={onClose} className="mt-0">
+              Keep logging
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDiscard}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Discard workout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  if (state === "partial") {
+    return (
+      <AlertDialog open onOpenChange={(open) => !open && onClose()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <AlertDialogTitle className="text-center">Finish early?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-center">
+                <p>You've completed {setsDone} of {setsTotal} sets ({progressPercent}%).</p>
+                <div className="mx-auto max-w-[200px]">
+                  <Progress value={progressPercent} className="h-2" />
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Your progress will be saved to history.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel onClick={onClose} className="mt-0">
+              Keep going
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onFinish}
+              className="bg-emerald-500 hover:bg-emerald-600"
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Finish anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  if (state === "complete") {
+    return (
+      <AlertDialog open onOpenChange={(open) => !open && onClose()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <AlertDialogTitle className="text-center">Great work!</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-center">
+                <p>You've completed all {setsTotal} sets!</p>
+                <div className="mx-auto max-w-[200px]">
+                  <Progress value={100} className="h-2" />
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Ready to finish and save your workout?
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel onClick={onClose} className="mt-0">
+              Add more sets
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onFinish}
+              className="bg-emerald-500 hover:bg-emerald-600"
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Finish workout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  return null;
+}
+
 export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [finishDialogState, setFinishDialogState] = useState<FinishDialogState>("closed");
 
   // Reset index when exercises change
   useEffect(() => {
@@ -316,6 +455,21 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
       );
     }
   }, [props]);
+
+  // Handle finish button click - determine which dialog to show
+  const handleFinishClick = () => {
+    if (props.kind !== "logging") return;
+
+    const { setsDone, setsTotal } = props;
+
+    if (setsDone === 0) {
+      setFinishDialogState("no-progress");
+    } else if (setsDone < setsTotal) {
+      setFinishDialogState("partial");
+    } else {
+      setFinishDialogState("complete");
+    }
+  };
 
   if (props.kind === "loading") {
     return (
@@ -505,8 +659,24 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         onStartRestTimer={props.onStartRestTimer}
         onStopRestTimer={props.onStopRestTimer}
         onSaveExit={props.onSaveExit}
-        onFinish={props.onFinish}
+        onFinish={handleFinishClick}
         finishDisabled={props.finishDisabled}
+      />
+
+      {/* Finish confirmation dialog */}
+      <FinishConfirmationDialog
+        state={finishDialogState}
+        setsDone={setsDone}
+        setsTotal={setsTotal}
+        onClose={() => setFinishDialogState("closed")}
+        onFinish={() => {
+          setFinishDialogState("closed");
+          props.onFinish();
+        }}
+        onDiscard={() => {
+          setFinishDialogState("closed");
+          props.onDiscardWorkout();
+        }}
       />
     </div>
   );
