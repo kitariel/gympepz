@@ -5,19 +5,50 @@ import { useMemo } from "react";
 import { useTrainingProfile } from "@/hooks/useTrainingProfile";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
-import type { TrainEntryScreenViewProps, TrainEntryStartCard } from "./TrainEntryScreen.types";
+import { useTrainPrefs } from "@/hooks/useTrainPrefs";
+import {
+  getDayNumberForToday,
+  getEffectivePlanDay,
+} from "@/features/train/domain/workoutSessionState";
+import type {
+  TrainEntryScreenViewProps,
+  TrainEntryStartCard,
+  RecentWorkoutItem,
+} from "./TrainEntryScreen.types";
 import { TrainEntryScreenView } from "./TrainEntryScreen.view";
+
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 export function TrainEntryScreen() {
   const { profile, hydrated: profileHydrated } = useTrainingProfile();
   const { activeProgram, hydrated: programHydrated } = useActiveProgram();
-  const { draft, hydrated: workoutHydrated, summary } = useWorkoutDraft();
+  const { draft, hydrated: workoutHydrated, summary, history } = useWorkoutDraft();
+  const { selectedWorkoutDay, hydrated: prefsHydrated } = useTrainPrefs();
 
-  const hydrated = profileHydrated && programHydrated && workoutHydrated;
+  const hydrated = profileHydrated && programHydrated && workoutHydrated && prefsHydrated;
 
   const hasProfile = Boolean(profile);
   const hasProgram = Boolean(activeProgram);
   const hasDraft = Boolean(draft);
+
+  const today = useMemo(() => getDayNumberForToday(), []);
+  const todaysPlan = useMemo(() => {
+    if (!activeProgram) return null;
+    return getEffectivePlanDay({
+      days: activeProgram.plan.days,
+      selectedWorkoutDay,
+      today,
+    });
+  }, [activeProgram, today, selectedWorkoutDay]);
 
   const statusText = useMemo(() => {
     if (!hydrated) return "Loading…";
@@ -29,18 +60,26 @@ export function TrainEntryScreen() {
 
   const startCard: TrainEntryStartCard = useMemo(() => {
     if (!hydrated) return { kind: "loading" };
-    if (hasDraft) {
+    if (hasDraft && draft) {
       return {
         kind: "draft",
         cta: { label: "Resume workout", href: "/train/log", variant: "default" },
+        programName: draft.programName,
+        dayLabel: draft.programDayLabel ?? null,
       };
     }
     if (hasProgram && activeProgram) {
+      const dayLabel = todaysPlan?.label ?? null;
+      const exerciseCount = todaysPlan?.items.length ?? 0;
+      const setsProgress = exerciseCount > 0 ? `${exerciseCount} exercises` : null;
+
       return {
         kind: "program",
-        primary: { label: "Start today’s workout", href: "/train/log", variant: "default" },
-        secondary: { label: "View program overview", href: "/train/overview", variant: "outline" },
+        primary: { label: "Start today's workout", href: "/train/log", variant: "default" },
+        secondary: { label: "View overview", href: "/train/overview", variant: "outline" },
         programName: activeProgram.name,
+        dayLabel,
+        setsProgress,
       };
     }
     if (hasProfile) {
@@ -54,12 +93,25 @@ export function TrainEntryScreen() {
       primary: { label: "Quick onboarding", href: "/train/onboarding", variant: "default" },
       secondary: { label: "Browse templates", href: "/train/templates", variant: "outline" },
     };
-  }, [hydrated, hasDraft, hasProgram, activeProgram, hasProfile]);
+  }, [hydrated, hasDraft, draft, hasProgram, activeProgram, hasProfile, todaysPlan]);
+
+  const recentWorkouts: RecentWorkoutItem[] = useMemo(() => {
+    if (!hydrated) return [];
+    return history
+      .slice(0, 3)
+      .map((h) => ({
+        id: h.id,
+        dateText: formatRelativeDate(h.date),
+        dayLabel: h.programDayLabel ?? null,
+        setsCount: h.sets.length,
+      }));
+  }, [hydrated, history]);
 
   const viewProps: TrainEntryScreenViewProps = {
     statusText,
     sessionsText: `${summary.total} sessions`,
     startCard,
+    recentWorkouts,
     historyHref: "/train/history",
     templatesHref: "/train/templates",
     buildHref: "/train/build",
@@ -68,4 +120,3 @@ export function TrainEntryScreen() {
 
   return <TrainEntryScreenView {...viewProps} />;
 }
-

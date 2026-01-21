@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { ChevronRight, Dumbbell, FolderOpen, History, Play, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { TrainEntryScreenViewProps } from "./TrainEntryScreen.types";
 
 function CtaButton({
@@ -12,32 +15,349 @@ function CtaButton({
   label,
   variant,
   className,
+  icon,
 }: {
   href: string;
   label: string;
   variant?: "default" | "outline" | "ghost";
   className?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <Button
       asChild
       variant={variant === "default" || variant == null ? undefined : variant}
-      className={className}
+      className={cn("touch-target h-12", className)}
     >
-      <Link href={href}>{label}</Link>
+      <Link href={href}>
+        {icon}
+        {label}
+      </Link>
     </Button>
+  );
+}
+
+function HeroCard({ startCard }: { startCard: TrainEntryScreenViewProps["startCard"] }) {
+  if (startCard.kind === "loading") {
+    return (
+      <Card elevation="hero" className="animate-pulse">
+        <CardContent className="space-y-4 p-6">
+          <div className="bg-muted h-6 w-32 rounded" />
+          <div className="bg-muted h-10 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (startCard.kind === "draft") {
+    return (
+      <Card elevation="hero" className="animate-fade-up overflow-hidden">
+        <CardContent className="relative space-y-4 p-6">
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-emerald-500/10" />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+                <Play className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  Workout in progress
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {startCard.programName}
+                  {startCard.dayLabel ? ` - ${startCard.dayLabel}` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+          <CtaButton
+            href={startCard.cta.href}
+            label={startCard.cta.label}
+            variant={startCard.cta.variant}
+            className="w-full bg-emerald-500 text-lg font-semibold hover:bg-emerald-600"
+            icon={<Play className="mr-2 h-5 w-5" />}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (startCard.kind === "program") {
+    return (
+      <Card elevation="hero" className="animate-fade-up overflow-hidden">
+        <CardContent className="relative space-y-4 p-6">
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/10" />
+          <div className="relative">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
+                  <Dumbbell className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">{startCard.programName}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {startCard.dayLabel ?? "Today's workout"}
+                  </p>
+                </div>
+              </div>
+              {startCard.setsProgress ? (
+                <Badge variant="secondary" className="shrink-0">
+                  {startCard.setsProgress}
+                </Badge>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <CtaButton
+              href={startCard.primary.href}
+              label={startCard.primary.label}
+              variant={startCard.primary.variant}
+              className="flex-1 text-base font-semibold"
+              icon={<Play className="mr-2 h-5 w-5" />}
+            />
+            <CtaButton
+              href={startCard.secondary.href}
+              label={startCard.secondary.label}
+              variant={startCard.secondary.variant}
+              className="flex-1"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (startCard.kind === "profile") {
+    return (
+      <Card elevation="hero" className="animate-fade-up overflow-hidden">
+        <CardContent className="relative space-y-4 p-6">
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-accent/10" />
+          <div className="relative">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15">
+                <Sparkles className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <p className="font-semibold">Profile ready</p>
+                <p className="text-muted-foreground text-sm">
+                  Let's find you a program
+                </p>
+              </div>
+            </div>
+          </div>
+          <CtaButton
+            href={startCard.cta.href}
+            label={startCard.cta.label}
+            variant={startCard.cta.variant}
+            className="w-full text-base font-semibold"
+            icon={<Sparkles className="mr-2 h-5 w-5" />}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // New user
+  return (
+    <Card elevation="hero" className="animate-fade-up overflow-hidden">
+      <CardContent className="relative space-y-4 p-6">
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/10" />
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
+              <Dumbbell className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold">Welcome to GymPepz</p>
+              <p className="text-muted-foreground text-sm">
+                Start your fitness journey
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <CtaButton
+            href={startCard.primary.href}
+            label={startCard.primary.label}
+            variant={startCard.primary.variant}
+            className="flex-1 text-base font-semibold"
+          />
+          <CtaButton
+            href={startCard.secondary.href}
+            label={startCard.secondary.label}
+            variant={startCard.secondary.variant}
+            className="flex-1"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RecentWorkoutsSection({
+  workouts,
+  historyHref,
+}: {
+  workouts: TrainEntryScreenViewProps["recentWorkouts"];
+  historyHref: string;
+}) {
+  if (workouts.length === 0) return null;
+
+  return (
+    <div className="animate-fade-up space-y-3 delay-100">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Recent</h2>
+        <Button asChild variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+          <Link href={historyHref}>
+            View all
+            <ChevronRight className="h-3 w-3" />
+          </Link>
+        </Button>
+      </div>
+      <div className="space-y-2">
+        {workouts.map((w) => (
+          <Card key={w.id} elevation="subtle">
+            <CardContent className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+                  <History className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{w.dateText}</p>
+                  {w.dayLabel ? (
+                    <p className="text-muted-foreground text-xs">{w.dayLabel}</p>
+                  ) : null}
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                {w.setsCount} sets
+              </Badge>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgramsSection({
+  templatesHref,
+  buildHref,
+  plansHref,
+}: {
+  templatesHref: string;
+  buildHref: string;
+  plansHref: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="animate-fade-up space-y-3 delay-200">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between"
+      >
+        <h2 className="text-sm font-semibold">Programs</h2>
+        <ChevronRight
+          className={cn(
+            "text-muted-foreground h-4 w-4 transition-transform",
+            expanded && "rotate-90"
+          )}
+        />
+      </button>
+
+      {expanded ? (
+        <div className="space-y-2">
+          <Card elevation="subtle">
+            <CardContent className="p-0">
+              <Link
+                href={templatesHref}
+                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+                  <Sparkles className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Browse templates</p>
+                  <p className="text-muted-foreground text-xs">
+                    Find a starter program
+                  </p>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card elevation="subtle">
+            <CardContent className="p-0">
+              <Link
+                href={buildHref}
+                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+                  <Dumbbell className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Create my own</p>
+                  <p className="text-muted-foreground text-xs">
+                    Build a custom program
+                  </p>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card elevation="subtle">
+            <CardContent className="p-0">
+              <Link
+                href={plansHref}
+                className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+                  <FolderOpen className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">My saved plans</p>
+                  <p className="text-muted-foreground text-xs">
+                    View your custom programs
+                  </p>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card elevation="subtle">
+          <CardContent className="p-0">
+            <Link
+              href={templatesHref}
+              className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/50"
+            >
+              <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+                <Sparkles className="text-muted-foreground h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Browse templates</p>
+              </div>
+              <ChevronRight className="text-muted-foreground h-4 w-4" />
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 
 export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Train</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Offline-first: pick a template, review the plan, then log your workout.
-          </p>
+          <p className="text-muted-foreground text-sm">Offline-first workouts</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{props.statusText}</Badge>
@@ -45,112 +365,21 @@ export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="px-4 pt-4 pb-2">
-            <CardTitle className="text-base">Start</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-4 pb-4">
-            {props.startCard.kind === "loading" ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : props.startCard.kind === "draft" ? (
-              <CtaButton
-                href={props.startCard.cta.href}
-                label={props.startCard.cta.label}
-                variant={props.startCard.cta.variant}
-                className="h-10 w-full"
-              />
-            ) : props.startCard.kind === "program" ? (
-              <div className="space-y-2">
-                <CtaButton
-                  href={props.startCard.primary.href}
-                  label={props.startCard.primary.label}
-                  variant={props.startCard.primary.variant}
-                  className="h-10 w-full"
-                />
-                <CtaButton
-                  href={props.startCard.secondary.href}
-                  label={props.startCard.secondary.label}
-                  variant={props.startCard.secondary.variant}
-                  className="h-10 w-full"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Current program: <span className="font-medium">{props.startCard.programName}</span>
-                </p>
-              </div>
-            ) : props.startCard.kind === "profile" ? (
-              <CtaButton
-                href={props.startCard.cta.href}
-                label={props.startCard.cta.label}
-                variant={props.startCard.cta.variant}
-                className="h-10 w-full"
-              />
-            ) : (
-              <div className="space-y-2">
-                <CtaButton
-                  href={props.startCard.primary.href}
-                  label={props.startCard.primary.label}
-                  variant={props.startCard.primary.variant}
-                  className="h-10 w-full"
-                />
-                <CtaButton
-                  href={props.startCard.secondary.href}
-                  label={props.startCard.secondary.label}
-                  variant={props.startCard.secondary.variant}
-                  className="h-10 w-full"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Hero card */}
+      <HeroCard startCard={props.startCard} />
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="px-4 pt-4 pb-2">
-            <CardTitle className="text-base">History</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-4 pb-4">
-            <p className="text-sm text-muted-foreground">Local workout history saved on this device.</p>
-            <CtaButton
-              href={props.historyHref}
-              label="View history"
-              variant="outline"
-              className="h-10 w-full"
-            />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Recent workouts */}
+      <RecentWorkoutsSection
+        workouts={props.recentWorkouts}
+        historyHref={props.historyHref}
+      />
 
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="px-4 pt-4 pb-2">
-          <CardTitle className="text-base">Programs</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 px-4 pb-4">
-          <p className="text-sm text-muted-foreground">Use a template, or create and save your own plan.</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <CtaButton
-              href={props.templatesHref}
-              label="Browse templates"
-              variant="default"
-              className="h-10 flex-1"
-            />
-            <CtaButton
-              href={props.buildHref}
-              label="Create my own plan"
-              variant="outline"
-              className="h-10 flex-1"
-            />
-          </div>
-          <div className="pt-1">
-            <CtaButton
-              href={props.plansHref}
-              label="My saved plans"
-              variant="ghost"
-              className="h-9 w-full"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Programs (collapsible) */}
+      <ProgramsSection
+        templatesHref={props.templatesHref}
+        buildHref={props.buildHref}
+        plansHref={props.plansHref}
+      />
     </div>
   );
 }
-

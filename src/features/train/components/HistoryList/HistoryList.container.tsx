@@ -3,26 +3,33 @@
 import { useMemo } from "react";
 
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
-import { groupHistoryByProgram } from "@/features/train/domain/groupHistoryByProgram";
-import type { HistoryListGroupVM, HistoryListItemVM, HistoryListViewProps } from "./HistoryList.types";
+import type { HistoryListTimeGroupVM, HistoryListItemVM, HistoryListViewProps } from "./HistoryList.types";
 import { HistoryListView } from "./HistoryList.view";
 
-function formatDateTime(iso: string): string {
+function formatTime(iso: string): string {
   try {
     const d = new Date(iso);
-    const date = new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    }).format(d);
-    const time = new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(undefined, {
       hour: "numeric",
       minute: "2-digit",
     }).format(d);
-    return `${date} • ${time}`;
   } catch {
-    return iso;
+    return "";
   }
+}
+
+function getTimeGroup(dateStr: string): "Today" | "Yesterday" | "This Week" | "Earlier" {
+  const date = new Date(dateStr);
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+  const startOfWeek = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000);
+
+  if (date >= startOfToday) return "Today";
+  if (date >= startOfYesterday) return "Yesterday";
+  if (date >= startOfWeek) return "This Week";
+  return "Earlier";
 }
 
 export function HistoryList() {
@@ -45,29 +52,49 @@ export function HistoryList() {
       };
     }
 
-    const grouped = groupHistoryByProgram(history);
-    const groups: HistoryListGroupVM[] = Object.entries(grouped).map(([programName, items]) => {
-      const mapped: HistoryListItemVM[] = items.map((h) => {
-        const exercisesCount = new Set(h.sets.map((s) => s.exerciseName)).size;
-        const dayLabel = h.programDayLabel ?? (h.programDayIndex ? `Day ${h.programDayIndex}` : null);
-        return {
-          id: h.id,
-          dateText: formatDateTime(h.endedAt ?? h.date),
-          dayLabel,
-          statusText: h.completed ? "Completed" : "Saved",
-          exercisesCount,
-          setsCount: h.sets.length,
-        };
+    // Group by time
+    const groupedByTime = {
+      Today: [] as HistoryListItemVM[],
+      Yesterday: [] as HistoryListItemVM[],
+      "This Week": [] as HistoryListItemVM[],
+      Earlier: [] as HistoryListItemVM[],
+    };
+
+    for (const h of history) {
+      const dateStr = h.endedAt ?? h.date;
+      const group = getTimeGroup(dateStr);
+      const exercisesCount = new Set(h.sets.map((s) => s.exerciseName)).size;
+      const dayLabel = h.programDayLabel ?? (h.programDayIndex ? `Day ${h.programDayIndex}` : null);
+
+      groupedByTime[group].push({
+        id: h.id,
+        dateText: formatTime(dateStr),
+        dayLabel,
+        programName: h.programName,
+        statusText: h.completed ? "Completed" : "Saved",
+        exercisesCount,
+        setsCount: h.sets.length,
       });
-      return { programName, sessionsCount: items.length, items: mapped };
-    });
+    }
+
+    const timeGroups: HistoryListTimeGroupVM[] = (
+      ["Today", "Yesterday", "This Week", "Earlier"] as const
+    )
+      .filter((label) => groupedByTime[label].length > 0)
+      .map((label) => ({
+        label,
+        items: groupedByTime[label],
+      }));
 
     return {
       kind: "ready",
       sessionsText,
       onClear: () => clearHistory(),
+      onDeleteItem: () => {
+        // Delete functionality not available yet
+      },
       clearDisabled,
-      groups,
+      timeGroups,
       backHref: "/train",
     };
   }, [hydrated, history, clearHistory, summary.total]);
