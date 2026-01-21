@@ -1,8 +1,13 @@
 "use client";
 
-import { Download, Share, Plus } from "lucide-react";
+import { Download, Share, Plus, Info } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import {
   Dialog,
@@ -26,90 +31,102 @@ export function InstallPWAButton({
 
   // Don't show if already installed
   if (isStandalone || !isInstallable) {
-    // Show debug info in development
+    // Show debug info in development via Tooltip
     return (
-      <div className="max-w-[300px] rounded border border-orange-200 bg-orange-50 p-3 font-mono text-[10px] text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300">
-        <div className="mb-2 font-bold">🔍 PWA Install Debug Info</div>
-        <div className="space-y-1">
-          <div>
-            isStandalone:{" "}
-            <span className="font-semibold">{String(isStandalone)}</span>
-          </div>
-          <div>
-            isInstallable:{" "}
-            <span className="font-semibold">{String(isInstallable)}</span>
-          </div>
-          <div>
-            isIOS: <span className="font-semibold">{String(isIOS)}</span>
-          </div>
-          <div className="mt-2 border-t border-orange-300 pt-2 dark:border-orange-800">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground opacity-50 hover:opacity-100"
+          >
+            <Info className="h-4 w-4" />
+            <span className="sr-only">PWA Debug Info</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[300px] border-orange-200 bg-orange-50 p-3 font-mono text-[10px] text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300">
+          <div className="mb-2 font-bold">🔍 PWA Install Debug Info</div>
+          <div className="space-y-1">
             <div>
-              SW Registered:{" "}
-              <span
-                className={
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  debugInfo?.hasServiceWorker
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }
-              >
-                {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  String(debugInfo?.hasServiceWorker)
-                }
-              </span>
+              isStandalone:{" "}
+              <span className="font-semibold">{String(isStandalone)}</span>
             </div>
             <div>
-              Manifest Found:{" "}
-              <span
-                className={
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  debugInfo?.hasManifest
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }
-              >
-                {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  String(debugInfo?.hasManifest)
-                }
-              </span>
+              isInstallable:{" "}
+              <span className="font-semibold">{String(isInstallable)}</span>
             </div>
             <div>
-              HTTPS/Localhost:{" "}
-              <span
-                className={
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  debugInfo?.isHTTPS
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }
-              >
-                {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                  String(debugInfo?.isHTTPS)
-                }
-              </span>
+              isIOS: <span className="font-semibold">{String(isIOS)}</span>
+            </div>
+            <div className="mt-2 border-t border-orange-300 pt-2 dark:border-orange-800">
+              <div>
+                SW Registered:{" "}
+                <span
+                  className={
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    debugInfo?.hasServiceWorker
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }
+                >
+                  {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    String(debugInfo?.hasServiceWorker)
+                  }
+                </span>
+              </div>
+              <div>
+                Manifest Found:{" "}
+                <span
+                  className={
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    debugInfo?.hasManifest
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }
+                >
+                  {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    String(debugInfo?.hasManifest)
+                  }
+                </span>
+              </div>
+              <div>
+                HTTPS/Localhost:{" "}
+                <span
+                  className={
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    debugInfo?.isHTTPS
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }
+                >
+                  {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    String(debugInfo?.isHTTPS)
+                  }
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-2 border-t border-orange-300 pt-2 text-[9px] text-orange-600 dark:border-orange-800 dark:text-orange-400">
-          <div className="mb-1 font-semibold">💡 Tips:</div>
-          <ul className="list-inside list-disc space-y-0.5">
-            <li>
-              Use <code>npm run build && npm start</code> for production build
-            </li>
-            <li>
-              Check Chrome DevTools → Application → Manifest & Service Workers
-            </li>
-            <li>
-              <code>beforeinstallprompt</code> only fires in Chrome/Edge (not
-              Safari)
-            </li>
-            <li>iOS shows install button but requires manual steps</li>
-          </ul>
-        </div>
-      </div>
+          <div className="mt-2 border-t border-orange-300 pt-2 text-[9px] text-orange-600 dark:border-orange-800 dark:text-orange-400">
+            <div className="mb-1 font-semibold">💡 Tips:</div>
+            <ul className="list-inside list-disc space-y-0.5">
+              <li>
+                Use <code>npm run build && npm start</code> for production build
+              </li>
+              <li>
+                Check Chrome DevTools → Application → Manifest & Service Workers
+              </li>
+              <li>
+                <code>beforeinstallprompt</code> only fires in Chrome/Edge (not
+                Safari)
+              </li>
+              <li>iOS shows install button but requires manual steps</li>
+            </ul>
+          </div>
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
