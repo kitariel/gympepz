@@ -150,104 +150,114 @@ function SingleExerciseView({
   const totalSets = exercise.setRows.length;
   const progress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
 
-  return (
-    <Card elevation="hero" className="animate-scale-in">
-      <CardContent className="space-y-5 p-5">
-        {/* Exercise header */}
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-xl font-bold">{exercise.name}</h2>
-              {exercise.targetText ? (
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {exercise.targetText}
-                </p>
-              ) : null}
-            </div>
-            <Badge variant="secondary" className="shrink-0 tabular-nums">
-              {completedSets}/{totalSets}
-            </Badge>
+  const content = (
+    <div className="space-y-5">
+      {/* Exercise header */}
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-xl font-bold">{exercise.name}</h2>
+            {exercise.targetText ? (
+              <p className="text-muted-foreground mt-1 text-sm">
+                {exercise.targetText}
+              </p>
+            ) : null}
           </div>
+          <Badge variant="secondary" className="shrink-0 tabular-nums">
+            {completedSets}/{totalSets}
+          </Badge>
+        </div>
 
-          {/* Mini progress bar */}
-          <Progress value={progress} className="h-1.5" />
+        {/* Mini progress bar */}
+        <Progress value={progress} className="h-1.5" />
 
-          {/* Previous performance hint */}
-          {exercise.previousPerformance ? (
-            <div className="bg-muted/50 flex items-center justify-between gap-3 rounded-lg px-3 py-2">
-              <div className="text-muted-foreground text-xs">
-                <span className="font-medium">Previous:</span>{" "}
-                {exercise.previousPerformance.weight
-                  ? `${exercise.previousPerformance.weight} x ${exercise.previousPerformance.reps}`
-                  : exercise.previousPerformance.reps}{" "}
-                ({exercise.previousPerformance.relativeDate})
+        {/* Previous performance hint */}
+        {exercise.previousPerformance ? (
+          <div className="bg-muted/50 flex items-center justify-between gap-3 rounded-lg px-3 py-2">
+            <div className="text-muted-foreground text-xs">
+              <span className="font-medium">Previous:</span>{" "}
+              {exercise.previousPerformance.weight
+                ? `${exercise.previousPerformance.weight} x ${exercise.previousPerformance.reps}`
+                : exercise.previousPerformance.reps}{" "}
+              ({exercise.previousPerformance.relativeDate})
+            </div>
+            {!exercise.previousPerformance.isSameProgram ? (
+              <Badge variant="outline" className="text-[10px]">
+                {exercise.previousPerformance.programName}
+              </Badge>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Set rows */}
+      <div className="space-y-3">
+        {exercise.setRows.map((set, setIndex) => (
+          <div key={set.id} className="space-y-1">
+            <SwipeableSetRow
+              id={set.id}
+              setNumber={set.setNumber}
+              repsValue={set.repsValue}
+              repsPlaceholder={set.repsPlaceholder}
+              weightValue={set.weightValue}
+              weightPlaceholder={set.weightPlaceholder}
+              completed={set.completed}
+              onUpdateReps={(value) => onUpdateSet(set.id, { actualReps: value })}
+              onUpdateWeight={(value) => onUpdateSet(set.id, { actualWeight: value })}
+              onToggleComplete={(completed) => onUpdateSet(set.id, { completed })}
+              onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
+            />
+
+            {/* Quick copy buttons */}
+            {!set.completed && (
+              <div className="flex justify-center gap-2">
+                {exercise.previousPerformance && setIndex === 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground h-7 text-[10px]"
+                    onClick={() => onCopyPrevious(exercise.id, set.id)}
+                  >
+                    Copy previous
+                  </Button>
+                ) : null}
+                {set.canCopyLastSet && setIndex !== 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground h-7 text-[10px]"
+                    onClick={() => onCopyLastSet(exercise.id, set.id)}
+                  >
+                    Copy set {set.setNumber - 1}
+                  </Button>
+                ) : null}
               </div>
-              {!exercise.previousPerformance.isSameProgram ? (
-                <Badge variant="outline" className="text-[10px]">
-                  {exercise.previousPerformance.programName}
-                </Badge>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
+            )}
+          </div>
+        ))}
+      </div>
 
-        {/* Set rows */}
-        <div className="space-y-3">
-          {exercise.setRows.map((set, setIndex) => (
-            <div key={set.id} className="space-y-1">
-              <SwipeableSetRow
-                id={set.id}
-                setNumber={set.setNumber}
-                repsValue={set.repsValue}
-                repsPlaceholder={set.repsPlaceholder}
-                weightValue={set.weightValue}
-                weightPlaceholder={set.weightPlaceholder}
-                completed={set.completed}
-                onUpdateReps={(value) => onUpdateSet(set.id, { actualReps: value })}
-                onUpdateWeight={(value) => onUpdateSet(set.id, { actualWeight: value })}
-                onToggleComplete={(completed) => onUpdateSet(set.id, { completed })}
-                onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
-              />
+      {/* Add set button */}
+      <Button
+        variant="outline"
+        className="touch-target h-12 w-full"
+        onClick={() => onAddSet(exercise.id)}
+      >
+        {exercise.canAddExtraSet ? "+ Add extra set" : "+ Add set"}
+      </Button>
+    </div>
+  );
 
-              {/* Quick copy buttons */}
-              {!set.completed && (
-                <div className="flex justify-center gap-2">
-                  {exercise.previousPerformance && setIndex === 0 ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground h-7 text-[10px]"
-                      onClick={() => onCopyPrevious(exercise.id, set.id)}
-                    >
-                      Copy previous
-                    </Button>
-                  ) : null}
-                  {set.canCopyLastSet && setIndex !== 0 ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground h-7 text-[10px]"
-                      onClick={() => onCopyLastSet(exercise.id, set.id)}
-                    >
-                      Copy set {set.setNumber - 1}
-                    </Button>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+  return (
+    <div className="animate-scale-in">
+      {/* Mobile: no card wrapper, just content */}
+      <div className="md:hidden">{content}</div>
 
-        {/* Add set button */}
-        <Button
-          variant="outline"
-          className="touch-target h-12 w-full"
-          onClick={() => onAddSet(exercise.id)}
-        >
-          {exercise.canAddExtraSet ? "+ Add extra set" : "+ Add set"}
-        </Button>
-      </CardContent>
-    </Card>
+      {/* Desktop: with card wrapper */}
+      <Card elevation="hero" className="hidden md:flex">
+        <CardContent className="p-5">{content}</CardContent>
+      </Card>
+    </div>
   );
 }
 
