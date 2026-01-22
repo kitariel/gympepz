@@ -7,6 +7,7 @@ import { AddressCard } from "./address-card";
 import { SecurityCard } from "./security-card";
 import { PlanBillingCard } from "./plan-billing-card";
 import { PreferencesCard } from "./preferences-card";
+import { SyncCard } from "./sync-card";
 import { DangerZoneCard } from "./danger-zone-card";
 
 type AccountUser = {
@@ -37,6 +38,7 @@ export default function AccountForm({
       <AddressCard email={email} />
       <SecurityCard userId={userId} user={initialUser} />
       <PlanBillingCard userId={userId} />
+      <SyncCard />
       <PreferencesCard />
       <DangerZoneCard />
     </div>

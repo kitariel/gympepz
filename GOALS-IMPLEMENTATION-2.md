@@ -72,8 +72,8 @@ ComponentName/
 - [ ] No separate Goals layout; Goals use **portal layout**
 
 ### **Phase 6: Integration + Sync**
-- [ ] **Portal train → Goals:** Workout complete (`/portal/train/log`) → `recordProgress` for matching goals
-- [ ] **Goals → Portal train:** Optional “Start workout” / “View in Train” → `/portal/train/log`
+- [x] **Workout complete → Goals:** `workoutLog.complete` mutation updates matching goals (`recordProgress`) for strength, reps, consistency
+- [x] **Goals → Train:** “Start workout” links on dashboard + detail → `/train/log`
 - [ ] **Sync (optional):** Offline `/train` data → server when user logs in / uses `/portal/train`
 
 ---
@@ -290,7 +290,7 @@ pnpm add recharts
 
 Before marking Goals as complete:
 
-- [ ] All routes work (`/train/goals`, `/train/goals/new`, `/train/goals/[goalId]`)
+- [ ] All routes work (`/portal/goals`, `/portal/goals/new`, `/portal/goals/[goalId]`)
 - [ ] GoalCard displays correctly with progress
 - [ ] GoalProgress chart shows history
 - [ ] Create goal form validates and saves

@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
+import { Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,9 +38,15 @@ export default function GoalDetailPage({
 
   return (
     <div className="container mx-auto max-w-lg space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/portal/goals">← Goals</Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/train/log">
+            <Play className="mr-2 h-4 w-4" />
+            Start workout
+          </Link>
         </Button>
       </div>
 

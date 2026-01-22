@@ -1,5 +1,52 @@
+import type { PrismaClient } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+
+/** Update matching goals when a workout is completed (recordProgress). */
+async function updateGoalsFromWorkoutCompletion(
+  db: PrismaClient,
+  userId: string,
+  workout: {
+    id: string;
+    exercises: { exerciseId: string; weight: number | null; reps: number }[];
+  },
+) {
+  const activeGoals = await db.goal.findMany({
+    where: { userId, status: "active" },
+  });
+
+  const notes = `From workout on ${new Date().toLocaleDateString()}`;
+
+  for (const goal of activeGoals) {
+    let value: number | null = null;
+
+    if (goal.type === "consistency") {
+      value = goal.currentValue + 1;
+    } else if (goal.type === "strength" && goal.exerciseId) {
+      const ex = workout.exercises.find((e) => e.exerciseId === goal.exerciseId);
+      if (ex?.weight != null && ex.weight > 0) value = ex.weight;
+    } else if (goal.type === "reps" && goal.exerciseId) {
+      const ex = workout.exercises.find((e) => e.exerciseId === goal.exerciseId);
+      if (ex && ex.reps > 0) value = ex.reps;
+    }
+    // bodyweight: skip (not updated from workout completion)
+
+    if (value == null) continue;
+
+    await db.goalProgress.create({
+      data: { goalId: goal.id, value, notes },
+    });
+
+    const reached = value >= goal.targetValue;
+    await db.goal.update({
+      where: { id: goal.id, userId },
+      data: {
+        currentValue: value,
+        ...(reached && { status: "completed" as const, completedAt: new Date() }),
+      },
+    });
+  }
+}
 
 export const workoutLogRouter = createTRPCRouter({
   create: publicProcedure
@@ -253,18 +300,26 @@ export const workoutLogRouter = createTRPCRouter({
           completed: input.completed ?? true,
           duration: input.duration,
           notes: input.notes,
-          // endTime field exists in schema but not in current database migration
-          // Will be available after running migration
         },
         include: {
           exercises: true,
         },
       });
 
-      // Volume and streak tracking will be available after migration
-      // WorkoutSet and WorkoutStreak tables don't exist yet
-      // WorkoutStreak table doesn't exist yet
-      // After migration, uncomment this code to enable real-time streak updates
+      // Update matching goals (recordProgress) when workout is completed
+      try {
+        await updateGoalsFromWorkoutCompletion(ctx.db, workout.userId, {
+          id: workout.id,
+          exercises: workout.exercises.map((e) => ({
+            exerciseId: e.exerciseId,
+            weight: e.weight,
+            reps: e.reps,
+          })),
+        });
+      } catch (e) {
+        console.error("[workoutLog.complete] Goals update failed:", e);
+        // Don't fail the mutation; workout is already completed
+      }
 
       return workout;
     }),
@@ -856,5 +911,252 @@ export const workoutLogRouter = createTRPCRouter({
         },
         orderBy: { date: "desc" },
       });
+    }),
+
+  // Sync offline workouts to database
+  syncFromOffline: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        workouts: z.array(
+          z.object({
+            // Common fields (both workoutRepo and OfflineWorkoutLog formats)
+            planDayId: z.string().nullish(),
+            date: z.string(), // ISO
+            startTime: z.string(), // ISO
+            endTime: z.string().nullish(), // ISO
+            completed: z.boolean(),
+            notes: z.string().nullish(),
+            sets: z.array(
+              z.object({
+                exerciseId: z.string(),
+                setNumber: z.number(),
+                // Support both string (workoutRepo) and number (OfflineWorkoutLog) formats
+                targetReps: z.union([z.string(), z.number()]).nullish(),
+                actualReps: z.union([z.string(), z.number()]),
+                targetWeight: z.union([z.string(), z.number()]).nullish(),
+                actualWeight: z.union([z.string(), z.number()]).nullish(),
+                rpe: z.number().nullish(),
+                completed: z.boolean(),
+              }),
+            ),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const syncedIds: string[] = [];
+      const errors: Array<{ workoutIndex: number; error: string }> = [];
+
+      for (let i = 0; i < input.workouts.length; i++) {
+        const workout = input.workouts[i];
+        if (!workout) continue;
+
+        try {
+          // Normalize date to UTC start of day
+          const workoutDate = new Date(workout.date);
+          const normalizedDate = new Date(
+            Date.UTC(
+              workoutDate.getUTCFullYear(),
+              workoutDate.getUTCMonth(),
+              workoutDate.getUTCDate(),
+              0,
+              0,
+              0,
+              0,
+            ),
+          );
+
+          // Check for existing workout on same date (conflict handling)
+          const existing = await ctx.db.workoutLog.findFirst({
+            where: {
+              userId: input.userId,
+              date: normalizedDate,
+            },
+          });
+
+          if (existing) {
+            // Skip duplicate - workout already exists for this date
+            errors.push({
+              workoutIndex: i,
+              error: "Workout already exists for this date",
+            });
+            continue;
+          }
+
+          // Convert ISO strings to DateTime
+          const startTime = new Date(workout.startTime);
+          const endTime = workout.endTime ? new Date(workout.endTime) : null;
+
+          // Calculate duration (minutes)
+          const duration =
+            endTime && startTime
+              ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
+              : null;
+
+          // Transform sets: convert strings to numbers if needed
+          const transformedSets = workout.sets
+            .filter((set) => set.exerciseId && set.setNumber > 0) // Filter invalid sets
+            .map((set) => {
+              // Helper to safely convert string/number to number
+              const toNumber = (
+                value: string | number | null | undefined,
+              ): number | null => {
+                if (value == null) return null;
+                if (typeof value === "number") {
+                  return Number.isNaN(value) || value < 0 ? null : value;
+                }
+                if (typeof value === "string") {
+                  const parsed = Number.parseFloat(value);
+                  return Number.isNaN(parsed) || parsed < 0 ? null : parsed;
+                }
+                return null;
+              };
+
+              return {
+                exerciseId: set.exerciseId,
+                setNumber: set.setNumber,
+                targetReps: toNumber(set.targetReps),
+                actualReps: toNumber(set.actualReps) ?? 0, // Default to 0 if invalid
+                targetWeight: toNumber(set.targetWeight),
+                actualWeight: toNumber(set.actualWeight),
+                rpe:
+                  set.rpe != null && set.rpe >= 1 && set.rpe <= 10
+                    ? set.rpe
+                    : null,
+                completed: set.completed ?? false,
+              };
+            });
+
+          // Skip workout if no valid sets
+          if (transformedSets.length === 0) {
+            errors.push({
+              workoutIndex: i,
+              error: "No valid sets to sync",
+            });
+            continue;
+          }
+
+          // Calculate total volume (sum of actualWeight * actualReps)
+          const totalVolume = transformedSets.reduce((sum, set) => {
+            if (set.actualWeight != null && set.actualWeight > 0 && set.actualReps > 0) {
+              return sum + set.actualWeight * set.actualReps;
+            }
+            return sum;
+          }, 0);
+
+          // Create WorkoutLog
+          const workoutLog = await ctx.db.workoutLog.create({
+            data: {
+              userId: input.userId,
+              planDayId: workout.planDayId ?? null,
+              date: normalizedDate,
+              startTime,
+              endTime,
+              duration,
+              notes: workout.notes ?? null,
+              completed: workout.completed,
+              totalVolume: totalVolume > 0 ? totalVolume : null,
+            },
+          });
+
+          // Group sets by exerciseId to create WorkoutLogExercise aggregates
+          const setsByExercise = new Map<
+            string,
+            Array<typeof transformedSets[number]>
+          >();
+          for (const set of transformedSets) {
+            const existing = setsByExercise.get(set.exerciseId) ?? [];
+            existing.push(set);
+            setsByExercise.set(set.exerciseId, existing);
+          }
+
+          // Create WorkoutLogExercise for each exercise (aggregate)
+          const exerciseEntries: Array<{
+            workoutLogId: string;
+            exerciseId: string;
+            sets: number;
+            reps: number;
+            weight: number | null;
+            rpe: number | null;
+            order: number;
+          }> = [];
+
+          let exerciseOrder = 0;
+          for (const [exerciseId, sets] of setsByExercise.entries()) {
+            const completedSets = sets.filter((s) => s.completed);
+            const totalSets = sets.length;
+            const avgReps =
+              completedSets.length > 0
+                ? Math.round(
+                    completedSets.reduce((sum, s) => sum + s.actualReps, 0) /
+                      completedSets.length,
+                  )
+                : sets[0]?.targetReps ?? sets[0]?.actualReps ?? 0;
+            const avgWeight =
+              completedSets.length > 0
+                ? completedSets.reduce((sum, s) => sum + (s.actualWeight ?? 0), 0) /
+                  completedSets.length
+                : sets[0]?.targetWeight ?? sets[0]?.actualWeight ?? null;
+            const avgRpe =
+              completedSets.length > 0
+                ? Math.round(
+                    completedSets.reduce(
+                      (sum, s) => sum + (s.rpe ?? 0),
+                      0,
+                    ) / completedSets.length,
+                  )
+                : null;
+
+            exerciseEntries.push({
+              workoutLogId: workoutLog.id,
+              exerciseId,
+              sets: totalSets,
+              reps: avgReps,
+              weight: avgWeight && avgWeight > 0 ? avgWeight : null,
+              rpe: avgRpe && avgRpe > 0 ? avgRpe : null,
+              order: exerciseOrder++,
+            });
+          }
+
+          if (exerciseEntries.length > 0) {
+            await ctx.db.workoutLogExercise.createMany({
+              data: exerciseEntries,
+            });
+          }
+
+          // Create WorkoutSet records for each set
+          if (transformedSets.length > 0) {
+            await ctx.db.workoutSet.createMany({
+              data: transformedSets.map((set) => ({
+                workoutLogId: workoutLog.id,
+                exerciseId: set.exerciseId,
+                setNumber: set.setNumber,
+                targetReps: set.targetReps,
+                actualReps: set.actualReps,
+                targetWeight: set.targetWeight,
+                actualWeight: set.actualWeight,
+                rpe: set.rpe,
+                completed: set.completed,
+              })),
+            });
+          }
+
+          syncedIds.push(workoutLog.id);
+        } catch (error) {
+          errors.push({
+            workoutIndex: i,
+            error:
+              error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+
+      return {
+        synced: syncedIds.length,
+        failed: errors.length,
+        syncedIds,
+        errors,
+      };
     }),
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,14 +33,22 @@ export default function GoalsPage() {
     <div className="container mx-auto space-y-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Goals</h1>
-        {userId && (
-          <Button asChild>
-            <Link href="/portal/goals/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Goal
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/train/log">
+              <Play className="mr-2 h-4 w-4" />
+              Start workout
             </Link>
           </Button>
-        )}
+          {userId && (
+            <Button asChild>
+              <Link href="/portal/goals/new">
+                <Plus className="mr-2 h-4 w-4" />
+                New Goal
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {!userId ? (
