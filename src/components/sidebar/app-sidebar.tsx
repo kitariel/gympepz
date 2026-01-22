@@ -8,6 +8,7 @@ import {
   X,
   Keyboard,
   Sparkles,
+  Target,
 } from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
@@ -206,7 +207,7 @@ export function AppSidebar({
             if ((item.url ?? "").startsWith("/portal/account")) return null;
             if (item.title.toLowerCase() === "settings") return null;
 
-            // Replace "Workouts" children with a single "This Week" item
+            // Replace "Workouts" children with portal + train + goals
             if (item.title.toLowerCase() === "workouts") {
               return {
                 ...item,
@@ -214,6 +215,7 @@ export function AppSidebar({
                 items: [
                   { title: "This Week", url: "/portal" },
                   { title: "Train", url: "/train" },
+                  { title: "Goals", url: "/portal/goals" },
                 ],
               };
             }
@@ -417,18 +419,32 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {!isGuest ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip="Ask AI Coach (⌘I)"
-                      isActive={pathname?.startsWith("/portal/ai-planner")}
-                    >
-                      <Link href="/portal/ai-planner">
-                        <Sparkles className="size-4" />
-                        <span>Ask AI Coach</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip="Ask AI Coach (⌘I)"
+                        isActive={pathname?.startsWith("/portal/ai-planner")}
+                      >
+                        <Link href="/portal/ai-planner">
+                          <Sparkles className="size-4" />
+                          <span>Ask AI Coach</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip="Goals"
+                        isActive={pathname?.startsWith("/portal/goals")}
+                      >
+                        <Link href="/portal/goals">
+                          <Target className="size-4" />
+                          <span>Goals</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
                 ) : null}
                 <InstallPWAButton variant="sidebar" />
               </SidebarMenu>

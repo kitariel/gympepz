@@ -1,0 +1,34 @@
+model Goal {
+  id           String    @id @default(cuid())
+  userId       String
+  type         String    // "strength" | "reps" | "consistency" | "bodyweight"
+  exerciseId   String?   // For strength/reps goals
+  targetValue  Float
+  currentValue Float     @default(0)
+  unit         String    // "lbs" | "kg" | "reps" | "workouts"
+  deadline     DateTime?
+  status       String    @default("active") // "active" | "completed" | "abandoned"
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  completedAt  DateTime?
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise?      @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+  progress GoalProgress[]
+
+  @@index([userId, status])
+  @@index([userId, type])
+}
+
+model GoalProgress {
+  id        String   @id @default(cuid())
+  goalId    String
+  value     Float
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId, date])
+}

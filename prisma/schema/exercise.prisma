@@ -15,6 +15,7 @@ model Exercise {
   workoutLogExercises WorkoutLogExercise[]
   workoutSets         WorkoutSet[]
   prs                 ExercisePR[]
+  goals               Goal[]
 
   @@index([muscleGroup, difficulty])
 }

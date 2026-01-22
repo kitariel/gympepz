@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   Sparkles,
+  Target,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -225,6 +226,12 @@ function MoreMenu({
       label: "Create program",
       description: "Build a custom plan",
       icon: Dumbbell,
+    },
+    {
+      href: "/portal/goals",
+      label: "Goals",
+      description: "Track strength & progress",
+      icon: Target,
     },
   ];
 

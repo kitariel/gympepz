@@ -30,4 +30,5 @@ model User {
     prs             ExercisePR[]
     streak          WorkoutStreak?
     pageViews       PageView[]
+    goals           Goal[]
 }

@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Calendar, NotebookPen, Home, Play } from "lucide-react";
+import {
+  Sparkles,
+  Calendar,
+  NotebookPen,
+  Home,
+  Play,
+  Target,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { resolveAppMode } from "@/lib/app-mode";
@@ -22,6 +29,7 @@ export function MobileBottomNav() {
       : [
           { label: "AI", href: "/portal/ai-planner", icon: Sparkles },
           { label: "Templates", href: "/train/templates", icon: Calendar },
+          { label: "Goals", href: "/portal/goals", icon: Target },
           { label: "History", href: "/train/history", icon: NotebookPen },
         ];
 
