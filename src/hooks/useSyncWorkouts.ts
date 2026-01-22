@@ -7,8 +7,8 @@ import { workoutRepo, type WorkoutHistoryItem } from "@/lib/storage/workoutRepo"
 import {
   readOfflineWorkoutLogQueue,
   markOfflineWorkoutLogSynced,
-  type OfflineWorkoutLog,
 } from "@/lib/guest/storage";
+import type { OfflineWorkoutLog, OfflineWorkoutSet } from "@/lib/guest/types";
 
 /**
  * Transform workoutRepo format (WorkoutHistoryItem) to sync format
@@ -84,7 +84,7 @@ function transformOfflineLogToSync(
     endTime: workout.endTime ?? null,
     completed: workout.completed,
     notes: workout.notes,
-    sets: workout.sets.map((set) => ({
+    sets: workout.sets.map((set: OfflineWorkoutSet) => ({
       exerciseId: set.exerciseId,
       setNumber: set.setNumber,
       targetReps: set.targetReps,

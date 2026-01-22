@@ -35,8 +35,8 @@ export function useGoals() {
       (goals ?? []).reduce<Partial<Record<GoalType, GoalItem[]>>>(
         (acc, goal) => {
           const t = goal.type as GoalType;
-          if (!acc[t]) acc[t] = [];
-          acc[t]!.push(goal);
+          const arr = acc[t] ??= [];
+          arr.push(goal);
           return acc;
         },
         {},
@@ -120,8 +120,12 @@ export function useGoalMutations() {
   });
 
   return {
-    create: (input: Parameters<typeof createMutation.mutateAsync>[0]) =>
-      createMutation.mutateAsync({ ...input, userId }),
+    create: (
+      input: Omit<
+        Parameters<typeof createMutation.mutateAsync>[0],
+        "userId"
+      >,
+    ) => createMutation.mutateAsync({ ...input, userId }),
     update: (input: Omit<Parameters<typeof updateMutation.mutateAsync>[0], "userId">) =>
       updateMutation.mutateAsync({ ...input, userId }),
     delete: (input: { id: string }) =>

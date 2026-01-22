@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGoals, useGoalMutations } from "@/hooks/useGoals";
 import { GoalCard } from "@/features/goals/components/GoalCard";
+import type { Goal } from "@/types/goal.types";
 
 export default function GoalsPage() {
   const { activeGoals, completedGoals, isLoading, userId } = useGoals();
@@ -82,7 +83,7 @@ export default function GoalsPage() {
                 {activeGoals.map((goal) => (
                   <GoalCard
                     key={goal.id}
-                    goal={goal}
+                    goal={goal as Goal}
                     onDelete={handleDelete}
                   />
                 ))}
@@ -95,7 +96,7 @@ export default function GoalsPage() {
               <h2 className="text-xl font-semibold">Completed Goals</h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {completedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} />
+                  <GoalCard key={goal.id} goal={goal as Goal} />
                 ))}
               </div>
             </section>

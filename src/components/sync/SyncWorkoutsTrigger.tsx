@@ -11,7 +11,7 @@ import { toast } from "sonner";
  */
 export function SyncWorkoutsTrigger() {
   const { data: session } = useSession();
-  const { syncOfflineWorkouts, hasUnsyncedWorkouts, unsyncedCount, isSyncing } =
+  const { syncOfflineWorkouts, hasUnsyncedWorkouts, isSyncing } =
     useSyncWorkouts();
   const hasSyncedRef = useRef(false);
 

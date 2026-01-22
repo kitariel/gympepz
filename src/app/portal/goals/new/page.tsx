@@ -50,7 +50,7 @@ export default function NewGoalPage() {
   const [error, setError] = useState<string | null>(null);
 
   const units = UNITS[type] ?? UNITS.strength;
-  const defaultUnit = units[0]?.value ?? "kg";
+  const defaultUnit = units?.[0]?.value ?? "kg";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +156,7 @@ export default function NewGoalPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {units.map((u) => (
+                  {(units ?? []).map((u) => (
                     <SelectItem key={u.value} value={u.value}>
                       {u.label}
                     </SelectItem>
