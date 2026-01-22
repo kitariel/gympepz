@@ -5,7 +5,8 @@ const CreateGoalInput = z.object({
   userId: z.string().min(1),
   type: z.enum(["strength", "reps", "consistency", "bodyweight"]),
   exerciseId: z.string().optional(),
-  targetValue: z.number().min(0),
+  targetValue: z.number(), // Allow negative for bodyweight "lose" goals (e.g. -10)
+  currentValue: z.number().optional(),
   unit: z.enum(["lbs", "kg", "reps", "workouts"]),
   deadline: z.date().optional(),
 });
@@ -60,7 +61,7 @@ export const goalRouter = createTRPCRouter({
           targetValue: input.targetValue,
           unit: input.unit,
           deadline: input.deadline,
-          currentValue: 0,
+          currentValue: input.currentValue ?? 0,
           status: "active",
         },
         include: { exercise: { select: { id: true, name: true } } },

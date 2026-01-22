@@ -1,0 +1,289 @@
+import type { GoalType } from "@/types/goal.types";
+
+export type GoalTemplateCategory =
+  | "strength"
+  | "reps"
+  | "consistency"
+  | "bodyweight";
+
+export interface GoalTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: GoalTemplateCategory;
+  icon: "dumbbell" | "flame" | "target" | "scale";
+  type: GoalType;
+  /** Exercise name for lookup (e.g. "Bench Press"). Used to resolve exerciseId. */
+  exerciseName?: string;
+  targetValue: number;
+  unit: "lbs" | "kg" | "reps" | "workouts";
+  /** Suggested deadline in days from now (e.g. 90 = 3 months). */
+  suggestedDeadlineDays?: number;
+}
+
+export const GOAL_TEMPLATE_CATEGORIES: Record<
+  GoalTemplateCategory,
+  { label: string; icon: GoalTemplate["icon"] }
+> = {
+  strength: { label: "Strength", icon: "dumbbell" },
+  reps: { label: "Reps", icon: "flame" },
+  consistency: { label: "Consistency", icon: "target" },
+  bodyweight: { label: "Bodyweight", icon: "scale" },
+};
+
+export const GOAL_TEMPLATES: GoalTemplate[] = [
+  // Strength (6)
+  {
+    id: "bench-225",
+    name: "Bench Press 225",
+    description: "Hit a 225 lb bench press",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Bench Press",
+    targetValue: 225,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "bench-315",
+    name: "Bench Press 315",
+    description: "Hit a 315 lb bench press",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Bench Press",
+    targetValue: 315,
+    unit: "lbs",
+    suggestedDeadlineDays: 365,
+  },
+  {
+    id: "squat-315",
+    name: "Squat 315",
+    description: "Hit a 315 lb back squat",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Back Squat",
+    targetValue: 315,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "squat-405",
+    name: "Squat 405",
+    description: "Hit a 405 lb back squat",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Back Squat",
+    targetValue: 405,
+    unit: "lbs",
+    suggestedDeadlineDays: 365,
+  },
+  {
+    id: "deadlift-405",
+    name: "Deadlift 405",
+    description: "Hit a 405 lb deadlift",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Deadlift",
+    targetValue: 405,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "deadlift-500",
+    name: "Deadlift 500",
+    description: "Hit a 500 lb deadlift",
+    category: "strength",
+    icon: "dumbbell",
+    type: "strength",
+    exerciseName: "Deadlift",
+    targetValue: 500,
+    unit: "lbs",
+    suggestedDeadlineDays: 365,
+  },
+  // Reps (4)
+  {
+    id: "pullups-20",
+    name: "20 Pull-ups",
+    description: "Complete 20 consecutive pull-ups",
+    category: "reps",
+    icon: "flame",
+    type: "reps",
+    exerciseName: "Pull-up",
+    targetValue: 20,
+    unit: "reps",
+    suggestedDeadlineDays: 90,
+  },
+  {
+    id: "pushups-50",
+    name: "50 Push-ups",
+    description: "Complete 50 consecutive push-ups",
+    category: "reps",
+    icon: "flame",
+    type: "reps",
+    exerciseName: "Push-up",
+    targetValue: 50,
+    unit: "reps",
+    suggestedDeadlineDays: 90,
+  },
+  {
+    id: "muscleups-10",
+    name: "10 Muscle-ups",
+    description: "Complete 10 muscle-ups",
+    category: "reps",
+    icon: "flame",
+    type: "reps",
+    exerciseName: "Muscle-up",
+    targetValue: 10,
+    unit: "reps",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "bw-squat-100",
+    name: "100 Bodyweight Squats",
+    description: "Complete 100 bodyweight squats in one session",
+    category: "reps",
+    icon: "flame",
+    type: "reps",
+    exerciseName: "Goblet Squat",
+    targetValue: 100,
+    unit: "reps",
+    suggestedDeadlineDays: 60,
+  },
+  // Consistency (5)
+  {
+    id: "gym-rat-30",
+    name: "Gym Rat (30 workouts)",
+    description: "Complete 30 workouts in 3 months",
+    category: "consistency",
+    icon: "target",
+    type: "consistency",
+    targetValue: 30,
+    unit: "workouts",
+    suggestedDeadlineDays: 90,
+  },
+  {
+    id: "dedicated-50",
+    name: "Dedicated (50 workouts)",
+    description: "Complete 50 workouts in 6 months",
+    category: "consistency",
+    icon: "target",
+    type: "consistency",
+    targetValue: 50,
+    unit: "workouts",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "iron-will-100",
+    name: "Iron Will (100 workouts)",
+    description: "Complete 100 workouts in 1 year",
+    category: "consistency",
+    icon: "target",
+    type: "consistency",
+    targetValue: 100,
+    unit: "workouts",
+    suggestedDeadlineDays: 365,
+  },
+  {
+    id: "weekly-warrior-16",
+    name: "Weekly Warrior (4×/week)",
+    description: "Complete 16 workouts in 1 month",
+    category: "consistency",
+    icon: "target",
+    type: "consistency",
+    targetValue: 16,
+    unit: "workouts",
+    suggestedDeadlineDays: 30,
+  },
+  {
+    id: "never-miss-monday-12",
+    name: "Never Miss Monday",
+    description: "Complete 12 Monday workouts in 3 months",
+    category: "consistency",
+    icon: "target",
+    type: "consistency",
+    targetValue: 12,
+    unit: "workouts",
+    suggestedDeadlineDays: 90,
+  },
+  // Bodyweight (5)
+  {
+    id: "lose-10",
+    name: "Lose 10 lbs",
+    description: "Lose 10 pounds",
+    category: "bodyweight",
+    icon: "scale",
+    type: "bodyweight",
+    targetValue: -10,
+    unit: "lbs",
+    suggestedDeadlineDays: 90,
+  },
+  {
+    id: "lose-20",
+    name: "Lose 20 lbs",
+    description: "Lose 20 pounds",
+    category: "bodyweight",
+    icon: "scale",
+    type: "bodyweight",
+    targetValue: -20,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "gain-10",
+    name: "Gain 10 lbs",
+    description: "Gain 10 pounds",
+    category: "bodyweight",
+    icon: "scale",
+    type: "bodyweight",
+    targetValue: 10,
+    unit: "lbs",
+    suggestedDeadlineDays: 90,
+  },
+  {
+    id: "reach-180",
+    name: "Reach 180 lbs",
+    description: "Reach 180 lb bodyweight",
+    category: "bodyweight",
+    icon: "scale",
+    type: "bodyweight",
+    targetValue: 180,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+  {
+    id: "reach-200",
+    name: "Reach 200 lbs",
+    description: "Reach 200 lb bodyweight",
+    category: "bodyweight",
+    icon: "scale",
+    type: "bodyweight",
+    targetValue: 200,
+    unit: "lbs",
+    suggestedDeadlineDays: 180,
+  },
+];
+
+export function getTemplatesByCategory(): Record<
+  GoalTemplateCategory,
+  GoalTemplate[]
+> {
+  const map: Record<GoalTemplateCategory, GoalTemplate[]> = {
+    strength: [],
+    reps: [],
+    consistency: [],
+    bodyweight: [],
+  };
+  for (const t of GOAL_TEMPLATES) {
+    map[t.category].push(t);
+  }
+  return map;
+}
+
+export function getGoalTemplateById(id: string): GoalTemplate | undefined {
+  return GOAL_TEMPLATES.find((t) => t.id === id);
+}

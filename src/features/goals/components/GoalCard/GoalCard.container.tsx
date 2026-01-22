@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { useGoal } from "@/hooks/useGoals";
-import type { GoalType } from "@/types/goal.types";
 import type { GoalCardProps, GoalCardViewModel } from "./GoalCard.types";
 import { GoalCardView } from "./GoalCard.view";
 
@@ -50,7 +49,7 @@ export function GoalCardContainer({
       id: goal.id,
       title,
       subtitle,
-      goalType: goal.type as GoalType,
+      goalType: goal.type,
       progress: progressPercentage,
       currentValue: goal.currentValue,
       targetValue: goal.targetValue,
