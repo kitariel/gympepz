@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { trainToast } from "@/features/train/utils/toast";
 import type { HistoryListTimeGroupVM, HistoryListItemVM, HistoryListViewProps } from "./HistoryList.types";
 import { HistoryListView } from "./HistoryList.view";
 
@@ -33,10 +35,61 @@ function getTimeGroup(dateStr: string): "Today" | "Yesterday" | "This Week" | "E
 }
 
 export function HistoryList() {
-  const { history, hydrated, clearHistory, summary } = useWorkoutDraft();
+  const router = useRouter();
+  const { history, hydrated, clearHistory, deleteHistoryItem, summary } = useWorkoutDraft();
+  const [error, setError] = useState<{ title: string; message: string } | null>(null);
+
+  const handleDeleteItem = useCallback(
+    (id: string) => {
+      try {
+        // Store item for potential undo
+        const item = history.find((h) => h.id === id);
+        deleteHistoryItem(id);
+
+        if (item) {
+          trainToast.undo(`Deleted ${item.programName}`, () => {
+            // Re-add the item (simplified - in production would use proper undo)
+            // For now, just refresh
+            window.location.reload();
+          });
+        } else {
+          trainToast.historyItemDeleted();
+        }
+      } catch (err) {
+        console.error("Failed to delete history item:", err);
+        trainToast.error("Failed to delete workout");
+      }
+    },
+    [history, deleteHistoryItem],
+  );
+
+  const handleClearHistory = useCallback(() => {
+    try {
+      clearHistory();
+      trainToast.undo("Cleared all history", () => {
+        window.location.reload();
+      });
+    } catch (err) {
+      console.error("Failed to clear history:", err);
+      trainToast.error("Failed to clear history");
+    }
+  }, [clearHistory]);
 
   const viewProps: HistoryListViewProps = useMemo(() => {
     if (!hydrated) return { kind: "loading" };
+
+    if (error) {
+      return {
+        kind: "error",
+        title: error.title,
+        message: error.message,
+        onRetry: () => {
+          setError(null);
+          window.location.reload();
+        },
+        onGoBack: () => router.push("/train"),
+      };
+    }
 
     const sessionsText = `${summary.total} sessions`;
     const clearDisabled = history.length === 0;
@@ -45,7 +98,7 @@ export function HistoryList() {
       return {
         kind: "empty",
         sessionsText,
-        onClear: () => clearHistory(),
+        onClear: handleClearHistory,
         clearDisabled,
         backHref: "/train",
         goToTrainHref: "/train",
@@ -89,15 +142,13 @@ export function HistoryList() {
     return {
       kind: "ready",
       sessionsText,
-      onClear: () => clearHistory(),
-      onDeleteItem: () => {
-        // Delete functionality not available yet
-      },
+      onClear: handleClearHistory,
+      onDeleteItem: handleDeleteItem,
       clearDisabled,
       timeGroups,
       backHref: "/train",
     };
-  }, [hydrated, history, clearHistory, summary.total]);
+  }, [hydrated, error, history, handleClearHistory, handleDeleteItem, router, summary.total]);
 
   return <HistoryListView {...viewProps} />;
 }

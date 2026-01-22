@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useActiveProgram } from "@/hooks/useActiveProgram";
@@ -14,6 +14,7 @@ import {
   getPreviousPerformance,
   formatRelativeDate,
 } from "@/features/train/domain/previousPerformance";
+import { trainToast } from "@/features/train/utils/toast";
 import type {
   WorkoutLoggerExerciseVM,
   WorkoutLoggerViewProps,
@@ -31,6 +32,10 @@ function makeId(prefix: string): string {
 export function WorkoutLogger() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [error, setError] = useState<{ title: string; message: string } | null>(
+    null,
+  );
+
   const {
     activeProgram,
     currentProgramRef,
@@ -54,6 +59,13 @@ export function WorkoutLogger() {
   } = useWorkoutDraft();
 
   const hydrated = programHydrated && draftHydrated && prefsHydrated;
+
+  // Clear error on successful hydration
+  useEffect(() => {
+    if (hydrated && error) {
+      setError(null);
+    }
+  }, [hydrated, error]);
 
   const overrideDay = useMemo(() => {
     const raw = searchParams.get("day");
@@ -85,58 +97,69 @@ export function WorkoutLogger() {
   }, [activeProgram, today, selectedWorkoutDay, overrideDay]);
 
   const createDraftForDay = useCallback(() => {
-    if (!hydrated) return;
-    if (!activeProgram) return;
-    if (draft) return;
-    if (!todaysPlan) return;
-    if (todaysPlan.isRestDay || todaysPlan.items.length === 0) return;
+    try {
+      if (!hydrated) return;
+      if (!activeProgram) return;
+      if (draft) return;
+      if (!todaysPlan) return;
+      if (todaysPlan.isRestDay || todaysPlan.items.length === 0) return;
 
-    const exercises = todaysPlan.items
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .map((it) => ({
-        id: makeId("ex"),
-        name: it.nameFallback ?? "Exercise",
-        order: it.order,
-        targetSets: it.sets ?? null,
-        targetReps: it.reps ?? null,
-        targetWeight: it.weight ?? null,
-      }));
+      const exercises = todaysPlan.items
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .map((it) => ({
+          id: makeId("ex"),
+          name: it.nameFallback ?? "Exercise",
+          order: it.order,
+          targetSets: it.sets ?? null,
+          targetReps: it.reps ?? null,
+          targetWeight: it.weight ?? null,
+        }));
 
-    const sets = exercises.flatMap((ex) => {
-      const target = ex.targetSets ?? 0;
-      if (!target || target <= 0) return [];
-      return Array.from({ length: target }, (_, idx) => ({
-        id: makeId("set"),
-        exerciseId: ex.id,
-        exerciseName: ex.name,
-        setNumber: idx + 1,
-        targetReps: ex.targetReps ?? null,
-        actualReps: ex.targetReps ?? "",
-        targetWeight: ex.targetWeight ?? null,
-        actualWeight: ex.targetWeight ?? null,
+      const sets = exercises.flatMap((ex) => {
+        const target = ex.targetSets ?? 0;
+        if (!target || target <= 0) return [];
+        return Array.from({ length: target }, (_, idx) => ({
+          id: makeId("set"),
+          exerciseId: ex.id,
+          exerciseName: ex.name,
+          setNumber: idx + 1,
+          targetReps: ex.targetReps ?? null,
+          actualReps: ex.targetReps ?? "",
+          targetWeight: ex.targetWeight ?? null,
+          actualWeight: ex.targetWeight ?? null,
+          completed: false,
+          createdAt: nowIso(),
+        }));
+      });
+
+      autoStartedRef.current = true;
+      saveDraft({
+        id: makeId("workout"),
+        templateId: activeProgram.templateId,
+        programRef: currentProgramRef ?? undefined,
+        programDayIndex: todaysPlan.day,
+        programDayLabel: todaysPlan.label,
+        programName: activeProgram.name,
+        date: nowIso(),
+        startedAt: nowIso(),
         completed: false,
-        createdAt: nowIso(),
-      }));
-    });
+        exercises,
+        sets,
+        notes: null,
+        restTimer: { status: "idle" },
+        updatedAt: nowIso(),
+      });
 
-    autoStartedRef.current = true;
-    saveDraft({
-      id: makeId("workout"),
-      templateId: activeProgram.templateId,
-      programRef: currentProgramRef ?? undefined,
-      programDayIndex: todaysPlan.day,
-      programDayLabel: todaysPlan.label,
-      programName: activeProgram.name,
-      date: nowIso(),
-      startedAt: nowIso(),
-      completed: false,
-      exercises,
-      sets,
-      notes: null,
-      restTimer: { status: "idle" },
-      updatedAt: nowIso(),
-    });
+      trainToast.workoutStarted();
+    } catch (err) {
+      console.error("Failed to create workout draft:", err);
+      setError({
+        title: "Failed to start workout",
+        message: "Something went wrong. Please try again.",
+      });
+      trainToast.error("Failed to start workout");
+    }
   }, [
     hydrated,
     activeProgram,
@@ -220,6 +243,19 @@ export function WorkoutLogger() {
 
   const viewProps: WorkoutLoggerViewProps = useMemo(() => {
     if (!hydrated) return { kind: "loading" };
+
+    if (error) {
+      return {
+        kind: "error",
+        title: error.title,
+        message: error.message,
+        onRetry: () => {
+          setError(null);
+          createDraftForDay();
+        },
+        onGoBack: () => router.push("/train"),
+      };
+    }
 
     if (!activeProgram) {
       return {
@@ -373,15 +409,22 @@ export function WorkoutLogger() {
       onStartRestTimer: (durationMs) => startRestTimer(durationMs),
       onStopRestTimer: () => stopRestTimer(),
       onFinish: () => {
-        const id = finish();
-        router.push(
-          id
-            ? `/train/summary?logId=${encodeURIComponent(id)}`
-            : "/train/history",
-        );
+        try {
+          const id = finish();
+          trainToast.workoutFinished();
+          router.push(
+            id
+              ? `/train/summary?logId=${encodeURIComponent(id)}`
+              : "/train/history",
+          );
+        } catch (err) {
+          console.error("Failed to finish workout:", err);
+          trainToast.saveFailed();
+        }
       },
       onDiscardWorkout: () => {
         discardDraft();
+        trainToast.workoutDiscarded();
         router.push("/train");
       },
       finishDisabled: draft.sets.length === 0,
@@ -389,6 +432,7 @@ export function WorkoutLogger() {
     };
   }, [
     hydrated,
+    error,
     activeProgram,
     currentProgramRef,
     workoutHistory,

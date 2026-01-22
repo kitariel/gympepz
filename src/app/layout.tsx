@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata, type Viewport } from "next";
 import { Geist } from "next/font/google";
+import { Toaster } from "sonner";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -51,6 +52,18 @@ export default function RootLayout({
                 <AnalyticsTracker />
               </Suspense>
               {children}
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  classNames: {
+                    toast: "bg-background border-border text-foreground",
+                    title: "text-foreground",
+                    description: "text-muted-foreground",
+                    success: "!bg-emerald-50 !border-emerald-200 dark:!bg-emerald-950 dark:!border-emerald-800",
+                    error: "!bg-red-50 !border-red-200 dark:!bg-red-950 dark:!border-red-800",
+                  },
+                }}
+              />
             </TRPCReactProvider>
           </AuthSessionProvider>
         </ThemeProvider>

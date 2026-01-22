@@ -170,6 +170,11 @@ export function useWorkoutDraft() {
     setHistory([]);
   }, []);
 
+  const deleteHistoryItem = useCallback((id: string) => {
+    workoutRepo.deleteHistoryItem(id);
+    setHistory(workoutRepo.getHistory());
+  }, []);
+
   const addSet = useCallback(
     (exerciseId: string) => {
       if (!draft) return;
@@ -304,6 +309,7 @@ export function useWorkoutDraft() {
     history,
     refreshHistory,
     clearHistory,
+    deleteHistoryItem,
     summary,
     getDraftStatus,
     isCompletedToday,

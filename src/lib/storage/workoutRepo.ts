@@ -73,5 +73,10 @@ export const workoutRepo = {
   clearHistory(): void {
     remove(STORAGE_KEYS.history);
   },
+  deleteHistoryItem(id: string): void {
+    const current = workoutRepo.getHistory();
+    const filtered = current.filter((item) => item.id !== id);
+    setJSON(STORAGE_KEYS.history, filtered);
+  },
 };
 

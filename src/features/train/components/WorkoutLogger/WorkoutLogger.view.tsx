@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Trash2,
+  RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
 
 import {
@@ -523,6 +525,39 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
       <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
         <div className="bg-muted h-8 w-48 animate-pulse rounded-lg" />
         <div className="bg-muted h-64 animate-pulse rounded-xl" />
+      </div>
+    );
+  }
+
+  if (props.kind === "error") {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight">{props.title}</h1>
+            <p className="text-muted-foreground">{props.message}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            className="touch-target h-12 flex-1"
+            onClick={props.onRetry}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+          <Button
+            variant="outline"
+            className="touch-target h-12 flex-1"
+            onClick={props.onGoBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go back
+          </Button>
+        </div>
       </div>
     );
   }

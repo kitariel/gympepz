@@ -32,6 +32,13 @@ export type WorkoutLoggerViewProps =
       kind: "loading";
     }
   | {
+      kind: "error";
+      title: string;
+      message: string;
+      onRetry: () => void;
+      onGoBack: () => void;
+    }
+  | {
       kind: "noProgram";
       onBrowseTemplates: () => void;
     }

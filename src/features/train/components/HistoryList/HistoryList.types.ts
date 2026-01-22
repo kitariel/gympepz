@@ -16,6 +16,13 @@ export type HistoryListTimeGroupVM = {
 export type HistoryListViewProps =
   | { kind: "loading" }
   | {
+      kind: "error";
+      title: string;
+      message: string;
+      onRetry: () => void;
+      onGoBack: () => void;
+    }
+  | {
       kind: "empty";
       sessionsText: string;
       onClear: () => void;
