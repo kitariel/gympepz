@@ -1,9 +1,10 @@
-import type { Goal } from "@/types/goal.types";
+import type { Goal, GoalType } from "@/types/goal.types";
 
 export type GoalCardViewModel = {
   id: string;
   title: string;
   subtitle: string;
+  goalType: GoalType;
   progress: number;
   currentValue: number;
   targetValue: number;

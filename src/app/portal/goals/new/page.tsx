@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Dumbbell, Repeat, Calendar, Scale } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,12 +17,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGoalMutations } from "@/hooks/useGoals";
+import { ExerciseCombobox } from "@/components/exercise-combobox";
 
 const GOAL_TYPES = [
-  { value: "strength", label: "Strength" },
-  { value: "reps", label: "Reps" },
-  { value: "consistency", label: "Consistency" },
-  { value: "bodyweight", label: "Bodyweight" },
+  {
+    value: "strength",
+    label: "Strength",
+    icon: Dumbbell,
+    description: "Lift a target weight for an exercise",
+    requiresExercise: true,
+  },
+  {
+    value: "reps",
+    label: "Reps",
+    icon: Repeat,
+    description: "Complete a target number of reps",
+    requiresExercise: true,
+  },
+  {
+    value: "consistency",
+    label: "Consistency",
+    icon: Calendar,
+    description: "Complete a target number of workouts",
+    requiresExercise: false,
+  },
+  {
+    value: "bodyweight",
+    label: "Bodyweight",
+    icon: Scale,
+    description: "Reach a target bodyweight",
+    requiresExercise: false,
+  },
 ] as const;
 
 const UNITS: Record<string, { value: string; label: string }[]> = {
@@ -44,6 +70,8 @@ export default function NewGoalPage() {
   const [type, setType] = useState<
     "strength" | "reps" | "consistency" | "bodyweight"
   >("strength");
+  const [exerciseId, setExerciseId] = useState<string | null>(null);
+  const [exerciseName, setExerciseName] = useState<string | null>(null);
   const [targetValue, setTargetValue] = useState("");
   const [unit, setUnit] = useState("kg");
   const [deadline, setDeadline] = useState("");
@@ -51,6 +79,8 @@ export default function NewGoalPage() {
 
   const units = UNITS[type] ?? UNITS.strength;
   const defaultUnit = units?.[0]?.value ?? "kg";
+  const goalTypeConfig = GOAL_TYPES.find((t) => t.value === type);
+  const requiresExercise = goalTypeConfig?.requiresExercise ?? false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,12 +97,18 @@ export default function NewGoalPage() {
       return;
     }
 
+    if (requiresExercise && !exerciseId) {
+      setError("Please select an exercise for this goal type.");
+      return;
+    }
+
     try {
       const goal = await create({
         type,
         targetValue: value,
         unit: unit as "lbs" | "kg" | "reps" | "workouts",
         deadline: deadline ? new Date(deadline) : undefined,
+        exerciseId: requiresExercise ? exerciseId ?? undefined : undefined,
       });
       router.push(`/portal/goals/${goal.id}`);
     } catch (err) {
@@ -121,29 +157,75 @@ export default function NewGoalPage() {
                 onValueChange={(v) => {
                   setType(v as typeof type);
                   setUnit(defaultUnit);
+                  // Clear exercise when switching to a type that doesn't require it
+                  const newType = GOAL_TYPES.find((t) => t.value === v);
+                  if (!newType?.requiresExercise) {
+                    setExerciseId(null);
+                    setExerciseName(null);
+                  }
                 }}
               >
                 <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {GOAL_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
+                  {GOAL_TYPES.map((t) => {
+                    const Icon = t.icon;
+                    return (
+                      <SelectItem key={t.value} value={t.value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          <span>{t.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {goalTypeConfig && (
+                <p className="text-xs text-muted-foreground">
+                  {goalTypeConfig.description}
+                </p>
+              )}
             </div>
 
+            {requiresExercise && (
+              <div className="space-y-2">
+                <Label>Exercise</Label>
+                <ExerciseCombobox
+                  value={exerciseId}
+                  onChange={(id, name) => {
+                    setExerciseId(id);
+                    setExerciseName(name);
+                  }}
+                  placeholder="Select an exercise..."
+                />
+                {exerciseName && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {exerciseName}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="target">Target value</Label>
+              <Label htmlFor="target">
+                Target {type === "consistency" ? "workouts" : type === "reps" ? "reps" : "value"}
+              </Label>
               <Input
                 id="target"
                 type="number"
                 min={0}
-                step={0.1}
-                placeholder="e.g. 135"
+                step={type === "bodyweight" || type === "strength" ? 0.1 : 1}
+                placeholder={
+                  type === "strength"
+                    ? "e.g. 135"
+                    : type === "reps"
+                      ? "e.g. 20"
+                      : type === "consistency"
+                        ? "e.g. 12"
+                        : "e.g. 175"
+                }
                 value={targetValue}
                 onChange={(e) => setTargetValue(e.target.value)}
               />
