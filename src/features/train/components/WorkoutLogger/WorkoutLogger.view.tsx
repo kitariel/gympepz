@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -319,8 +320,8 @@ function FloatingActionBar({
   finishDisabled: boolean;
 }) {
   return (
-    <div className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed right-0 bottom-0 left-0 z-40 border-t px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] backdrop-blur md:bottom-20">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+    <div className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 rounded-lg border px-4 py-3 backdrop-blur">
+      <div className="flex items-center justify-between gap-3">
         <RestTimerCompact
           restTimer={restTimer}
           onStartRestTimer={onStartRestTimer}
@@ -493,6 +494,13 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [finishDialogState, setFinishDialogState] =
     useState<FinishDialogState>("closed");
+  const pathname = usePathname();
+  const isPortal = pathname?.startsWith("/portal") ?? false;
+
+  // Container width classes: portal uses full width, train uses max-w-3xl
+  const containerClasses = isPortal
+    ? "w-full"
+    : "mx-auto w-full max-w-3xl";
 
   // Reset index when exercises change
   useEffect(() => {
@@ -522,7 +530,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
 
   if (props.kind === "loading") {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-4 p-6 pt-4")}>
         <div className="bg-muted h-8 w-48 animate-pulse rounded-lg" />
         <div className="bg-muted h-64 animate-pulse rounded-xl" />
       </div>
@@ -531,7 +539,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
 
   if (props.kind === "error") {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
         <div className="space-y-4 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
             <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -564,7 +572,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
 
   if (props.kind === "noProgram") {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">
             No active program
@@ -585,7 +593,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
 
   if (props.kind === "draftConflict") {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Active workout</h1>
           <p className="text-muted-foreground">
@@ -639,7 +647,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
 
   if (props.kind === "completedToday") {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Great work!</h1>
           <p className="text-muted-foreground">
@@ -685,7 +693,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   if (props.kind === "noDraft") {
     if (props.isRestDay) {
       return (
-        <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+        <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Rest day</h1>
             <p className="text-muted-foreground">
@@ -712,7 +720,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
     }
 
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      <div className={cn(containerClasses, "space-y-6 p-6 pt-4")}>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Ready to train</h1>
           <p className="text-muted-foreground">
@@ -737,7 +745,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const progressPercent = setsTotal > 0 ? (setsDone / setsTotal) * 100 : 0;
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 p-4 pt-2 pb-36">
+    <div className={cn(containerClasses, "space-y-4 p-4 pt-2 pb-8")}>
       {/* Compact header with progress */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -750,6 +758,16 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         </div>
         <Progress value={progressPercent} className="h-2" />
       </div>
+
+      {/* Action bar - moved to top */}
+      <FloatingActionBar
+        restTimer={props.restTimer}
+        onStartRestTimer={props.onStartRestTimer}
+        onStopRestTimer={props.onStopRestTimer}
+        onSaveExit={props.onSaveExit}
+        onFinish={handleFinishClick}
+        finishDisabled={props.finishDisabled}
+      />
 
       {/* Exercise navigator */}
       <ExerciseNavigator
@@ -769,16 +787,6 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           onCopyLastSet={props.onCopyLastSet}
         />
       ) : null}
-
-      {/* Floating action bar */}
-      <FloatingActionBar
-        restTimer={props.restTimer}
-        onStartRestTimer={props.onStartRestTimer}
-        onStopRestTimer={props.onStopRestTimer}
-        onSaveExit={props.onSaveExit}
-        onFinish={handleFinishClick}
-        finishDisabled={props.finishDisabled}
-      />
 
       {/* Finish confirmation dialog */}
       <FinishConfirmationDialog

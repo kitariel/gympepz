@@ -4,8 +4,10 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { trainPath } from "@/lib/routes";
 import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
 import { isDoneToday } from "@/features/train/domain/isDoneToday";
 import type {
@@ -23,6 +25,7 @@ function getDayNumberForToday(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
 
 export function ProgramOverview() {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { activeProgram, hydrated, clearActiveProgram } = useActiveProgram();
   const { hydrated: prefsHydrated, selectedWorkoutDay, setSelectedWorkoutDay } = useTrainPrefs();
   const { hydrated: historyHydrated, history, draft } = useWorkoutDraft();
@@ -40,9 +43,12 @@ export function ProgramOverview() {
   }, [activeProgram, selectedWorkoutDay, today]);
 
   const startHref = useMemo(() => {
-    const base = pickedRaw?.day != null ? `/train/log?day=${pickedRaw.day.day}` : "/train/log";
-    return base.includes("?") ? `${base}&autostart=1` : `${base}?autostart=1`;
-  }, [pickedRaw]);
+    const params: Record<string, string | number> = { autostart: 1 };
+    if (pickedRaw?.day != null) {
+      params.day = pickedRaw.day.day;
+    }
+    return trainPath(routeContext, "log", params);
+  }, [pickedRaw, routeContext]);
 
   const completedToday = useMemo(() => {
     if (!activeProgram) return false;

@@ -7,8 +7,7 @@ import {
   Search,
   X,
   Keyboard,
-  Sparkles,
-  Target,
+  Sparkles
 } from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
@@ -202,40 +201,40 @@ export function AppSidebar({
 
     const items = isGuest
       ? base
-          .map((item) => {
-            // Hide settings/account in guest mode
-            if ((item.url ?? "").startsWith("/portal/account")) return null;
-            if (item.title.toLowerCase() === "settings") return null;
+        .map((item) => {
+          // Hide settings/account in guest mode
+          if ((item.url ?? "").startsWith("/portal/account")) return null;
+          if (item.title.toLowerCase() === "settings") return null;
 
-            // Replace "Workouts" children with portal + train + goals
-            if (item.title.toLowerCase() === "workouts") {
-              return {
-                ...item,
-                url: "#",
-                items: [
-                  { title: "This Week", url: "/portal" },
-                  { title: "Train", url: "/train" },
-                  { title: "Goals", url: "/portal/goals" },
-                ],
-              };
-            }
+          // Replace "Workouts" children with portal + train + goals
+          if (item.title.toLowerCase() === "workouts") {
+            return {
+              ...item,
+              url: "#",
+              items: [
+                { title: "This Week", url: "/portal" },
+                { title: "Train", url: "/train" },
+                { title: "Goals", url: "/portal/goals" },
+              ],
+            };
+          }
 
-            // Hide exercises + account in guest mode
-            const children =
-              item.items?.filter((c) => {
-                const u = (c.url ?? "").toString();
-                if (u.startsWith("/portal/exercises")) return false;
-                if (u.startsWith("/portal/account")) return false;
-                return true;
-              }) ?? item.items;
+          // Hide exercises + account in guest mode
+          const children =
+            item.items?.filter((c) => {
+              const u = (c.url ?? "").toString();
+              if (u.startsWith("/portal/exercises")) return false;
+              if (u.startsWith("/portal/account")) return false;
+              return true;
+            }) ?? item.items;
 
-            // Hide exercises in guest mode
-            const url = (item.url ?? "").toString();
-            if (url.startsWith("/portal/exercises")) return null;
+          // Hide exercises in guest mode
+          const url = (item.url ?? "").toString();
+          if (url.startsWith("/portal/exercises")) return null;
 
-            return { ...item, items: children };
-          })
-          .filter((i): i is NonNullable<typeof i> => Boolean(i))
+          return { ...item, items: children };
+        })
+        .filter((i): i is NonNullable<typeof i> => Boolean(i))
       : base;
 
     if (!searchQuery.trim()) return items;
@@ -432,7 +431,7 @@ export function AppSidebar({
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
+                    {/* <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
                         tooltip="Goals"
@@ -443,7 +442,7 @@ export function AppSidebar({
                           <span>Goals</span>
                         </Link>
                       </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    </SidebarMenuItem> */}
                   </>
                 ) : null}
                 <InstallPWAButton variant="sidebar" />

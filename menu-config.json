@@ -1,5 +1,29 @@
 {
-  "navMain": [],
+  "navMain": [
+    {
+      "title": "Journey",
+      "url": "#",
+      "iconName": "Route",
+      "iconPlatform": "lucide",
+      "enabled": true,
+      "items": [
+        {
+          "title": "Train",
+          "url": "/portal/train",
+          "iconName": "Dumbbell",
+          "iconPlatform": "lucide",
+          "enabled": true
+        },
+        {
+          "title": "Goal",
+          "url": "/portal/goals",
+          "iconName": "Target",
+          "iconPlatform": "lucide",
+          "enabled": true
+        }
+      ]
+    }
+  ],
   "navSecondary": [],
   "projects": []
 }

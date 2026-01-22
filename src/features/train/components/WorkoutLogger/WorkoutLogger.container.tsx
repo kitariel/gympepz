@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { trainPath } from "@/lib/routes";
 import {
   getDayNumberForToday,
   getEffectivePlanDay,
@@ -32,6 +34,7 @@ function makeId(prefix: string): string {
 export function WorkoutLogger() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const routeContext = useRouteContext();
   const [error, setError] = useState<{ title: string; message: string } | null>(
     null,
   );
@@ -253,14 +256,14 @@ export function WorkoutLogger() {
           setError(null);
           createDraftForDay();
         },
-        onGoBack: () => router.push("/train"),
+        onGoBack: () => router.push(trainPath(routeContext)),
       };
     }
 
     if (!activeProgram) {
       return {
         kind: "noProgram",
-        onBrowseTemplates: () => router.push("/train/templates"),
+        onBrowseTemplates: () => router.push(trainPath(routeContext, "templates")),
       };
     }
 
@@ -275,12 +278,19 @@ export function WorkoutLogger() {
           activeDraftDay: draft.programDayLabel ?? null,
           requestedProgram: activeProgram.name,
           requestedDay: todaysPlan.label ?? null,
-          onResume: () => router.push("/train/log"),
+          onResume: () => {
+            // Navigate to the draft's day to resume without conflict
+            if (draft.programDayIndex) {
+              router.replace(trainPath(routeContext, "log", { day: draft.programDayIndex }));
+            } else {
+              router.replace(trainPath(routeContext, "log"));
+            }
+          },
           onDiscard: () => {
             discardDraft();
             createDraftForDay();
           },
-          onCancel: () => router.push("/train/overview"),
+          onCancel: () => router.push(trainPath(routeContext, "overview")),
         };
       }
     }
@@ -302,9 +312,9 @@ export function WorkoutLogger() {
           kind: "completedToday",
           programName: activeProgram.name,
           dayLabel: todaysPlan?.label ?? null,
-          onTakeRestDay: () => router.push("/train/overview"),
+          onTakeRestDay: () => router.push(trainPath(routeContext, "overview")),
           onRepeat: createDraftForDay,
-          onBackToOverview: () => router.push("/train/overview"),
+          onBackToOverview: () => router.push(trainPath(routeContext, "overview")),
         };
       }
 
@@ -315,8 +325,8 @@ export function WorkoutLogger() {
         isRestDay,
         startDisabled: !todaysPlan || isRestDay,
         onStart: createDraftForDay,
-        onBackToOverview: () => router.push("/train/overview"),
-        onUseAutoDay: () => router.push("/train/log"),
+        onBackToOverview: () => router.push(trainPath(routeContext, "overview")),
+        onUseAutoDay: () => router.push(trainPath(routeContext, "log")),
       };
     }
 
@@ -414,8 +424,8 @@ export function WorkoutLogger() {
           trainToast.workoutFinished();
           router.push(
             id
-              ? `/train/summary?logId=${encodeURIComponent(id)}`
-              : "/train/history",
+              ? trainPath(routeContext, "summary", { logId: id })
+              : trainPath(routeContext, "history"),
           );
         } catch (err) {
           console.error("Failed to finish workout:", err);
@@ -425,10 +435,10 @@ export function WorkoutLogger() {
       onDiscardWorkout: () => {
         discardDraft();
         trainToast.workoutDiscarded();
-        router.push("/train");
+        router.push(trainPath(routeContext));
       },
       finishDisabled: draft.sets.length === 0,
-      onSaveExit: () => router.push("/train"),
+      onSaveExit: () => router.push(trainPath(routeContext)),
     };
   }, [
     hydrated,
@@ -439,6 +449,7 @@ export function WorkoutLogger() {
     draft,
     todaysPlan,
     router,
+    routeContext,
     createDraftForDay,
     discardDraft,
     getDraftStatus,
