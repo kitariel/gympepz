@@ -169,6 +169,8 @@ function SingleExerciseView({
   onAddSet,
   onCopyPrevious,
   onCopyLastSet,
+  showNextWorkout,
+  onNextWorkout,
 }: {
   exercise: WorkoutLoggerExerciseVM;
   onUpdateSet: (
@@ -182,6 +184,8 @@ function SingleExerciseView({
   onAddSet: (exerciseId: string) => void;
   onCopyPrevious: (exerciseId: string, setId: string) => void;
   onCopyLastSet: (exerciseId: string, setId: string) => void;
+  showNextWorkout?: boolean;
+  onNextWorkout?: () => void;
 }) {
   const completedSets = exercise.setRows.filter((s) => s.completed).length;
   const totalSets = exercise.setRows.length;
@@ -279,6 +283,16 @@ function SingleExerciseView({
           </div>
         ))}
       </div>
+
+      {showNextWorkout ? (
+        <Button
+          variant="default"
+          className="touch-target h-12 w-full bg-emerald-500 hover:bg-emerald-600"
+          onClick={onNextWorkout}
+        >
+          Next workout
+        </Button>
+      ) : null}
 
       {/* Add set button */}
       <Button
@@ -494,6 +508,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [finishDialogState, setFinishDialogState] =
     useState<FinishDialogState>("closed");
+  const [workoutListOpen, setWorkoutListOpen] = useState(true);
   const pathname = usePathname();
   const isPortal = pathname?.startsWith("/portal") ?? false;
 
@@ -743,6 +758,9 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const { programName, setsDone, setsTotal, exercises } = props;
   const currentExercise = exercises[currentExerciseIndex];
   const progressPercent = setsTotal > 0 ? (setsDone / setsTotal) * 100 : 0;
+  const hasNextExercise = currentExerciseIndex < exercises.length - 1;
+  const currentExerciseComplete =
+    currentExercise?.setRows.every((set) => set.completed) ?? false;
 
   return (
     <div className={cn(containerClasses, "space-y-4 p-4 pt-2 pb-8")}>
@@ -776,6 +794,60 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         onNavigate={setCurrentExerciseIndex}
       />
 
+      <Card elevation="subtle">
+        <CardContent className="space-y-2 p-4">
+          <button
+            type="button"
+            onClick={() => setWorkoutListOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between text-left text-sm font-semibold text-muted-foreground"
+            aria-expanded={workoutListOpen}
+          >
+            Workout list
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 transition-transform",
+                workoutListOpen && "rotate-90",
+              )}
+            />
+          </button>
+
+          {workoutListOpen ? (
+            <div className="space-y-1">
+              {exercises.map((exercise, index) => {
+                const completed = exercise.setRows.filter((set) => set.completed)
+                  .length;
+                const total = exercise.setRows.length;
+                const isComplete = total > 0 && completed === total;
+                const isActive = index === currentExerciseIndex;
+
+                return (
+                  <button
+                    key={exercise.id}
+                    type="button"
+                    onClick={() => setCurrentExerciseIndex(index)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors",
+                      isActive
+                        ? "bg-emerald-500/10 text-emerald-700"
+                        : "hover:bg-muted",
+                    )}
+                    aria-current={isActive ? "true" : undefined}
+                  >
+                    <span className="truncate">{exercise.name}</span>
+                    <span className="flex items-center gap-2 text-xs tabular-nums text-muted-foreground">
+                      {isComplete ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : null}
+                      {completed}/{total}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       {/* Single exercise focus */}
       {currentExercise ? (
         <SingleExerciseView
@@ -785,6 +857,8 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           onAddSet={props.onAddSet}
           onCopyPrevious={props.onCopyPrevious}
           onCopyLastSet={props.onCopyLastSet}
+          showNextWorkout={currentExerciseComplete && hasNextExercise}
+          onNextWorkout={() => setCurrentExerciseIndex((idx) => idx + 1)}
         />
       ) : null}
 

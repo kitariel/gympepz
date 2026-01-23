@@ -112,7 +112,7 @@ export function PortalTrainEntryScreen() {
         return {
           kind: "draft",
           cta: { label: "Resume workout", href: "/portal/train/log", variant: "default" },
-          programName: activeWorkout.planDay?.title ?? "Workout",
+          programName: "Workout",
           dayLabel: null,
         };
       }
@@ -182,7 +182,7 @@ export function PortalTrainEntryScreen() {
       return dbWorkouts.items.slice(0, 3).map((w) => ({
         id: w.id,
         dateText: formatRelativeDate(w.date),
-        dayLabel: w.planDay?.title ?? null,
+        dayLabel: null,
         setsCount: w._count.exercises,
       }));
     }

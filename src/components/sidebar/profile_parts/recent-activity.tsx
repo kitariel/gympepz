@@ -11,9 +11,6 @@ interface Workout {
   date: Date | string;
   completed: boolean;
   duration?: number;
-  planDay?: {
-    title: string;
-  };
   _count?: {
     exercises: number;
   };
@@ -62,7 +59,7 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-foreground truncate text-xs font-semibold">
-                    {workout.planDay?.title ?? "Workout"}
+                    Workout
                   </div>
                   <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[9px]">
                     <span>

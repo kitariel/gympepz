@@ -6,8 +6,8 @@ import { userRouter } from "./routers/user";
 import { locationRouter } from "./routers/location";
 import { galleryRouter } from "./routers/gallery";
 import { exerciseRouter } from "./routers/exercise";
-import { planRouter } from "./routers/plan";
 import { workoutLogRouter } from "./routers/workout-log";
+import { programRouter } from "./routers/program";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
 import { goalRouter } from "./routers/goal";
@@ -25,8 +25,8 @@ export const appRouter = createTRPCRouter({
   location: locationRouter,
   gallery: galleryRouter,
   exercise: exerciseRouter,
-  plan: planRouter,
   workoutLog: workoutLogRouter,
+  program: programRouter,
   progress: progressRouter,
   analytics: analyticsRouter,
   goal: goalRouter,

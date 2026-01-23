@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dumbbell, Target, Wrench, BarChart3, Plus, Heart } from "lucide-react";
+import { Dumbbell, Target, Wrench, BarChart3, Heart } from "lucide-react";
 
 import type { Exercise } from "@/types/exercise";
 
@@ -20,7 +20,6 @@ interface ExerciseDetailModalProps {
   exercise: Exercise | null;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
-  onAddToPlan?: () => void;
 }
 
 export function ExerciseDetailModal({
@@ -29,7 +28,6 @@ export function ExerciseDetailModal({
   exercise,
   isFavorite = false,
   onToggleFavorite,
-  onAddToPlan,
 }: ExerciseDetailModalProps) {
   if (!exercise) return null;
 
@@ -145,10 +143,6 @@ export function ExerciseDetailModal({
                 className={`mr-2 h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
               />
               {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-            </Button>
-            <Button className="flex-1" onClick={onAddToPlan}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add to Plan
             </Button>
           </div>
         </div>

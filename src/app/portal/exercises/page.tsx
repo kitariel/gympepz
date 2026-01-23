@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ExerciseCard } from "./_components/exercise-card";
 import { ExerciseFilters } from "./_components/exercise-filters";
 import { ExerciseDetailModal } from "./_components/exercise-detail-modal";
-import { AddToPlanDialog } from "./_components/add-to-plan-dialog";
 import { Dumbbell } from "lucide-react";
 import type { Exercise } from "@/types/exercise";
 import { useSession } from "next-auth/react";
@@ -25,7 +24,7 @@ export default function ExercisesPage() {
           <CardContent className="space-y-3 p-6">
             <h2 className="text-xl font-semibold">Exercise Library</h2>
             <p className="text-sm text-muted-foreground">
-              Login to browse the full exercise library and add exercises to your plans.
+              Login to browse the full exercise library and add exercises to your programs.
             </p>
             <Button asChild className="h-9">
               <Link href="/login">Login to sync</Link>
@@ -52,7 +51,6 @@ function AuthenticatedExercisesPage() {
     null,
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isAddToPlanDialogOpen, setIsAddToPlanDialogOpen] = useState(false);
 
   // Favorites
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -166,10 +164,6 @@ function AuthenticatedExercisesPage() {
               isFavorite={favorites.has(exercise.id)}
               onToggleFavorite={() => handleToggleFavorite(exercise.id)}
               onViewDetails={() => handleViewDetails(exercise)}
-              onAddToPlan={() => {
-                setSelectedExercise(exercise);
-                setIsAddToPlanDialogOpen(true);
-              }}
             />
           ))}
         </div>
@@ -201,20 +195,7 @@ function AuthenticatedExercisesPage() {
         onToggleFavorite={() =>
           selectedExercise && handleToggleFavorite(selectedExercise.id)
         }
-        onAddToPlan={() => {
-          setIsAddToPlanDialogOpen(true);
-        }}
       />
-
-      {/* Add to Plan Dialog */}
-      {selectedExercise && (
-        <AddToPlanDialog
-          open={isAddToPlanDialogOpen}
-          onOpenChange={setIsAddToPlanDialogOpen}
-          exerciseId={selectedExercise.id}
-          exerciseName={selectedExercise.name}
-        />
-      )}
     </div>
   );
 }

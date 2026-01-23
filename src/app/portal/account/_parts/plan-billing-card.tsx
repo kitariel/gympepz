@@ -3,19 +3,11 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/trpc/react";
 import { Sparkles, TrendingUp, Star } from "lucide-react";
 
-export function PlanBillingCard({ userId }: { userId: string }) {
-  const plansQuery = api.plan.listByUser.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
-  const planCount = Array.isArray(plansQuery.data) ? plansQuery.data.length : 0;
-  const activePlanCount = Array.isArray(plansQuery.data)
-    ? plansQuery.data.filter((p) => (p as { isActive?: boolean }).isActive)
-        .length
-    : 0;
+export function PlanBillingCard({ userId: _userId }: { userId: string }) {
+  const planCount = 0;
+  const activePlanCount = 0;
 
   return (
     <Card className="border-0 shadow-sm">

@@ -16,7 +16,6 @@ import type { OfflineWorkoutLog, OfflineWorkoutSet } from "@/lib/guest/types";
 function transformWorkoutRepoToSync(
   workout: WorkoutHistoryItem,
 ): {
-  planDayId: string | null;
   date: string;
   startTime: string;
   endTime: string | null;
@@ -24,6 +23,7 @@ function transformWorkoutRepoToSync(
   notes: string | null;
   sets: Array<{
     exerciseId: string;
+    exerciseName?: string;
     setNumber: number;
     targetReps: string | number | null;
     actualReps: string | number;
@@ -34,7 +34,6 @@ function transformWorkoutRepoToSync(
   }>;
 } {
   return {
-    planDayId: null, // workoutRepo doesn't store planDayId
     date: workout.date,
     startTime: workout.startedAt,
     endTime: workout.endedAt ?? null,
@@ -42,6 +41,7 @@ function transformWorkoutRepoToSync(
     notes: workout.notes,
     sets: workout.sets.map((set) => ({
       exerciseId: set.exerciseId,
+      exerciseName: set.exerciseName,
       setNumber: set.setNumber,
       // workoutRepo uses strings - keep as-is, endpoint will convert
       targetReps: set.targetReps,
@@ -60,7 +60,6 @@ function transformWorkoutRepoToSync(
 function transformOfflineLogToSync(
   workout: OfflineWorkoutLog,
 ): {
-  planDayId: string | null;
   date: string;
   startTime: string;
   endTime: string | null;
@@ -68,6 +67,7 @@ function transformOfflineLogToSync(
   notes: string | null;
   sets: Array<{
     exerciseId: string;
+    exerciseName?: string;
     setNumber: number;
     targetReps: number | null;
     actualReps: number;
@@ -78,7 +78,6 @@ function transformOfflineLogToSync(
   }>;
 } {
   return {
-    planDayId: workout.planDayId,
     date: workout.date,
     startTime: workout.startTime,
     endTime: workout.endTime ?? null,
@@ -86,6 +85,7 @@ function transformOfflineLogToSync(
     notes: workout.notes,
     sets: workout.sets.map((set: OfflineWorkoutSet) => ({
       exerciseId: set.exerciseId,
+      exerciseName: undefined,
       setNumber: set.setNumber,
       targetReps: set.targetReps,
       actualReps: set.actualReps,

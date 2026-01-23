@@ -112,7 +112,6 @@ export function TrainModeProvider({ children }: { children: ReactNode }) {
       if (completedWorkouts.length > 0) {
         // Transform to sync format
         const workoutsToSync = completedWorkouts.map((workout: WorkoutHistoryItem) => ({
-          planDayId: null,
           date: workout.date,
           startTime: workout.startedAt,
           endTime: workout.endedAt ?? null,
@@ -120,6 +119,7 @@ export function TrainModeProvider({ children }: { children: ReactNode }) {
           notes: workout.notes,
           sets: workout.sets.map((set) => ({
             exerciseId: set.exerciseId,
+            exerciseName: set.exerciseName,
             setNumber: set.setNumber,
             targetReps: set.targetReps,
             actualReps: set.actualReps,

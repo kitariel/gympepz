@@ -136,14 +136,6 @@ function getPortalNavTabs(
 ): NavTab[] {
   return [
     {
-      label: "AI",
-      href: "/portal/ai-planner",
-      icon: Sparkles,
-      isActive:
-        pathname === "/portal/ai-planner" ||
-        pathname.startsWith("/portal/ai-planner/"),
-    },
-    {
       label: "Goals",
       href: "/portal/goals",
       icon: Target,
@@ -410,7 +402,7 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
   };
 
   const handlePortalClick = () => {
-    router.push("/portal/ai-planner");
+    router.push("/portal");
   };
 
   const portalTabs = getPortalNavTabs(pathname, trainBasePath, handleTrainClick);

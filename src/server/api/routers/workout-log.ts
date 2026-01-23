@@ -53,7 +53,6 @@ export const workoutLogRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string().min(1),
-        planDayId: z.string().optional(),
         date: z.date().optional(),
         notes: z.string().optional(),
       }),
@@ -94,45 +93,10 @@ export const workoutLogRouter = createTRPCRouter({
       const log = await ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
-          planDayId: input.planDayId,
           date: workoutDate,
           notes: input.notes,
         },
       });
-
-      if (input.planDayId) {
-        const planDay = await ctx.db.planDay.findUnique({
-          where: { id: input.planDayId },
-          include: {
-            items: {
-              include: { exercise: true }, // Include exercise relation to check if it exists
-            },
-          },
-        });
-
-        if (planDay && planDay.items.length > 0) {
-          // Filter out items with deleted/missing exercises and sort by order
-          const validItems = planDay.items.filter(
-            (item) => item.exercise != null,
-          );
-          const sortedItems = [...validItems].sort(
-            (a, b) => (a.order ?? 0) - (b.order ?? 0),
-          );
-
-          if (sortedItems.length > 0) {
-            await ctx.db.workoutLogExercise.createMany({
-              data: sortedItems.map((item, index) => ({
-                workoutLogId: log.id,
-                exerciseId: item.exerciseId,
-                sets: item.sets,
-                reps: item.reps,
-                weight: item.weight,
-                order: index,
-              })),
-            });
-          }
-        }
-      }
 
       return log;
     }),
@@ -152,7 +116,6 @@ export const workoutLogRouter = createTRPCRouter({
         take: input.limit + 1,
         cursor: input.cursor ? { id: input.cursor } : undefined,
         include: {
-          planDay: true,
           _count: { select: { exercises: true } },
         },
       });
@@ -179,7 +142,6 @@ export const workoutLogRouter = createTRPCRouter({
             include: { exercise: true },
             orderBy: { order: "asc" },
           },
-          planDay: true,
         },
       });
     }),
@@ -324,106 +286,11 @@ export const workoutLogRouter = createTRPCRouter({
       return workout;
     }),
 
-  // Quick start from active plan
+  // Quick start creates an empty workout log for today.
   quickStart: publicProcedure
-    .input(z.object({ userId: z.string().min(1), day: z.string().optional() }))
+    .input(z.object({ userId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const user = await ctx.db.user.findUnique({
-        where: { id: input.userId },
-        include: {
-          activePlan: {
-            include: {
-              days: {
-                include: { items: { include: { exercise: true } } },
-                orderBy: { order: "asc" },
-              },
-            },
-          },
-        },
-      });
-
-      if (!user?.activePlan) {
-        throw new Error("No active plan found");
-      }
-
-      // Use provided day from client (local timezone) or fall back to UTC calculation
-      const DAY_NAMES = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ] as const;
-
       const now = new Date();
-      // If client provides day name, use it; otherwise calculate from UTC
-      const currentDayName = input.day ?? DAY_NAMES[now.getUTCDay()];
-
-      // Helper: Check if day has exercises
-      const hasExercises = (day: (typeof user.activePlan.days)[0]) => {
-        return (
-          day &&
-          day.items &&
-          day.items.length > 0 &&
-          day.items.some((item) => item.exercise !== null)
-        );
-      };
-
-      // Find the correct day in the plan
-      // 1. Try to find exact match by day name (prioritize days with exercises)
-      const dayMatches = user.activePlan.days.filter(
-        (d) => d.day === currentDayName,
-      );
-
-      let targetDay = dayMatches.find(hasExercises) ?? dayMatches[0];
-
-      // 2. If no exact day name match, try to find by order (0=Sunday, 1=Monday, etc.)
-      if (!targetDay) {
-        const dayIndex = DAY_NAMES.findIndex((d) => d === currentDayName);
-        if (dayIndex !== -1) {
-          // Normalize order (7 -> 6 for Saturday)
-          const normalizedOrder = (order: number) => (order === 7 ? 6 : order);
-
-          const orderMatches = user.activePlan.days.filter(
-            (d) => normalizedOrder(d.order) === dayIndex,
-          );
-          targetDay = orderMatches.find(hasExercises) ?? orderMatches[0];
-        }
-      }
-
-      // 3. If still no match (e.g. today is Sunday but plan only has Mon-Fri),
-      // fall back to next available day logic
-      if (!targetDay) {
-        // Get last workout to determine next day
-        const lastLog = await ctx.db.workoutLog.findFirst({
-          where: {
-            userId: input.userId,
-            planDayId: { not: null },
-          },
-          orderBy: { date: "desc" },
-          include: { planDay: true },
-        });
-
-        if (lastLog?.planDay) {
-          const lastDayOrder = lastLog.planDay.order;
-          const nextDayIndex =
-            user.activePlan.days.findIndex((d) => d.order > lastDayOrder) ?? 0;
-          targetDay =
-            user.activePlan.days[nextDayIndex] ?? user.activePlan.days[0];
-        } else {
-          // No previous logs, start with first day
-          targetDay = user.activePlan.days[0];
-        }
-      }
-
-      if (!targetDay) {
-        throw new Error("No workout day found");
-      }
-
-      // Create workout log with today's date in UTC (start of day)
-      // This ensures the date displays correctly regardless of timezone
       const todayUTC = new Date(
         Date.UTC(
           now.getUTCFullYear(),
@@ -436,44 +303,12 @@ export const workoutLogRouter = createTRPCRouter({
         ),
       );
 
-      const log = await ctx.db.workoutLog.create({
+      return ctx.db.workoutLog.create({
         data: {
           userId: input.userId,
-          planDayId: targetDay.id,
           date: todayUTC,
         },
       });
-
-      // Create workout log exercises from plan day items
-      if (targetDay.items && targetDay.items.length > 0) {
-        // Filter out items with null exercises (deleted exercises)
-        const validItems = targetDay.items.filter(
-          (item) => item.exercise !== null,
-        );
-
-        // Sort items by order before creating
-        const sortedItems = [...validItems].sort(
-          (a, b) => (a.order ?? 0) - (b.order ?? 0),
-        );
-
-        if (sortedItems.length > 0) {
-          await ctx.db.workoutLogExercise.createMany({
-            data: sortedItems.map((item, index) => ({
-              workoutLogId: log.id,
-              exerciseId: item.exerciseId,
-              sets: item.sets,
-              reps: item.reps,
-              weight: item.weight,
-              order: index, // Preserve order from plan
-            })),
-          });
-        }
-      }
-
-      // Set tracking will be available after migration
-      // WorkoutSet table doesn't exist yet
-
-      return log;
     }),
 
   // Get workout with history context
@@ -492,14 +327,6 @@ export const workoutLogRouter = createTRPCRouter({
             include: { exercise: true },
             orderBy: { order: "asc" },
           },
-          planDay: {
-            include: {
-              items: {
-                include: { exercise: true },
-                orderBy: { order: "asc" },
-              },
-            },
-          },
           // Note: sets relation will be available after migration
           // Frontend handles fallback to exercises if sets don't exist
         },
@@ -507,36 +334,13 @@ export const workoutLogRouter = createTRPCRouter({
 
       if (!workout) return null;
 
-      // Get plan day exercises (always available from the active plan)
-      const planDayExercises =
-        workout.planDay?.items
-          ?.filter((item) => item.exercise != null)
-          .map((item, index) => ({
-            id: `plan-${item.id}`, // Temporary ID for plan items
-            workoutLogId: workout.id,
-            exerciseId: item.exerciseId,
-            exercise: item.exercise,
-            sets: item.sets,
-            reps: item.reps,
-            weight: item.weight,
-            rpe: null,
-            notes: null,
-            order: item.order ?? index,
-            createdAt: workout.createdAt,
-            isFromPlan: true, // Flag to indicate this is from plan, not logged yet
-          })) ?? [];
-
-      // Use logged exercises if they exist, otherwise use plan exercises
-      // This ensures exercises are always available from the active plan
-      const exercisesToDisplay =
-        workout.exercises.length > 0 ? workout.exercises : planDayExercises;
+      const exercisesToDisplay = workout.exercises;
 
       let lastWorkout = null;
-      if (input.includeLastWorkout && workout.planDayId) {
+      if (input.includeLastWorkout) {
         lastWorkout = await ctx.db.workoutLog.findFirst({
           where: {
             userId: workout.userId,
-            planDayId: workout.planDayId,
             id: { not: workout.id },
             completed: true,
           },
@@ -554,7 +358,6 @@ export const workoutLogRouter = createTRPCRouter({
         ...workout,
         // Always use exercises (from plan if no logged exercises exist)
         exercises: exercisesToDisplay,
-        planDayExercises, // Also provide plan exercises separately for reference
         lastWorkout,
       };
     }),
@@ -581,7 +384,6 @@ export const workoutLogRouter = createTRPCRouter({
           },
         },
         include: {
-          planDay: true,
           _count: { select: { exercises: true } },
         },
         orderBy: { date: "asc" },
@@ -787,13 +589,6 @@ export const workoutLogRouter = createTRPCRouter({
           },
         },
         orderBy: { date: "desc" },
-        include: {
-          planDay: {
-            select: {
-              title: true,
-            },
-          },
-        },
       });
 
       if (!recentWorkout) {
@@ -810,7 +605,7 @@ export const workoutLogRouter = createTRPCRouter({
         hasRecentWorkout: true,
         workout: {
           id: recentWorkout.id,
-          title: recentWorkout.planDay?.title ?? "Workout",
+          title: "Workout",
           date: recentWorkout.date,
           duration: recentWorkout.duration,
           hoursSince,
@@ -829,7 +624,6 @@ export const workoutLogRouter = createTRPCRouter({
           exercises: {
             include: { exercise: true }, // Include exercise relation to check if it exists
           },
-          planDay: true,
         },
       });
 
@@ -841,7 +635,6 @@ export const workoutLogRouter = createTRPCRouter({
       const newLog = await ctx.db.workoutLog.create({
         data: {
           userId: sourceLog.userId,
-          planDayId: sourceLog.planDayId,
           date: input.date ?? new Date(),
           notes: sourceLog.notes,
           completed: false,
@@ -900,15 +693,6 @@ export const workoutLogRouter = createTRPCRouter({
           userId: input.userId,
           completed: false,
         },
-        include: {
-          planDay: {
-            select: {
-              id: true,
-              title: true,
-              order: true,
-            },
-          },
-        },
         orderBy: { date: "desc" },
       });
     }),
@@ -921,7 +705,6 @@ export const workoutLogRouter = createTRPCRouter({
         workouts: z.array(
           z.object({
             // Common fields (both workoutRepo and OfflineWorkoutLog formats)
-            planDayId: z.string().nullish(),
             date: z.string(), // ISO
             startTime: z.string(), // ISO
             endTime: z.string().nullish(), // ISO
@@ -930,6 +713,7 @@ export const workoutLogRouter = createTRPCRouter({
             sets: z.array(
               z.object({
                 exerciseId: z.string(),
+                exerciseName: z.string().optional(),
                 setNumber: z.number(),
                 // Support both string (workoutRepo) and number (OfflineWorkoutLog) formats
                 targetReps: z.union([z.string(), z.number()]).nullish(),
@@ -947,12 +731,70 @@ export const workoutLogRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const syncedIds: string[] = [];
       const errors: Array<{ workoutIndex: number; error: string }> = [];
+      type TransformedSet = {
+        exerciseId: string;
+        setNumber: number;
+        targetReps: number | null;
+        actualReps: number;
+        targetWeight: number | null;
+        actualWeight: number | null;
+        rpe: number | null;
+        completed: boolean;
+      };
 
       for (let i = 0; i < input.workouts.length; i++) {
         const workout = input.workouts[i];
         if (!workout) continue;
 
         try {
+          const uniqueExerciseIds = Array.from(
+            new Set(workout.sets.map((set) => set.exerciseId).filter(Boolean)),
+          );
+          const existingExercises =
+            uniqueExerciseIds.length > 0
+              ? await ctx.db.exercise.findMany({
+                  where: { id: { in: uniqueExerciseIds } },
+                })
+              : [];
+          const exerciseIdMap = new Map<string, string>(
+            existingExercises.map((ex) => [ex.id, ex.id]),
+          );
+
+          const nameLookup = new Map<string, string>();
+          for (const set of workout.sets) {
+            if (set.exerciseName && !nameLookup.has(set.exerciseId)) {
+              nameLookup.set(set.exerciseId, set.exerciseName);
+            }
+          }
+
+          const missingExerciseIds = uniqueExerciseIds.filter(
+            (id) => !exerciseIdMap.has(id),
+          );
+
+          if (missingExerciseIds.length > 0) {
+            const created = await Promise.all(
+              missingExerciseIds.map(async (missingId) => {
+                const name = nameLookup.get(missingId);
+                if (!name) return null;
+                const existingByName = await ctx.db.exercise.findFirst({
+                  where: { name },
+                });
+                if (existingByName) return { fromId: missingId, toId: existingByName.id };
+                const createdExercise = await ctx.db.exercise.create({
+                  data: {
+                    name,
+                    muscleGroup: "Custom",
+                  },
+                });
+                return { fromId: missingId, toId: createdExercise.id };
+              }),
+            );
+
+            for (const entry of created) {
+              if (entry) exerciseIdMap.set(entry.fromId, entry.toId);
+            }
+          }
+
           // Normalize date to UTC start of day
           const workoutDate = new Date(workout.date);
           const normalizedDate = new Date(
@@ -998,6 +840,8 @@ export const workoutLogRouter = createTRPCRouter({
           const transformedSets = workout.sets
             .filter((set) => set.exerciseId && set.setNumber > 0) // Filter invalid sets
             .map((set) => {
+              const mappedExerciseId = exerciseIdMap.get(set.exerciseId) ?? null;
+              if (!mappedExerciseId) return null;
               // Helper to safely convert string/number to number
               const toNumber = (
                 value: string | number | null | undefined,
@@ -1014,7 +858,7 @@ export const workoutLogRouter = createTRPCRouter({
               };
 
               return {
-                exerciseId: set.exerciseId,
+                exerciseId: mappedExerciseId,
                 setNumber: set.setNumber,
                 targetReps: toNumber(set.targetReps),
                 actualReps: toNumber(set.actualReps) ?? 0, // Default to 0 if invalid
@@ -1026,13 +870,14 @@ export const workoutLogRouter = createTRPCRouter({
                     : null,
                 completed: set.completed ?? false,
               };
-            });
+            })
+            .filter((set): set is TransformedSet => set !== null);
 
           // Skip workout if no valid sets
           if (transformedSets.length === 0) {
             errors.push({
               workoutIndex: i,
-              error: "No valid sets to sync",
+              error: "No valid sets to sync (missing exercises)",
             });
             continue;
           }
@@ -1049,7 +894,6 @@ export const workoutLogRouter = createTRPCRouter({
           const workoutLog = await ctx.db.workoutLog.create({
             data: {
               userId: input.userId,
-              planDayId: workout.planDayId ?? null,
               date: normalizedDate,
               startTime,
               endTime,

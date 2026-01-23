@@ -21,9 +21,9 @@ model User {
     accounts     Account[]
     sessions     Session[]
     images       UserImage[]
-    plans        Plan[]
-    activePlanId String?       @unique
-    activePlan   Plan?         @relation("UserActivePlan", fields: [activePlanId], references: [id])
+    programs     Program[]
+    activeProgramId String?   @unique
+    activeProgram   Program?  @relation("UserActiveProgram", fields: [activeProgramId], references: [id])
 
     workoutLogs     WorkoutLog[]
     progressEntries ProgressEntry[]

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Sparkles, Target, Dumbbell, ChevronLeft } from "lucide-react";
+import { Target, Dumbbell, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PortalNavItem {
@@ -28,9 +28,8 @@ export function PortalNavContent({
     router.push(trainBasePath);
   };
 
-  // Portal navigation items: AI Planner, Goal, Exercises, Train (with arrow)
+  // Portal navigation items: Goal, Exercises, Train (with arrow)
   const navItems: PortalNavItem[] = [
-    { label: "AI Planner", href: "/portal/ai-planner", icon: Sparkles },
     { label: "Goal", href: "/portal/goals", icon: Target },
     { label: "Exercises", href: "/portal/exercises", icon: Dumbbell },
     {

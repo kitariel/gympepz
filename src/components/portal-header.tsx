@@ -21,30 +21,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Play,
-  Sparkles,
-  Bell,
-  Settings,
-  User,
-  LogOut,
-  Home,
-  Calendar,
-} from "lucide-react";
+import { Play, Bell, Settings, User, LogOut, Home } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +34,6 @@ import { Badge } from "@/components/ui/badge";
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
   "/portal/exercises": "Exercises",
-  "/portal/ai-planner": "AI Planner",
   "/portal/workout-builder": "Workout Builder",
   "/portal/account": "Account",
 };
@@ -100,7 +81,6 @@ export function PortalHeader() {
       // Handle dynamic routes (UUIDs)
       const isDynamicRoute = /^[a-z0-9-]{20,}$/.test(path);
       if (isDynamicRoute) {
-        if (href.includes("/plans/")) return { label: "Plan Details", href };
         if (href.includes("/workout/")) return { label: "Workout", href };
         if (href.includes("/log/")) return { label: "Log Details", href };
         return { label: "Details", href };
@@ -114,12 +94,6 @@ export function PortalHeader() {
   }, [pathname]);
 
   const userId = session?.user?.id ?? "";
-  const activePlan = api.plan.listByUser.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
-  const activePlanData = activePlan.data?.find((p) => p.isActive);
-
   const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
     { userId },
     { enabled: !!userId },
@@ -130,46 +104,7 @@ export function PortalHeader() {
     { enabled: !!userId },
   );
 
-  // Get today's workout to check if it has exercises
-  // Match quick-actions behavior: enable when userId and activePlanId exist
-  // Pass day based on local timezone to avoid UTC timezone issues
-  const dayNames = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ] as const;
-  const localDayName = dayNames[new Date().getDay()]!;
-
-  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
-    { userId, day: localDayName },
-    {
-      enabled: !!userId && !!activePlanData?.id,
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-    },
-  );
-
-  console.log(
-    "todaysWorkout.datatodaysWorkout.datatodaysWorkout.data",
-    todaysWorkout.data,
-  );
-
-  const utils = api.useUtils();
-  const toggleRestDay = api.plan.toggleRestDay.useMutation({
-    onSuccess: () => {
-      // Invalidate getTodaysWorkout query to ensure UI updates
-      if (userId) {
-        void utils.plan.getTodaysWorkout.invalidate({ userId });
-      }
-    },
-  });
-
   const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 
   const quickStart = api.workoutLog.quickStart.useMutation({
     onSuccess: () => router.push("/portal/train/log"),
@@ -181,78 +116,22 @@ export function PortalHeader() {
       return;
     }
 
-    if (!activePlanData) {
-      router.push("/portal/train/templates");
-      return;
-    }
-
     // Check if there's already an active workout - redirect to it (match quick-actions behavior)
     if (activeWorkout.data && !activeWorkout.data.completed) {
       router.push("/portal/train/log");
       return;
     }
 
-    const todayWorkout = todaysWorkout.data?.todayWorkout;
-    const isRestDay = todayWorkout?.isRestDay ?? false;
-    const hasExercises =
-      todayWorkout?.exercises && todayWorkout.exercises.length > 0;
-
-    // Priority: 1. Rest Day (if marked as rest day, show dialog), 2. Exercises, 3. No workout
-    if (isRestDay) {
-      // It's a rest day - show dialog
-      setShowRestDayDialog(true);
+    if (recentWorkoutCheck.data?.hasRecentWorkout) {
+      setShowWarningDialog(true);
       return;
     }
-
-    // If there are exercises, allow starting
-    if (hasExercises) {
-      // Check if there's a recent completed workout
-      if (recentWorkoutCheck.data?.hasRecentWorkout) {
-        setShowWarningDialog(true);
-        return;
-      }
-      quickStart.mutate({ userId });
-      return;
-    }
-
-    // No exercises and not a rest day - show dialog
-    if (todayWorkout) {
-      setShowRestDayDialog(true);
-      return;
-    }
-
-    // No workout scheduled - proceed anyway (match quick-actions behavior)
     quickStart.mutate({ userId });
-  };
-
-  const handleRestDayChoice = async (action: "skip" | "add" | "mark") => {
-    setShowRestDayDialog(false);
-
-    if (action === "skip") {
-      // User confirms it's a rest day - just close
-      return;
-    } else if (action === "mark") {
-      // User wants to mark today as rest day
-      if (todaysWorkout.data?.todayWorkout?.id) {
-        await toggleRestDay.mutateAsync({
-          id: todaysWorkout.data.todayWorkout.id,
-        });
-        // Query will be invalidated automatically by the mutation's onSuccess
-      }
-      return;
-    } else {
-      // Fresh-start flow: go to templates
-      router.push("/portal/train/templates");
-    }
   };
 
   const handleConfirmStart = () => {
     setShowWarningDialog(false);
-    if (activePlanData && userId) {
-      quickStart.mutate({ userId });
-    } else {
-      router.push("/portal/train");
-    }
+    quickStart.mutate({ userId });
   };
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 rounded-t-xl border-b px-4 backdrop-blur">
@@ -312,57 +191,14 @@ export function PortalHeader() {
         ) : null}
         {/* Quick Start Workout Button */}
         {!isGuest &&
-          activePlanData &&
           (() => {
-            const todayWorkout = todaysWorkout.data?.todayWorkout;
-            const exercises = todayWorkout?.exercises;
-            const hasExercises = exercises && exercises.length > 0;
-
-            // Check if planDay is marked as rest day (this is the primary check)
-            const isRestDay = todayWorkout?.isRestDay ?? false;
-
-            // Determine button text and icon
-            // Priority: 1. Rest Day status (if marked as rest day, always show Rest Day), 2. Exercises, 3. No workout
-            const getButtonContent = () => {
-              if (quickStart.isPending) {
-                return {
-                  icon: <Play className="h-3.5 w-3.5 animate-spin" />,
-                  text: "Starting...",
-                };
-              }
-
-              // Priority 1: Check if planDay is marked as rest day (rest day takes priority over exercises)
-              if (isRestDay) {
-                return {
-                  icon: <Calendar className="h-3.5 w-3.5" />,
-                  text: "Rest Day",
-                };
-              }
-
-              // Priority 2: Check if there are exercises
-              if (hasExercises) {
-                return {
-                  icon: <Play className="h-3.5 w-3.5" />,
-                  text: "Start Workout",
-                };
-              }
-
-              // Priority 3: No exercises and not a rest day - show based on whether workout exists
-              if (todayWorkout) {
-                return {
-                  icon: <Play className="h-3.5 w-3.5" />,
-                  text: "No Exercises",
-                };
-              }
-
-              // No workout scheduled
-              return {
-                icon: <Play className="h-3.5 w-3.5" />,
-                text: "Start Workout",
-              };
-            };
-
-            const buttonContent = getButtonContent();
+            const hasActiveWorkout =
+              activeWorkout.data && !activeWorkout.data.completed;
+            const buttonContent = quickStart.isPending
+              ? { icon: <Play className="h-3.5 w-3.5 animate-spin" />, text: "Starting..." }
+              : hasActiveWorkout
+                ? { icon: <Play className="h-3.5 w-3.5" />, text: "Resume workout" }
+                : { icon: <Play className="h-3.5 w-3.5" />, text: "Start workout" };
 
             return (
               <Button
@@ -376,19 +212,6 @@ export function PortalHeader() {
               </Button>
             );
           })()}
-
-        {/* AI Planner Button */}
-        {!isGuest ? (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => router.push("/portal/ai-planner")}
-            className="h-8 w-8 p-0"
-            title="AI Planner"
-          >
-            <Sparkles className="h-4 w-4" />
-          </Button>
-        ) : null}
 
         {/* Profile Sidebar Button - Mobile/Tablet */}
         {isMobile && (
@@ -478,70 +301,6 @@ export function PortalHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Rest Day / No Exercises Dialog */}
-      <Dialog open={showRestDayDialog} onOpenChange={setShowRestDayDialog}>
-        <DialogContent>
-          <DialogHeader>
-            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
-              <>
-                <DialogTitle>It&apos;s Your Rest Day Today</DialogTitle>
-                <DialogDescription className="pt-2">
-                  {todaysWorkout.data.todayWorkout.title
-                    ? `Today is scheduled as a rest day for "${todaysWorkout.data.todayWorkout.title}". Take time to recover and let your muscles heal.`
-                    : "Today is scheduled as a rest day. Take time to recover and let your muscles heal."}
-                </DialogDescription>
-              </>
-            ) : (
-              <>
-                <DialogTitle>No Exercises for Today&apos;s Workout</DialogTitle>
-                <DialogDescription className="pt-2">
-                  {todaysWorkout.data?.todayWorkout?.title
-                    ? `Today's workout "${todaysWorkout.data.todayWorkout.title}" doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?`
-                    : "Today's workout doesn't have any exercises yet. Is this a rest day, or would you like to add exercises?"}
-                </DialogDescription>
-              </>
-            )}
-          </DialogHeader>
-
-          <DialogFooter className="mt-4 flex-col gap-2">
-            {todaysWorkout.data?.todayWorkout?.isRestDay ? (
-              <Button
-                variant="default"
-                onClick={() => handleRestDayChoice("skip")}
-                className="w-full"
-              >
-                Got It
-              </Button>
-            ) : (
-              <>
-                <div className="flex w-full flex-col gap-2 sm:flex-row">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleRestDayChoice("skip")}
-                    className="flex-1"
-                  >
-                    Skip for Now
-                  </Button>
-                  <Button
-                    onClick={() => handleRestDayChoice("add")}
-                    className="flex-1"
-                  >
-                    Add Exercises
-                  </Button>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => handleRestDayChoice("mark")}
-                  className="w-full"
-                >
-                  Mark Today as Rest Day
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Rest Warning Dialog */}
       <WorkoutRestWarning

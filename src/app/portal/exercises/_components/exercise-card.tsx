@@ -16,7 +16,6 @@ interface ExerciseCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   onViewDetails?: () => void;
-  onAddToPlan?: () => void;
 }
 
 export function ExerciseCard({
@@ -30,7 +29,6 @@ export function ExerciseCard({
   isFavorite = false,
   onToggleFavorite,
   onViewDetails,
-  onAddToPlan,
 }: ExerciseCardProps) {
   // Generate random gradient based on exercise ID
   const getGradient = (seed: string) => {

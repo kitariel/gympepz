@@ -7,7 +7,6 @@ import {
   Search,
   X,
   Keyboard,
-  Sparkles
 } from "lucide-react";
 import * as Lucide from "lucide-react";
 import * as HeroOutline from "@heroicons/react/24/outline";
@@ -116,8 +115,11 @@ export function AppSidebar({
   const userId = useMemo(() => session?.user?.id ?? "", [session?.user?.id]);
   const isGuest = !userId;
 
-  // Get today's workout for badge
-  // Pass day based on local timezone to avoid UTC timezone issues
+  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
+    { userId },
+    { enabled: !!userId },
+  );
+
   const dayNames = [
     "Sunday",
     "Monday",
@@ -128,11 +130,6 @@ export function AppSidebar({
     "Saturday",
   ] as const;
   const localDayName = dayNames[new Date().getDay()]!;
-
-  const todaysWorkout = api.plan.getTodaysWorkout.useQuery(
-    { userId, day: localDayName },
-    { enabled: !!userId },
-  );
 
   const [guestHasTodayWorkout, setGuestHasTodayWorkout] = useState(false);
 
@@ -147,7 +144,7 @@ export function AppSidebar({
 
   const hasActiveWorkout = isGuest
     ? guestHasTodayWorkout
-    : Boolean(todaysWorkout.data?.hasPlan && todaysWorkout.data?.todayWorkout);
+    : Boolean(activeWorkout.data && !activeWorkout.data.completed);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -417,34 +414,6 @@ export function AppSidebar({
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {!isGuest ? (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip="Ask AI Coach (⌘I)"
-                        isActive={pathname?.startsWith("/portal/ai-planner")}
-                      >
-                        <Link href="/portal/ai-planner">
-                          <Sparkles className="size-4" />
-                          <span>Ask AI Coach</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {/* <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip="Goals"
-                        isActive={pathname?.startsWith("/portal/goals")}
-                      >
-                        <Link href="/portal/goals">
-                          <Target className="size-4" />
-                          <span>Goals</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem> */}
-                  </>
-                ) : null}
                 <InstallPWAButton variant="sidebar" />
               </SidebarMenu>
             </SidebarGroupContent>

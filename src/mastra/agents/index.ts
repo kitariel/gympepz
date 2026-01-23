@@ -5,9 +5,6 @@ import { LibSQLStore } from "@mastra/libsql";
 import { z } from "zod";
 import { Memory } from "@mastra/memory";
 
-// Re-export the workout planner agent
-export { workoutPlannerAgent } from "./workout-planner";
-
 export const AgentState = z.object({
   proverbs: z.array(z.string()).default([]),
 });
