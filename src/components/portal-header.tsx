@@ -30,6 +30,15 @@ import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
+import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useTrainPrefs } from "@/hooks/useTrainPrefs";
+import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import {
+  getDayNumberForToday,
+  getEffectivePlanDay,
+  getWorkoutSessionState,
+  isWorkoutCompletedTodayForDay,
+} from "@/features/train/domain/workoutSessionState";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -108,6 +117,46 @@ export function PortalHeader() {
 
   const quickStart = api.workoutLog.quickStart.useMutation({
     onSuccess: () => router.push("/portal/train/log"),
+  });
+
+  const { activeProgram, currentProgramRef, hydrated: programHydrated } =
+    useActiveProgram();
+  const { hydrated: prefsHydrated, selectedWorkoutDay } = useTrainPrefs();
+  const { draft, history, hydrated: draftHydrated } = useWorkoutDraft();
+
+  const localHydrated = programHydrated && prefsHydrated && draftHydrated;
+  const today = useMemo(() => getDayNumberForToday(), []);
+  const todaysPlan = useMemo(() => {
+    if (!activeProgram) return null;
+    return getEffectivePlanDay({
+      days: activeProgram.plan.days,
+      selectedWorkoutDay,
+      today,
+    });
+  }, [activeProgram, selectedWorkoutDay, today]);
+
+  const isRestDay = Boolean(
+    todaysPlan?.isRestDay ??
+      (todaysPlan ? todaysPlan.items.length === 0 : false),
+  );
+  const programId =
+    localHydrated && activeProgram
+      ? currentProgramRef?.id ?? activeProgram.templateId
+      : null;
+  const isCompletedToday =
+    localHydrated &&
+    programId != null &&
+    todaysPlan?.day != null &&
+    !isRestDay &&
+    isWorkoutCompletedTodayForDay({
+      history,
+      programId,
+      dayIndex: todaysPlan.day,
+    });
+  const sessionState = getWorkoutSessionState({
+    hasDraft: Boolean(draft),
+    isRestDay,
+    isCompletedToday,
   });
 
   const handleQuickStart = () => {
@@ -193,12 +242,33 @@ export function PortalHeader() {
         {!isGuest &&
           (() => {
             const hasActiveWorkout =
-              activeWorkout.data && !activeWorkout.data.completed;
+              Boolean(draft) ||
+              (activeWorkout.data && !activeWorkout.data.completed);
+            const effectiveState = hasActiveWorkout ? "active" : sessionState;
             const buttonContent = quickStart.isPending
-              ? { icon: <Play className="h-3.5 w-3.5 animate-spin" />, text: "Starting..." }
-              : hasActiveWorkout
-                ? { icon: <Play className="h-3.5 w-3.5" />, text: "Resume workout" }
-                : { icon: <Play className="h-3.5 w-3.5" />, text: "Start workout" };
+              ? {
+                  icon: <Play className="h-3.5 w-3.5 animate-spin" />,
+                  text: "Starting...",
+                }
+              : effectiveState === "active"
+                ? {
+                    icon: <Play className="h-3.5 w-3.5" />,
+                    text: "Resume workout",
+                  }
+                : effectiveState === "rest"
+                  ? {
+                      icon: <Play className="h-3.5 w-3.5" />,
+                      text: "Rest day",
+                    }
+                  : effectiveState === "completed"
+                    ? {
+                        icon: <Play className="h-3.5 w-3.5" />,
+                        text: "Completed",
+                      }
+                    : {
+                        icon: <Play className="h-3.5 w-3.5" />,
+                        text: "Start workout",
+                      };
 
             return (
               <Button

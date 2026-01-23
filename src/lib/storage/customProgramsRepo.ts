@@ -22,19 +22,27 @@ export const customProgramsRepo = {
   get(id: string): CustomProgramRecord | null {
     return customProgramsRepo.list().find((p) => p.id === id) ?? null;
   },
-  upsert(record: CustomProgramRecord): void {
+  upsert(record: CustomProgramRecord, options?: { markDirty?: boolean }): void {
     const current = customProgramsRepo.list();
     const idx = current.findIndex((p) => p.id === record.id);
     if (idx === -1) current.unshift(record);
     else current[idx] = record;
     setJSON(STORAGE_KEYS.customPrograms, current);
+    if (options?.markDirty !== false) {
+      setJSON(STORAGE_KEYS.programsDirty, true);
+    }
   },
-  remove(id: string): void {
+  remove(id: string, options?: { markDirty?: boolean }): void {
     const next = customProgramsRepo.list().filter((p) => p.id !== id);
     setJSON(STORAGE_KEYS.customPrograms, next);
+    if (options?.markDirty !== false) {
+      setJSON(STORAGE_KEYS.programsDirty, true);
+    }
   },
-  clear(): void {
+  clear(options?: { markDirty?: boolean }): void {
     remove(STORAGE_KEYS.customPrograms);
+    if (options?.markDirty !== false) {
+      setJSON(STORAGE_KEYS.programsDirty, true);
+    }
   },
 };
-

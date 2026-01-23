@@ -72,9 +72,16 @@ export const currentProgramRepo = {
     if (snap) return snap;
     return migrateFromLegacy();
   },
-  setCurrentProgram(ref: CurrentProgramRef, snapshot: Omit<CurrentProgramSnapshot, "ref">): void {
+  setCurrentProgram(
+    ref: CurrentProgramRef,
+    snapshot: Omit<CurrentProgramSnapshot, "ref">,
+    options?: { markDirty?: boolean },
+  ): void {
     setJSON(STORAGE_KEYS.currentProgramRef, ref);
     setJSON(STORAGE_KEYS.currentProgramSnapshot, { ...snapshot, ref });
+    if (options?.markDirty !== false) {
+      setJSON(STORAGE_KEYS.programsDirty, true);
+    }
     // Keep legacy key in sync for now (back-compat)
     const legacy: ActiveProgram = {
       templateId: ref.id,
@@ -85,9 +92,12 @@ export const currentProgramRepo = {
     };
     programRepo.saveActiveProgram(legacy);
   },
-  clear(): void {
+  clear(options?: { markDirty?: boolean }): void {
     remove(STORAGE_KEYS.currentProgramRef);
     remove(STORAGE_KEYS.currentProgramSnapshot);
+    if (options?.markDirty !== false) {
+      setJSON(STORAGE_KEYS.programsDirty, true);
+    }
     // Keep legacy clear
     programRepo.clearActiveProgram();
   },

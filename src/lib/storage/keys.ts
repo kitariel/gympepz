@@ -8,10 +8,10 @@ export const STORAGE_KEYS = {
   activeWorkoutDraft: "gympepz.activeWorkoutDraft",
   history: "gympepz.history",
   customPrograms: "gympepz.customPrograms",
+  programsDirty: "gympepz.programsDirty",
   trainBuilderDraft: "gympepz.train.builderDraft",
   trainSelectedWorkoutDay: "gympepz.train.selectedWorkoutDay",
   // Program day selection (preferred keys)
   programDayMode: "gympepz.programDayMode",
   programDayManualIndex: "gympepz.programDayManualIndex",
 } as const;
-

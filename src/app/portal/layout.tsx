@@ -9,6 +9,7 @@ import {
 import { auth } from "@/server/auth";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { SyncWorkoutsTrigger } from "@/components/sync/SyncWorkoutsTrigger";
+import { SyncProgramsTrigger } from "@/components/sync/SyncProgramsTrigger";
 import type { ReactNode } from "react";
 
 export default async function Layout({ children }: { children: ReactNode }) {
@@ -19,6 +20,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <AuthSessionProvider session={session}>
       <SyncWorkoutsTrigger />
+      <SyncProgramsTrigger />
       <SidebarProvider>
         <ProfileSidebarProvider>
           {/* Left Sidebar - Navigation */}

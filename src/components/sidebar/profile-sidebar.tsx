@@ -23,6 +23,9 @@ import {
   MonthlyStats,
   EmptyState,
 } from "./profile_parts";
+import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import type { ProgramTemplateDay } from "@/lib/program-templates/types";
 
 type Props = React.ComponentProps<typeof Sidebar>;
 
@@ -119,6 +122,8 @@ export default function ProfileSidebar(props: Props) {
     { userId },
     { enabled: !!userId },
   );
+  const { activeProgram } = useActiveProgram();
+  const { draft } = useWorkoutDraft();
 
   // Computed values
   const user = userQuery.data;
@@ -134,7 +139,7 @@ export default function ProfileSidebar(props: Props) {
     prs: prsQuery.data?.length ?? 0,
   };
 
-  // Calculate this week's progress - aligned with active plan
+  // Calculate this week's progress - aligned with active program
   const thisWeekProgress = useMemo(() => {
     const today = new Date();
     // Start week on Sunday (0) to match plan day orders (0-6)
@@ -145,12 +150,25 @@ export default function ProfileSidebar(props: Props) {
         completed: w.completed ?? true,
       })) ?? [];
 
+    const planDays = activeProgram?.plan.days ?? [];
+    const planDayByWeekday = new Map<number, ProgramTemplateDay>();
+    for (const day of planDays) {
+      const jsDay = day.day === 7 ? 0 : day.day;
+      planDayByWeekday.set(jsDay, day);
+    }
+
     // Check if there's an active workout
     const hasActiveWorkout =
       !!activeWorkout.data && !activeWorkout.data.completed;
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
+      const dayOfWeek = date.getDay();
+      const planDayForThisDay = planDayByWeekday.get(dayOfWeek);
+      const isRestDay = Boolean(
+        planDayForThisDay?.isRestDay ??
+          (planDayForThisDay ? planDayForThisDay.items.length === 0 : false),
+      );
 
       // Find matching workout for this date
       const workoutForDate = workoutDates.find((w) => isSameDay(w.date, date));
@@ -158,7 +176,7 @@ export default function ProfileSidebar(props: Props) {
 
       // Check if this is today and has an active workout for today's plan day
       const isToday = isSameDay(date, today);
-      const isInProgress = isToday && hasActiveWorkout;
+      const isInProgress = isToday && (hasActiveWorkout || Boolean(draft));
 
       const isPast = date < today && !isToday;
 
@@ -168,14 +186,16 @@ export default function ProfileSidebar(props: Props) {
         hasWorkout,
         isPast,
         isToday,
-        isMissed: isPast && !hasWorkout,
-        isRestDay: false,
+        isMissed: isPast && !hasWorkout && !isRestDay && !!planDayForThisDay,
+        isRestDay: isRestDay && !hasWorkout && !isInProgress,
         isInProgress: !!isInProgress,
       };
     });
   }, [
     calendarQuery.data,
+    activeProgram?.plan.days,
     activeWorkout.data,
+    draft,
   ]);
 
   const hasWorkouts =
