@@ -1,27 +1,25 @@
 {
   "navMain": [
     {
-      "title": "Journey",
-      "url": "#",
-      "iconName": "Route",
+      "title": "Train",
+      "url": "/portal/train",
+      "iconName": "Dumbbell",
       "iconPlatform": "lucide",
-      "enabled": true,
-      "items": [
-        {
-          "title": "Train",
-          "url": "/portal/train",
-          "iconName": "Dumbbell",
-          "iconPlatform": "lucide",
-          "enabled": true
-        },
-        {
-          "title": "Goal",
-          "url": "/portal/goals",
-          "iconName": "Target",
-          "iconPlatform": "lucide",
-          "enabled": true
-        }
-      ]
+      "enabled": true
+    },
+    {
+      "title": "Goal",
+      "url": "/portal/goals",
+      "iconName": "Target",
+      "iconPlatform": "lucide",
+      "enabled": true
+    },
+    {
+      "title": "Exercises",
+      "url": "/portal/exercises",
+      "iconName": "NotebookText",
+      "iconPlatform": "lucide",
+      "enabled": true
     }
   ],
   "navSecondary": [],

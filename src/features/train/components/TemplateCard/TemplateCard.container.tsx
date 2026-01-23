@@ -1,21 +1,23 @@
 "use client";
 
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import type { ProgramTemplate } from "@/lib/program-templates/types";
 import type { TemplateCardVM } from "./TemplateCard.types";
 import { TemplateCardView } from "./TemplateCard.view";
 
-function toVm(template: ProgramTemplate): TemplateCardVM {
-  return {
+export function TemplateCard({ template }: { template: ProgramTemplate }) {
+  const routeContext = useRouteContext();
+
+  const vm: TemplateCardVM = {
     id: template.id,
     name: template.name,
     description: template.description,
     daysPerWeek: template.daysPerWeek,
-    viewHref: `/train/template/${template.id}`,
-    useHref: `/train/template/${template.id}`,
+    viewHref: trainPath(routeContext, `template/${template.id}`),
+    useHref: trainPath(routeContext, `template/${template.id}`),
   };
-}
 
-export function TemplateCard({ template }: { template: ProgramTemplate }) {
-  return <TemplateCardView vm={toVm(template)} />;
+  return <TemplateCardView vm={vm} />;
 }
 

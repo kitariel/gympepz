@@ -6,6 +6,8 @@ import { useTrainingProfile } from "@/hooks/useTrainingProfile";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import {
   getDayNumberForToday,
   getEffectivePlanDay,
@@ -33,6 +35,7 @@ export function TrainEntryScreen() {
   const { activeProgram, hydrated: programHydrated } = useActiveProgram();
   const { draft, hydrated: workoutHydrated, summary, history } = useWorkoutDraft();
   const { selectedWorkoutDay, hydrated: prefsHydrated } = useTrainPrefs();
+  const routeContext = useRouteContext();
 
   const hydrated = profileHydrated && programHydrated && workoutHydrated && prefsHydrated;
 
@@ -63,7 +66,7 @@ export function TrainEntryScreen() {
     if (hasDraft && draft) {
       return {
         kind: "draft",
-        cta: { label: "Resume workout", href: "/train/log", variant: "default" },
+        cta: { label: "Resume workout", href: trainPath(routeContext, "log"), variant: "default" },
         programName: draft.programName,
         dayLabel: draft.programDayLabel ?? null,
       };
@@ -75,8 +78,8 @@ export function TrainEntryScreen() {
 
       return {
         kind: "program",
-        primary: { label: "Start today's workout", href: "/train/log", variant: "default" },
-        secondary: { label: "View overview", href: "/train/overview", variant: "outline" },
+        primary: { label: "Start today's workout", href: trainPath(routeContext, "log"), variant: "default" },
+        secondary: { label: "View overview", href: trainPath(routeContext, "overview"), variant: "outline" },
         programName: activeProgram.name,
         dayLabel,
         setsProgress,
@@ -85,15 +88,15 @@ export function TrainEntryScreen() {
     if (hasProfile) {
       return {
         kind: "profile",
-        cta: { label: "See recommended templates", href: "/train/templates", variant: "default" },
+        cta: { label: "See recommended templates", href: trainPath(routeContext, "templates"), variant: "default" },
       };
     }
     return {
       kind: "new",
-      primary: { label: "Quick onboarding", href: "/train/onboarding", variant: "default" },
-      secondary: { label: "Browse templates", href: "/train/templates", variant: "outline" },
+      primary: { label: "Quick onboarding", href: trainPath(routeContext, "onboarding"), variant: "default" },
+      secondary: { label: "Browse templates", href: trainPath(routeContext, "templates"), variant: "outline" },
     };
-  }, [hydrated, hasDraft, draft, hasProgram, activeProgram, hasProfile, todaysPlan]);
+  }, [hydrated, hasDraft, draft, hasProgram, activeProgram, hasProfile, todaysPlan, routeContext]);
 
   const recentWorkouts: RecentWorkoutItem[] = useMemo(() => {
     if (!hydrated) return [];
@@ -112,10 +115,10 @@ export function TrainEntryScreen() {
     sessionsText: `${summary.total} sessions`,
     startCard,
     recentWorkouts,
-    historyHref: "/train/history",
-    templatesHref: "/train/templates",
-    buildHref: "/train/build",
-    plansHref: "/train/plans",
+    historyHref: trainPath(routeContext, "history"),
+    templatesHref: trainPath(routeContext, "templates"),
+    buildHref: trainPath(routeContext, "build"),
+    plansHref: trainPath(routeContext, "plans"),
   };
 
   return <TrainEntryScreenView {...viewProps} />;

@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import {
   Tooltip,
   TooltipContent,
@@ -201,28 +203,29 @@ function MoreMenu({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const routeContext = useRouteContext();
 
   const menuItems = [
     {
-      href: "/train/overview",
+      href: trainPath(routeContext, "overview"),
       label: "Program overview",
       description: "View your weekly plan",
       icon: Dumbbell,
     },
     {
-      href: "/train/templates",
+      href: trainPath(routeContext, "templates"),
       label: "Browse templates",
       description: "Find a starter program",
       icon: Sparkles,
     },
     {
-      href: "/train/plans",
+      href: trainPath(routeContext, "plans"),
       label: "My saved plans",
       description: "View your custom programs",
       icon: FolderOpen,
     },
     {
-      href: "/train/build",
+      href: trainPath(routeContext, "build"),
       label: "Create program",
       description: "Build a custom plan",
       icon: Dumbbell,
@@ -265,6 +268,7 @@ function MoreMenu({
 export function TrainBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const routeContext = useRouteContext();
 
   const {
     activeProgram,
@@ -320,31 +324,33 @@ export function TrainBottomNav() {
   const logIcon =
     sessionState === "active" ? Pause : sessionState === "idle" ? Play : Moon;
 
+  const basePath = trainPath(routeContext);
+
   // Simplified to 4 tabs: Home, Log, History, More
   const tabs: TrainBottomNavTabVM[] = [
     {
-      href: "/train",
-      label: "Home",
+      href: basePath,
+      label: "Train",
       icon: Dumbbell,
       isActive:
-        isTrainNavActive(pathname, "/train") &&
-        !isTrainNavActive(pathname, "/train/log") &&
-        !isTrainNavActive(pathname, "/train/history") &&
-        !isTrainNavActive(pathname, "/train/templates") &&
-        !isTrainNavActive(pathname, "/train/plans") &&
-        !isTrainNavActive(pathname, "/train/build"),
+        isTrainNavActive(pathname, basePath) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "log")) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "history")) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "templates")) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "plans")) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "build")),
     },
     {
-      href: "/train/log",
+      href: trainPath(routeContext, "log"),
       label: logLabel,
       icon: logIcon,
-      isActive: isTrainNavActive(pathname, "/train/log"),
+      isActive: isTrainNavActive(pathname, trainPath(routeContext, "log")),
     },
     {
-      href: "/train/history",
+      href: trainPath(routeContext, "history"),
       label: "History",
       icon: History,
-      isActive: isTrainNavActive(pathname, "/train/history"),
+      isActive: isTrainNavActive(pathname, trainPath(routeContext, "history")),
     },
     {
       href: "#more",
