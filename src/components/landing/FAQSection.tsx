@@ -57,7 +57,7 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="relative w-full overflow-hidden py-16 sm:py-24" ref={ref}>
+    <section id="faq" className="relative w-full overflow-hidden py-16 sm:py-24" ref={ref}>
       {/* Animated geometric background boxes */}
       <div className="pointer-events-none absolute inset-0">
         <motion.div

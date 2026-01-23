@@ -9,6 +9,7 @@ import {
   History,
   Play,
   Sparkles,
+  ExternalLink,
   Wifi,
   WifiOff,
   Loader2,
@@ -409,6 +410,12 @@ export function PortalTrainEntryScreenView(props: TrainEntryScreenViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+            <Link href="/train">
+              Single view
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </Button>
           <OnlineOfflineToggle />
         </div>
       </div>

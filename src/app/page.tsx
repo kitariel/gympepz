@@ -1,4 +1,5 @@
 import Hero from "@/components/landing/Hero";
+import LandingHeader from "@/components/landing/LandingHeader";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import WeeklyPlanSection from "@/components/landing/WeeklyPlanSection";
@@ -15,6 +16,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <LandingHeader ctaHref={ctaHref} />
       <Hero ctaHref={ctaHref} />
       <FeaturesSection />
       <HowItWorksSection />

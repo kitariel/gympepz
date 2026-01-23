@@ -43,7 +43,8 @@ export function TrainHeader() {
       <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
-            href={trainPath(routeContext)}
+            href={'/'}
+            // href={trainPath(routeContext)}
             className={cn(
               "text-sm font-semibold tracking-tight",
               "hover:opacity-90",
@@ -61,6 +62,12 @@ export function TrainHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/login"
+            className="text-xs font-medium text-foreground/80 transition hover:text-foreground"
+          >
+            Log in
+          </Link>
           <InstallPWAButton />
           <Badge variant="secondary">Offline-first</Badge>
           {!isOnline ? <Badge variant="outline">Offline</Badge> : null}
