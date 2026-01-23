@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Loader2,
   Send,
@@ -14,6 +15,8 @@ import {
   Dumbbell,
   User,
   CheckCircle2,
+  MessageSquare,
+  Zap,
 } from "lucide-react";
 
 type Props = {
@@ -42,10 +45,22 @@ type PreviewDay = { title: string; order: number; items: PreviewItem[] };
 type PreviewPlan = { name: string; days: PreviewDay[] };
 
 const SUGGESTION_PROMPTS = [
-  "Create a push/pull/legs 6-day split",
-  "I want a full body workout 3x per week",
-  "Give me an upper/lower 4-day program",
-  "Create a 5-day bodybuilding split",
+  {
+    text: "Create a push/pull/legs 6-day split",
+    icon: Dumbbell,
+  },
+  {
+    text: "I want a full body workout 3x per week",
+    icon: Zap,
+  },
+  {
+    text: "Give me an upper/lower 4-day program",
+    icon: Dumbbell,
+  },
+  {
+    text: "Create a 5-day bodybuilding split",
+    icon: Sparkles,
+  },
 ];
 
 export default function WorkoutChat({
@@ -154,18 +169,18 @@ export default function WorkoutChat({
     if (!p || p.id !== id) return null;
     return (
       <div className="mx-auto max-w-3xl">
-        <Card className="border-border/50 bg-card border shadow-sm">
+        <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-purple-500/5 shadow-sm">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-                <Sparkles className="text-primary h-4 w-4" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <h3 className="text-base font-semibold">{p.name}</h3>
             </div>
             <div className="space-y-4">
               {(p.days ?? []).map((d) => (
                 <div key={d.id} className="space-y-2">
-                  <div className="text-foreground border-border/50 border-b pb-2 text-sm font-medium">
+                  <div className="text-foreground border-violet-500/20 border-b pb-2 text-sm font-medium">
                     {d.title}
                   </div>
                   <div className="space-y-1.5">
@@ -174,11 +189,11 @@ export default function WorkoutChat({
                         key={it.id}
                         className="text-muted-foreground hover:text-foreground flex items-center gap-3 text-sm transition-colors"
                       >
-                        <Dumbbell className="text-primary/60 h-4 w-4 shrink-0" />
+                        <Dumbbell className="text-violet-500/60 h-4 w-4 shrink-0" />
                         <span className="flex-1 font-medium">
                           {it.exercise?.name ?? it.exerciseId}
                         </span>
-                        <span className="bg-muted rounded px-2 py-0.5 text-xs">
+                        <span className="bg-violet-500/10 text-violet-700 dark:text-violet-300 rounded px-2 py-0.5 text-xs">
                           {it.sets}x{it.reps}
                         </span>
                       </div>
@@ -215,7 +230,7 @@ export default function WorkoutChat({
           ...m,
           {
             role: "assistant",
-            text: "Plan saved successfully! 🎉 Redirecting...",
+            text: "Plan saved successfully! Redirecting to your program...",
           },
         ]);
         setTimeout(() => {
@@ -239,26 +254,33 @@ export default function WorkoutChat({
     );
     return (
       <div className="mx-auto max-w-3xl">
-        <Card className="border-border/50 bg-card border shadow-sm">
+        <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 via-purple-500/5 to-fuchsia-500/5 shadow-lg">
           <CardContent className="p-6">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-                    <Sparkles className="text-primary h-4 w-4" />
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                    <Sparkles className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="text-base font-semibold">{preview.name}</h3>
-                </div>
-                <div className="text-muted-foreground ml-11 flex items-center gap-3 text-xs">
-                  <Badge variant="secondary" className="text-xs">
-                    {preview.days.length}{" "}
-                    {preview.days.length === 1 ? "day" : "days"}
-                  </Badge>
-                  <span>•</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {totalExercises}{" "}
-                    {totalExercises === 1 ? "exercise" : "exercises"}
-                  </Badge>
+                  <div>
+                    <h3 className="text-base font-semibold">{preview.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20"
+                      >
+                        {preview.days.length}{" "}
+                        {preview.days.length === 1 ? "day" : "days"}
+                      </Badge>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20"
+                      >
+                        {totalExercises}{" "}
+                        {totalExercises === 1 ? "exercise" : "exercises"}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
               <Button
@@ -266,7 +288,7 @@ export default function WorkoutChat({
                 size="sm"
                 onClick={savePreview}
                 disabled={create.isPending}
-                className="shrink-0"
+                className="shrink-0 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25"
               >
                 {create.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -280,94 +302,106 @@ export default function WorkoutChat({
             </div>
 
             {/* Quick Adjustments */}
-            <div className="bg-muted/50 border-border/50 mb-6 rounded-lg border p-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-muted-foreground text-xs font-medium">
-                  Quick Adjustments:
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-xs">
+            <div className="bg-background/50 border-violet-500/20 mb-6 rounded-xl border p-4">
+              <p className="text-muted-foreground text-xs font-medium mb-3">
+                Quick Adjustments
+              </p>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-xs min-w-[80px]">
                     Experience:
                   </span>
-                  {["Beginner", "Intermediate", "Advanced"].map((e) => (
-                    <Button
-                      key={e}
-                      type="button"
-                      size="sm"
-                      variant={exp === e ? "default" : "outline"}
-                      className="h-7 px-2.5 text-xs"
-                      onClick={async () => {
-                        setExp(e as typeof exp);
-                        setLoading(true);
-                        const sg = (await suggest.mutateAsync({
-                          goal: lastText || goal || "Workout",
-                          scheduleDays: preview.days.length,
-                          experience: e as typeof exp,
-                          equipment: equip === "Hybrid" ? undefined : equip,
-                          rawText: lastText,
-                          useAI: true,
-                        })) as {
-                          ok: boolean;
-                          name: string;
-                          days: PreviewDay[];
-                        };
-                        if (sg?.ok)
-                          setPreview({ name: sg.name, days: sg.days });
-                        setLoading(false);
-                      }}
-                    >
-                      {e}
-                    </Button>
-                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    {["Beginner", "Intermediate", "Advanced"].map((e) => (
+                      <Button
+                        key={e}
+                        type="button"
+                        size="sm"
+                        variant={exp === e ? "default" : "outline"}
+                        className={cn(
+                          "h-7 px-3 text-xs rounded-full",
+                          exp === e &&
+                            "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white border-0"
+                        )}
+                        onClick={async () => {
+                          setExp(e as typeof exp);
+                          setLoading(true);
+                          const sg = (await suggest.mutateAsync({
+                            goal: lastText || goal || "Workout",
+                            scheduleDays: preview.days.length,
+                            experience: e as typeof exp,
+                            equipment: equip === "Hybrid" ? undefined : equip,
+                            rawText: lastText,
+                            useAI: true,
+                          })) as {
+                            ok: boolean;
+                            name: string;
+                            days: PreviewDay[];
+                          };
+                          if (sg?.ok)
+                            setPreview({ name: sg.name, days: sg.days });
+                          setLoading(false);
+                        }}
+                      >
+                        {e}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-xs min-w-[80px]">
                     Equipment:
                   </span>
-                  {[
-                    { label: "Bodyweight", value: "Home Setup" },
-                    { label: "Dumbbells", value: "Dumbbells" },
-                    { label: "Full Gym", value: "Full Gym" },
-                    { label: "Hybrid", value: "Hybrid" },
-                  ].map((opt) => (
-                    <Button
-                      key={opt.label}
-                      type="button"
-                      size="sm"
-                      variant={equip === opt.value ? "default" : "outline"}
-                      className="h-7 px-2.5 text-xs"
-                      onClick={async () => {
-                        setEquip(opt.value as typeof equip);
-                        setLoading(true);
-                        const sg = (await suggest.mutateAsync({
-                          goal: lastText || goal || "Workout",
-                          scheduleDays: preview.days.length,
-                          experience: exp,
-                          equipment:
-                            opt.value === "Hybrid"
-                              ? undefined
-                              : (opt.value as
-                                  | "Full Gym"
-                                  | "Dumbbells"
-                                  | "Home Setup"),
-                          rawText: lastText,
-                          conversationHistory: messages
-                            .filter((m) => m.text)
-                            .map((m) => ({ role: m.role, content: m.text! })),
-                          useAI: true,
-                        })) as {
-                          ok: boolean;
-                          name: string;
-                          days: PreviewDay[];
-                        };
-                        if (sg?.ok)
-                          setPreview({ name: sg.name, days: sg.days });
-                        setLoading(false);
-                      }}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: "Bodyweight", value: "Home Setup" },
+                      { label: "Dumbbells", value: "Dumbbells" },
+                      { label: "Full Gym", value: "Full Gym" },
+                      { label: "Hybrid", value: "Hybrid" },
+                    ].map((opt) => (
+                      <Button
+                        key={opt.label}
+                        type="button"
+                        size="sm"
+                        variant={equip === opt.value ? "default" : "outline"}
+                        className={cn(
+                          "h-7 px-3 text-xs rounded-full",
+                          equip === opt.value &&
+                            "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white border-0"
+                        )}
+                        onClick={async () => {
+                          setEquip(opt.value as typeof equip);
+                          setLoading(true);
+                          const sg = (await suggest.mutateAsync({
+                            goal: lastText || goal || "Workout",
+                            scheduleDays: preview.days.length,
+                            experience: exp,
+                            equipment:
+                              opt.value === "Hybrid"
+                                ? undefined
+                                : (opt.value as
+                                    | "Full Gym"
+                                    | "Dumbbells"
+                                    | "Home Setup"),
+                            rawText: lastText,
+                            conversationHistory: messages
+                              .filter((m) => m.text)
+                              .map((m) => ({ role: m.role, content: m.text! })),
+                            useAI: true,
+                          })) as {
+                            ok: boolean;
+                            name: string;
+                            days: PreviewDay[];
+                          };
+                          if (sg?.ok)
+                            setPreview({ name: sg.name, days: sg.days });
+                          setLoading(false);
+                        }}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -376,8 +410,11 @@ export default function WorkoutChat({
             <div className="space-y-6">
               {preview.days.map((d, idx) => (
                 <div key={idx} className="space-y-3">
-                  <div className="border-border/50 flex items-center gap-3 border-b pb-2">
-                    <Badge variant="secondary" className="text-xs">
+                  <div className="border-violet-500/20 flex items-center gap-3 border-b pb-2">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20"
+                    >
                       Day {idx + 1}
                     </Badge>
                     <h4 className="text-sm font-semibold">{d.title}</h4>
@@ -390,9 +427,9 @@ export default function WorkoutChat({
                     {d.items.map((it, jdx) => (
                       <div
                         key={it.exerciseId + jdx}
-                        className="border-border/50 hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+                        className="border-violet-500/10 hover:bg-violet-500/5 flex items-center gap-3 rounded-xl border p-3 transition-colors"
                       >
-                        <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                        <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
                           {jdx + 1}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -406,7 +443,7 @@ export default function WorkoutChat({
                             {it.muscleGroup && (
                               <Badge
                                 variant="outline"
-                                className="px-1.5 py-0 text-[10px]"
+                                className="px-1.5 py-0 text-[10px] border-violet-500/20"
                               >
                                 {formatGroup(it.muscleGroup)}
                               </Badge>
@@ -437,16 +474,16 @@ export default function WorkoutChat({
     <div className="bg-background flex h-full flex-col">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="mx-auto max-w-3xl px-4 py-6">
           {/* Empty State */}
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="mb-6">
-                <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                  <Sparkles className="text-primary h-8 w-8" />
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 mx-auto mb-4 flex items-center justify-center shadow-xl shadow-violet-500/25">
+                  <MessageSquare className="h-8 w-8 text-white" />
                 </div>
-                <h2 className="mb-2 text-2xl font-semibold">
-                  AI Workout Planner
+                <h2 className="mb-2 text-xl font-semibold">
+                  Let&apos;s Build Your Plan
                 </h2>
                 <p className="text-muted-foreground max-w-md text-sm">
                   Describe your fitness goals and I&apos;ll create a
@@ -455,18 +492,28 @@ export default function WorkoutChat({
               </div>
 
               {showSuggestions && (
-                <div className="mt-8 w-full max-w-2xl">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {SUGGESTION_PROMPTS.map((suggestion, idx) => (
-                      <Button
-                        key={idx}
-                        variant="outline"
-                        className="hover:bg-muted/50 h-auto justify-start px-4 py-3 text-left transition-colors"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        <span className="text-sm">{suggestion}</span>
-                      </Button>
-                    ))}
+                <div className="mt-6 w-full max-w-lg">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Try one of these prompts:
+                  </p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {SUGGESTION_PROMPTS.map((suggestion, idx) => {
+                      const Icon = suggestion.icon;
+                      return (
+                        <button
+                          key={idx}
+                          className="group flex items-center gap-3 rounded-xl border border-border/50 hover:border-violet-500/30 hover:bg-violet-500/5 p-3 text-left transition-all"
+                          onClick={() => handleSuggestionClick(suggestion.text)}
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0 group-hover:bg-violet-500/20 transition-colors">
+                            <Icon className="h-4 w-4 text-violet-500" />
+                          </div>
+                          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                            {suggestion.text}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -477,30 +524,33 @@ export default function WorkoutChat({
           {messages.map((m, idx) => (
             <div
               key={idx}
-              className={`mb-6 flex gap-4 ${
+              className={cn(
+                "mb-4 flex gap-3",
                 m.role === "user" ? "justify-end" : "justify-start"
-              }`}
+              )}
             >
               {m.role === "assistant" && (
-                <Avatar className="border-border/50 h-8 w-8 shrink-0 border">
-                  <AvatarFallback className="bg-primary/10 text-primary">
+                <Avatar className="h-8 w-8 shrink-0 border-0">
+                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
                     <Sparkles className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
               )}
 
               <div
-                className={`flex max-w-[85%] flex-col gap-1 ${
+                className={cn(
+                  "flex max-w-[85%] flex-col gap-1",
                   m.role === "user" ? "items-end" : "items-start"
-                }`}
+                )}
               >
                 {m.text && (
                   <div
-                    className={`rounded-2xl px-4 py-3 ${
+                    className={cn(
+                      "rounded-2xl px-4 py-3",
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
-                    }`}
+                        ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white"
+                        : "bg-muted/50 border border-border/50 text-foreground"
+                    )}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {m.text}
@@ -510,13 +560,13 @@ export default function WorkoutChat({
                 {m.planId && renderPlanCard(m.planId)}
 
                 {m.suggestedActions && m.suggestedActions.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {m.suggestedActions.map((action, i) => (
                       <Button
                         key={i}
                         variant="outline"
                         size="sm"
-                        className="bg-background hover:bg-muted h-7 rounded-full px-3 text-xs"
+                        className="h-7 rounded-full px-3 text-xs border-violet-500/30 hover:bg-violet-500/10 hover:border-violet-500/50"
                         onClick={() => handleSuggestionClick(action)}
                       >
                         {action}
@@ -527,8 +577,8 @@ export default function WorkoutChat({
               </div>
 
               {m.role === "user" && (
-                <Avatar className="border-border/50 h-8 w-8 shrink-0 border">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+                <Avatar className="h-8 w-8 shrink-0 border-0">
+                  <AvatarFallback className="bg-muted text-muted-foreground">
                     <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
@@ -537,19 +587,23 @@ export default function WorkoutChat({
           ))}
 
           {/* Preview Card */}
-          {preview && <div className="mb-6">{renderPreviewCard()}</div>}
+          {preview && <div className="mb-4">{renderPreviewCard()}</div>}
 
           {/* Loading State */}
           {loading && (
-            <div className="mb-6 flex gap-4">
-              <Avatar className="border-border/50 h-8 w-8 shrink-0 border">
-                <AvatarFallback className="bg-primary/10 text-primary">
+            <div className="mb-4 flex gap-3">
+              <Avatar className="h-8 w-8 shrink-0 border-0">
+                <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
                   <Sparkles className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <div className="bg-muted rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="text-primary h-4 w-4 animate-spin" />
+              <div className="bg-muted/50 border border-border/50 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <span className="h-2 w-2 rounded-full bg-violet-500 animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-2 w-2 rounded-full bg-violet-500 animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-2 w-2 rounded-full bg-violet-500 animate-bounce" />
+                  </div>
                   <span className="text-muted-foreground text-sm">
                     Creating your workout plan...
                   </span>
@@ -563,13 +617,13 @@ export default function WorkoutChat({
       </div>
 
       {/* Input Area */}
-      <div className="border-border/50 bg-background border-t">
+      <div className="border-t border-border/50 bg-background">
         <div className="mx-auto max-w-3xl px-4 py-4">
-          <div className="flex gap-2">
-            <div className="glow-border flex-1">
+          <div className="relative flex items-center gap-2">
+            <div className="flex-1 relative">
               <Input
                 ref={inputRef}
-                placeholder="Message AI Workout Planner..."
+                placeholder="Describe your ideal workout plan..."
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
@@ -583,27 +637,27 @@ export default function WorkoutChat({
                   }
                 }}
                 disabled={loading}
-                className="h-11 w-full rounded-full border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-12 w-full rounded-full border-border/50 bg-muted/30 pl-5 pr-12 focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50"
               />
+              <Button
+                type="button"
+                onClick={() => {
+                  void send();
+                  setShowSuggestions(false);
+                }}
+                disabled={loading || !input.trim()}
+                size="sm"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full p-0 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 disabled:opacity-50 disabled:shadow-none"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-            <Button
-              type="button"
-              onClick={() => {
-                void send();
-                setShowSuggestions(false);
-              }}
-              disabled={loading || !input.trim()}
-              size="sm"
-              className="h-11 w-11 rounded-full p-0"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
           </div>
-          <p className="text-muted-foreground mt-2 text-center text-xs">
+          <p className="text-muted-foreground mt-3 text-center text-xs">
             AI can make mistakes. Review your workout plan before starting.
           </p>
         </div>

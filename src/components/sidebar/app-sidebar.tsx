@@ -168,7 +168,7 @@ export function AppSidebar({
       ) {
         e.preventDefault();
         if (hasActiveWorkout) {
-          window.location.href = "/train/log";
+          window.location.href = "/portal/train/log";
         }
       }
       // Escape: Clear search
@@ -213,7 +213,7 @@ export function AppSidebar({
               url: "#",
               items: [
                 { title: "This Week", url: "/portal" },
-                { title: "Train", url: "/train" },
+                { title: "Train", url: "/portal/train" },
                 { title: "Goals", url: "/portal/goals" },
               ],
             };
@@ -394,8 +394,8 @@ export function AppSidebar({
                     asChild
                     tooltip="Start today's workout (⌘W)"
                     isActive={
-                      pathname?.startsWith("/train/log") ||
-                      pathname?.startsWith("/train/overview")
+                      pathname?.startsWith("/portal/train/log") ||
+                      pathname?.startsWith("/portal/train/overview")
                     }
                     className={
                       hasActiveWorkout
@@ -403,7 +403,7 @@ export function AppSidebar({
                         : undefined
                     }
                   >
-                    <Link href="/train/log">
+                    <Link href="/portal/train/log">
                       <Command className="size-4" />
                       <span>Start Workout</span>
                       {hasActiveWorkout && (

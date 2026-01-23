@@ -33,7 +33,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
   const userId = session?.user?.id ?? "";
   
   // Check if Analytics tab is active
-  const isAnalyticsActive = pathname?.startsWith("/train/history");
+  const isAnalyticsActive = pathname?.startsWith("/portal/train/history");
 
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
@@ -80,23 +80,23 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     },
   });
   const quickStart = api.workoutLog.quickStart.useMutation({
-    onSuccess: () => router.push("/train/log"),
+    onSuccess: () => router.push("/portal/train/log"),
   });
 
   const handleStartWorkout = () => {
     if (!userId) {
-      router.push("/train");
+      router.push("/portal/train");
       return;
     }
 
     if (!activePlanId) {
-      router.push("/train/templates");
+      router.push("/portal/train/templates");
       return;
     }
 
     // Check if there's already an active workout - redirect to it
     if (activeWorkout.data && !activeWorkout.data.completed) {
-      router.push("/train/log");
+      router.push("/portal/train/log");
       return;
     }
 
@@ -150,7 +150,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
       return;
     } else {
       // Fresh-start flow: go to templates
-      router.push("/train/templates");
+      router.push("/portal/train/templates");
     }
   };
 
@@ -159,7 +159,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
     if (activePlanId && userId) {
       quickStart.mutate({ userId });
     } else {
-      router.push("/train");
+      router.push("/portal/train");
     }
   };
 
@@ -240,7 +240,7 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
               ? "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
               : ""
           }`}
-          onClick={() => router.push("/train/history")}
+          onClick={() => router.push("/portal/train/history")}
         >
           <BarChart3
             className={`mr-2 h-3.5 w-3.5 ${
@@ -256,11 +256,11 @@ export function QuickActions({ activePlanId }: QuickActionsProps) {
           variant="outline"
           size="sm"
           className="h-8 justify-start text-xs"
-          onClick={() => router.push("/train/templates")}
+          onClick={() => router.push("/portal/train/templates")}
         >
           <Target
             className={`mr-2 h-3.5 w-3.5 ${
-              pathname?.startsWith("/train/templates")
+              pathname?.startsWith("/portal/train/templates")
                 ? "text-primary"
                 : "text-muted-foreground"
             }`}

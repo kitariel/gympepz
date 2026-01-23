@@ -172,23 +172,23 @@ export function PortalHeader() {
   const [showRestDayDialog, setShowRestDayDialog] = useState(false);
 
   const quickStart = api.workoutLog.quickStart.useMutation({
-    onSuccess: () => router.push("/train/log"),
+    onSuccess: () => router.push("/portal/train/log"),
   });
 
   const handleQuickStart = () => {
     if (!userId) {
-      router.push("/train");
+      router.push("/portal/train");
       return;
     }
 
     if (!activePlanData) {
-      router.push("/train/templates");
+      router.push("/portal/train/templates");
       return;
     }
 
     // Check if there's already an active workout - redirect to it (match quick-actions behavior)
     if (activeWorkout.data && !activeWorkout.data.completed) {
-      router.push("/train/log");
+      router.push("/portal/train/log");
       return;
     }
 
@@ -242,7 +242,7 @@ export function PortalHeader() {
       return;
     } else {
       // Fresh-start flow: go to templates
-      router.push("/train/templates");
+      router.push("/portal/train/templates");
     }
   };
 
@@ -251,7 +251,7 @@ export function PortalHeader() {
     if (activePlanData && userId) {
       quickStart.mutate({ userId });
     } else {
-      router.push("/train");
+      router.push("/portal/train");
     }
   };
   return (
