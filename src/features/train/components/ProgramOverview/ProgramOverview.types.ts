@@ -31,5 +31,6 @@ export type ProgramOverviewViewProps =
       onPrimaryCta: () => void;
       repeatPromptEnabled: boolean;
       onConfirmRepeat: () => void;
+      onChangeProgram: () => void;
     };
 

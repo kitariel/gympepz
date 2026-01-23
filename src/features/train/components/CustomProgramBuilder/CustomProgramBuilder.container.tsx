@@ -7,8 +7,10 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useCustomPrograms } from "@/hooks/useCustomPrograms";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainBuilderDraft } from "@/hooks/useTrainBuilderDraft";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { trainPath } from "@/lib/routes";
 import { api } from "@/trpc/react";
 import type {
   ProgramTemplateDay,
@@ -44,6 +46,7 @@ function toExerciseVm(input: {
 
 export function CustomProgramBuilder() {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { isOnline } = useOnlineStatus();
   const { saveActiveProgram, selectTemplate } = useActiveProgram();
   const { clearDraft } = useWorkoutDraft();
@@ -210,7 +213,7 @@ export function CustomProgramBuilder() {
       plan: { days: planDays },
     });
 
-    router.push("/train/overview");
+    router.push(trainPath(routeContext, "overview"));
   };
 
   const { debounced: debouncedSaveDraft } = useDebouncedCallback(
@@ -299,7 +302,7 @@ export function CustomProgramBuilder() {
     onOpenPicker: openPicker,
     canSave,
     onSave: saveProgram,
-    onCancel: () => router.push("/train"),
+    onCancel: () => router.push(trainPath(routeContext)),
 
     pickerOpen,
     onPickerOpenChange: setPickerOpen,

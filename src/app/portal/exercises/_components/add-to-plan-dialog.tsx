@@ -111,7 +111,7 @@ export function AddToPlanDialog({
                 <Button
                   variant="link"
                   className="h-auto p-0 text-xs"
-                  onClick={() => router.push("/train/templates")}
+                  onClick={() => router.push("/portal/train/templates")}
                 >
                   Create one now
                 </Button>
@@ -145,7 +145,7 @@ export function AddToPlanDialog({
                     variant="link"
                     className="h-auto p-0 text-xs"
                     onClick={() =>
-                      router.push("/train/templates")
+                      router.push("/portal/train/templates")
                     }
                   >
                     Add a day

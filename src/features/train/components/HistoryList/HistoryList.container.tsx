@@ -4,6 +4,8 @@ import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import { trainToast } from "@/features/train/utils/toast";
 import type { HistoryListTimeGroupVM, HistoryListItemVM, HistoryListViewProps } from "./HistoryList.types";
 import { HistoryListView } from "./HistoryList.view";
@@ -36,6 +38,7 @@ function getTimeGroup(dateStr: string): "Today" | "Yesterday" | "This Week" | "E
 
 export function HistoryList() {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { history, hydrated, clearHistory, deleteHistoryItem, summary } = useWorkoutDraft();
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
 
@@ -87,7 +90,7 @@ export function HistoryList() {
           setError(null);
           window.location.reload();
         },
-        onGoBack: () => router.push("/train"),
+        onGoBack: () => router.push(trainPath(routeContext)),
       };
     }
 
@@ -100,8 +103,8 @@ export function HistoryList() {
         sessionsText,
         onClear: handleClearHistory,
         clearDisabled,
-        backHref: "/train",
-        goToTrainHref: "/train",
+        backHref: trainPath(routeContext),
+        goToTrainHref: trainPath(routeContext),
       };
     }
 
@@ -146,9 +149,9 @@ export function HistoryList() {
       onDeleteItem: handleDeleteItem,
       clearDisabled,
       timeGroups,
-      backHref: "/train",
+      backHref: trainPath(routeContext),
     };
-  }, [hydrated, error, history, handleClearHistory, handleDeleteItem, router, summary.total]);
+  }, [hydrated, error, history, handleClearHistory, handleDeleteItem, router, routeContext, summary.total]);
 
   return <HistoryListView {...viewProps} />;
 }

@@ -20,7 +20,7 @@ export function EmptyState() {
             <div className="text-sm text-muted-foreground mb-4">
               Start your fitness journey today
             </div>
-            <Button size="sm" onClick={() => router.push("/train/log")}>
+            <Button size="sm" onClick={() => router.push("/portal/train/log")}>
               <Play className="h-4 w-4 mr-2" />
               Start First Workout
             </Button>

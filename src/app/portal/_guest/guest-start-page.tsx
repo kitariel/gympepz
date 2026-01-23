@@ -192,7 +192,7 @@ export function GuestStartPage() {
     }
     // No logged sets: allow leaving freely
     if (href) router.push(href);
-    else router.push("/train");
+    else router.push("/portal/train");
   };
 
   const handleLeaveChoice = (choice: LeaveGuardChoice) => {
@@ -208,14 +208,14 @@ export function GuestStartPage() {
       setLeaveOpen(false);
       const href = pendingHref;
       setPendingHref(null);
-      router.push(href ?? "/train");
+      router.push(href ?? "/portal/train");
       return;
     }
     // save_exit: persist current state (already persisted) and navigate
     setLeaveOpen(false);
     const href = pendingHref;
     setPendingHref(null);
-    router.push(href ?? "/train");
+    router.push(href ?? "/portal/train");
   };
 
   const finishWorkout = () => {
@@ -231,12 +231,12 @@ export function GuestStartPage() {
     setSessionState(
       buildSession({ phase: "home", builder: null, activeLog: null }),
     );
-    router.push("/train/history");
+    router.push("/portal/train/history");
   };
 
   const saveAndExit = () => {
     // Keep sessionState persisted and go to logs
-    router.push("/train/history");
+    router.push("/portal/train/history");
   };
 
   return (

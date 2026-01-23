@@ -29,7 +29,7 @@ export function BodyStats({ weight, bodyFat }: BodyStatsProps) {
             variant="ghost"
             size="sm"
             className="text-primary hover:text-primary/80 h-auto p-0 text-[10px]"
-            onClick={() => router.push("/train/history")}
+            onClick={() => router.push("/portal/train/history")}
           >
             Update
           </Button>

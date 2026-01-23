@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { ChevronDown, Play } from "lucide-react";
 
@@ -199,6 +198,7 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
     onPrimaryCta,
     repeatPromptEnabled,
     onConfirmRepeat,
+    onChangeProgram,
   } = props;
 
   const handlePrimary = () => {
@@ -294,8 +294,8 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
 
       {/* Bottom actions */}
       <div className="flex gap-3">
-        <Button asChild variant="outline" className="h-10 flex-1">
-          <Link href="/train/templates">Change program</Link>
+        <Button variant="outline" className="h-10 flex-1" onClick={onChangeProgram}>
+          Change program
         </Button>
       </div>
 

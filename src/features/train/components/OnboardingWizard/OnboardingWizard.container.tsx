@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 
 import { useTrainingProfile } from "@/hooks/useTrainingProfile";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import type { TrainingEquipment, TrainingExperience, TrainingGoal } from "@/lib/training-profile/types";
 import type { OnboardingWizardViewProps } from "./OnboardingWizard.types";
 import { OnboardingWizardView } from "./OnboardingWizard.view";
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { profile, save, hydrated } = useTrainingProfile();
 
   const initializedRef = useRef(false);
@@ -64,9 +67,9 @@ export function OnboardingWizard() {
     onDaysPerWeekChange: setDaysPerWeek,
     onContinue: () => {
       save({ experience, goal, equipment, daysPerWeek });
-      router.push("/train/templates");
+      router.push(trainPath(routeContext, "templates"));
     },
-    onBack: () => router.push("/train"),
+    onBack: () => router.push(trainPath(routeContext)),
   };
 
   return <OnboardingWizardView {...viewProps} />;

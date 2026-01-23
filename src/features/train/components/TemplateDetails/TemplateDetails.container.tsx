@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 
 import { getTemplateById } from "@/lib/program-templates/templates";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useRouteContext } from "@/hooks/useRouteContext";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { trainPath } from "@/lib/routes";
 import type { TemplateDetailsDayVM, TemplateDetailsViewProps } from "./TemplateDetails.types";
 import { TemplateDetailsView } from "./TemplateDetails.view";
 
@@ -15,6 +17,7 @@ function nowIso(): string {
 
 export function TemplateDetails({ templateId }: { templateId: string }) {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { selectTemplate, saveActiveProgram } = useActiveProgram();
   const { clearDraft } = useWorkoutDraft();
 
@@ -22,7 +25,7 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
 
   const viewProps: TemplateDetailsViewProps = useMemo(() => {
     if (!template) {
-      return { kind: "notFound", backHref: "/train/templates" };
+      return { kind: "notFound", backHref: trainPath(routeContext, "templates") };
     }
 
     const days: TemplateDetailsDayVM[] = template.plan.days
@@ -56,11 +59,11 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
           updatedAt: nowIso(),
           plan: template.plan,
         });
-        router.push("/train/overview");
+        router.push(trainPath(routeContext, "overview"));
       },
-      backHref: "/train/templates",
+      backHref: trainPath(routeContext, "templates"),
     };
-  }, [template, clearDraft, selectTemplate, saveActiveProgram, router]);
+  }, [template, clearDraft, selectTemplate, saveActiveProgram, router, routeContext]);
 
   return <TemplateDetailsView {...viewProps} />;
 }

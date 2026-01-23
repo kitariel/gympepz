@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import { InstallPWAButton } from "@/components/pwa-install-button";
 
 function useIsOnline(): boolean {
@@ -28,6 +30,7 @@ function useIsOnline(): boolean {
 
 export function TrainHeader() {
   const isOnline = useIsOnline();
+  const routeContext = useRouteContext();
   const { activeProgram, hydrated } = useActiveProgram();
 
   const programName = useMemo(() => {
@@ -40,7 +43,7 @@ export function TrainHeader() {
       <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
-            href="/train"
+            href={trainPath(routeContext)}
             className={cn(
               "text-sm font-semibold tracking-tight",
               "hover:opacity-90",

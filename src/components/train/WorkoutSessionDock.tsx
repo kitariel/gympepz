@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 
 type WorkoutSessionDockVM =
   | { kind: "hidden" }
@@ -18,6 +20,7 @@ type WorkoutSessionDockVM =
       subtitle: string | null;
       onFinish: () => void;
       finishDisabled: boolean;
+      logHref: string;
     };
 
 function getNextSetSummary(input: {
@@ -55,7 +58,7 @@ function WorkoutSessionDockView({ vm }: { vm: WorkoutSessionDockVM }) {
               ) : null}
             </div>
             <Button asChild size="sm" className="h-9 shrink-0">
-              <Link href="/train/log">Open</Link>
+              <Link href={vm.logHref}>Open</Link>
             </Button>
           </CardContent>
         </Card>
@@ -83,7 +86,7 @@ function WorkoutSessionDockView({ vm }: { vm: WorkoutSessionDockVM }) {
 
             <div className="flex items-center gap-2">
               <Button asChild variant="outline" className="h-9 flex-1">
-                <Link href="/train/log" className="flex items-center justify-center gap-2">
+                <Link href={vm.logHref} className="flex items-center justify-center gap-2">
                   Open
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
@@ -105,6 +108,7 @@ function WorkoutSessionDockView({ vm }: { vm: WorkoutSessionDockVM }) {
 
 export function WorkoutSessionDock() {
   const router = useRouter();
+  const routeContext = useRouteContext();
   const { draft, hydrated, finish } = useWorkoutDraft();
 
   const vm: WorkoutSessionDockVM = useMemo(() => {
@@ -129,12 +133,13 @@ export function WorkoutSessionDock() {
       onFinish: () => {
         const id = finish();
         router.push(
-          id ? `/train/summary?logId=${encodeURIComponent(id)}` : "/train/history",
+          id ? trainPath(routeContext, `summary?logId=${encodeURIComponent(id)}`) : trainPath(routeContext, "history"),
         );
       },
       finishDisabled: draft.sets.length === 0,
+      logHref: trainPath(routeContext, "log"),
     };
-  }, [draft, finish, hydrated, router]);
+  }, [draft, finish, hydrated, router, routeContext]);
 
   return <WorkoutSessionDockView vm={vm} />;
 }

@@ -61,7 +61,7 @@ export function ProgramOverview() {
     if (!activeProgram) {
       return {
         kind: "noProgram",
-        onBrowseTemplates: () => router.push("/train/templates"),
+        onBrowseTemplates: () => router.push(trainPath(routeContext, "templates")),
       };
     }
 
@@ -94,7 +94,7 @@ export function ProgramOverview() {
 
     const onPrimaryCta = () => {
       if (hasDraft) {
-        router.push("/train/log");
+        router.push(trainPath(routeContext, "log"));
         return;
       }
       router.push(startHref);
@@ -112,6 +112,7 @@ export function ProgramOverview() {
       onPrimaryCta,
       repeatPromptEnabled,
       onConfirmRepeat: () => router.push(startHref),
+      onChangeProgram: () => router.push(trainPath(routeContext, "templates")),
     };
   }, [
     hydrated,
@@ -119,6 +120,7 @@ export function ProgramOverview() {
     historyHydrated,
     activeProgram,
     router,
+    routeContext,
     pickedRaw,
     draft,
     completedToday,

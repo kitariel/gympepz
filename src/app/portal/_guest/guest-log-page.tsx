@@ -105,7 +105,7 @@ export function GuestLogPage() {
               Start a workout and you’ll see a summary and demo analytics here.
             </p>
             <Button asChild className="h-9">
-              <Link href="/train/log">Start workout</Link>
+              <Link href="/portal/train/log">Start workout</Link>
             </Button>
           </CardContent>
         </Card>

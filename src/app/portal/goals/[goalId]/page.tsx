@@ -334,7 +334,7 @@ export default function GoalDetailPage({
           </AlertDialog>
 
           <Button variant="outline" size="sm" asChild>
-            <Link href="/train/log">
+            <Link href="/portal/train/log">
               <Play className="mr-2 h-4 w-4" />
               Workout
             </Link>
