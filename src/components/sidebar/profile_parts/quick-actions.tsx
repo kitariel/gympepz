@@ -12,6 +12,9 @@ import {
 import { api } from "@/trpc/react";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useActiveProgram } from "@/hooks/useActiveProgram";
+import { useTrainPrefs } from "@/hooks/useTrainPrefs";
+import { getDayNumberForToday } from "@/features/train/domain/workoutSessionState";
 import { cn } from "@/lib/utils";
 
 export function QuickActions() {
@@ -27,6 +30,9 @@ export function QuickActions() {
 
   // Use local draft state for accurate active workout detection
   const { draft, hydrated: draftHydrated } = useWorkoutDraft();
+  const { activeProgram } = useActiveProgram();
+  const { programDayMode } = useTrainPrefs();
+  const today = getDayNumberForToday();
 
   // Database query for recent workout check (for rest warning)
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
@@ -39,7 +45,15 @@ export function QuickActions() {
   });
 
   // Check if there's an active local draft (not completed)
-  const hasActiveWorkout = draftHydrated && draft && !draft.completed;
+  const draftProgramId = draft?.programRef?.id ?? draft?.templateId ?? null;
+  const matchesActiveProgram = activeProgram?.templateId
+    ? draftProgramId === activeProgram.templateId
+    : true;
+  const hasActiveWorkout = draftHydrated && draft && !draft.completed && matchesActiveProgram;
+  const isScheduledToday = activeProgram
+    ? activeProgram.plan.days.some((day) => day.day === today && !day.isRestDay && day.items.length > 0)
+    : true;
+  const isRestDay = Boolean(activeProgram) && programDayMode === "auto" && !isScheduledToday;
 
   const handleStartWorkout = () => {
     if (!userId) {
@@ -50,6 +64,11 @@ export function QuickActions() {
     // If there's an active local draft, resume it
     if (hasActiveWorkout) {
       router.push("/portal/train/log");
+      return;
+    }
+
+    if (isRestDay) {
+      router.push("/portal/train/overview");
       return;
     }
 
@@ -83,6 +102,11 @@ export function QuickActions() {
             <>
               <Play className="mr-2 h-4 w-4 fill-current" />
               Resume Workout
+            </>
+          ) : isRestDay ? (
+            <>
+              <Play className="mr-2 h-4 w-4 fill-current" />
+              View Next Workout
             </>
           ) : (
             <>

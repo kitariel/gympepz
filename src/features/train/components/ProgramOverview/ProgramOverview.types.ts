@@ -28,9 +28,9 @@ export type ProgramOverviewViewProps =
       picked: ProgramOverviewPickedVM | null;
       week: ProgramOverviewWeekDayVM[];
       primaryCtaText: string;
+      primaryCtaDisabled?: boolean;
       onPrimaryCta: () => void;
       repeatPromptEnabled: boolean;
       onConfirmRepeat: () => void;
       onChangeProgram: () => void;
     };
-

@@ -10,8 +10,8 @@ import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { trainPath } from "@/lib/routes";
 import {
   getDayNumberForToday,
-  getEffectivePlanDay,
 } from "@/features/train/domain/workoutSessionState";
+import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
 import {
   getPreviousPerformance,
   formatRelativeDate,
@@ -86,24 +86,32 @@ export function WorkoutLogger() {
   const autoStartedRef = useRef(false);
 
   const today = useMemo(() => getDayNumberForToday(), []);
+  const autoPick = useMemo(() => {
+    if (!activeProgram || selectedWorkoutDay !== "auto" || overrideDay != null) return null;
+    return pickWorkoutDayForWeekday(activeProgram.plan.days, today);
+  }, [activeProgram, selectedWorkoutDay, today, overrideDay]);
+
   const todaysPlan = useMemo(() => {
     if (!activeProgram) return null;
     if (overrideDay != null) {
       return activeProgram.plan.days.find((d) => d.day === overrideDay) ?? null;
     }
+    if (selectedWorkoutDay === "auto") return autoPick?.day ?? null;
+    return activeProgram.plan.days.find((d) => d.day === selectedWorkoutDay) ?? null;
+  }, [activeProgram, selectedWorkoutDay, overrideDay, autoPick]);
 
-    return getEffectivePlanDay({
-      days: activeProgram.plan.days,
-      selectedWorkoutDay,
-      today,
-    });
-  }, [activeProgram, today, selectedWorkoutDay, overrideDay]);
+  const isScheduleMatch = overrideDay != null
+    ? true
+    : selectedWorkoutDay === "auto"
+      ? Boolean(autoPick?.isExactMatch)
+      : true;
 
   const createDraftForDay = useCallback(() => {
     try {
       if (!hydrated) return;
       if (!activeProgram) return;
       if (draft) return;
+      if (!isScheduleMatch) return;
       if (!todaysPlan) return;
       if (todaysPlan.isRestDay || todaysPlan.items.length === 0) return;
 
@@ -170,6 +178,7 @@ export function WorkoutLogger() {
     draft,
     todaysPlan,
     saveDraft,
+    isScheduleMatch,
   ]);
 
   useEffect(() => {
@@ -296,7 +305,7 @@ export function WorkoutLogger() {
     }
 
     if (!draft) {
-      const isRestDay = Boolean(
+      const isRestDay = !isScheduleMatch || Boolean(
         todaysPlan?.isRestDay ??
           (todaysPlan ? todaysPlan.items.length === 0 : false),
       );

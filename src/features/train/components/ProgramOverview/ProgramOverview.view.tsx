@@ -195,6 +195,7 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
     picked,
     week,
     primaryCtaText,
+    primaryCtaDisabled,
     onPrimaryCta,
     repeatPromptEnabled,
     onConfirmRepeat,
@@ -270,6 +271,7 @@ export function ProgramOverviewView(props: ProgramOverviewViewProps) {
             <Button
               className="touch-target h-12 w-full text-base font-semibold"
               onClick={handlePrimary}
+              disabled={primaryCtaDisabled}
             >
               <Play className="mr-2 h-5 w-5" />
               {primaryCtaText}

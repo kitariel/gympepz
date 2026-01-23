@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { programRepo, type ActiveProgram } from "@/lib/storage/programRepo";
 import { currentProgramRepo, type CurrentProgramRef } from "@/lib/storage/currentProgramRepo";
+import { STORAGE_KEYS } from "@/lib/storage/keys";
 
 function inferRefType(id: string): CurrentProgramRef["type"] {
   if (id.startsWith("custom_") || id.startsWith("custom")) return "custom";
@@ -17,27 +18,66 @@ export function useActiveProgram() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const snap = currentProgramRepo.getSnapshot();
-    if (snap) {
-      setCurrentProgramRef(snap.ref);
-      setActiveProgram({
-        templateId: snap.ref.id,
-        name: snap.programName,
-        createdAt: snap.createdAt,
-        updatedAt: snap.updatedAt,
-        plan: snap.plan,
-      });
-      setSelectedTemplateId(snap.ref.id);
-    } else {
+    const hydrateFromStorage = () => {
+      const snap = currentProgramRepo.getSnapshot();
+      if (snap) {
+        setCurrentProgramRef(snap.ref);
+        setActiveProgram({
+          templateId: snap.ref.id,
+          name: snap.programName,
+          createdAt: snap.createdAt,
+          updatedAt: snap.updatedAt,
+          plan: snap.plan,
+        });
+        setSelectedTemplateId(snap.ref.id);
+        return;
+      }
+
       // legacy fallback
       const legacy = programRepo.getActiveProgram();
       setActiveProgram(legacy);
       setSelectedTemplateId(programRepo.getSelectedTemplateId());
       if (legacy) {
         setCurrentProgramRef({ type: inferRefType(legacy.templateId), id: legacy.templateId });
+      } else {
+        setCurrentProgramRef(null);
       }
-    }
+    };
+
+    hydrateFromStorage();
     setHydrated(true);
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === STORAGE_KEYS.currentProgramRef ||
+        e.key === STORAGE_KEYS.currentProgramSnapshot ||
+        e.key === STORAGE_KEYS.activeProgram ||
+        e.key === STORAGE_KEYS.selectedTemplateId
+      ) {
+        hydrateFromStorage();
+      }
+    };
+
+    const handleCustomStorageChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ key: string }>;
+      const key = customEvent.detail?.key;
+      if (
+        key === STORAGE_KEYS.currentProgramRef ||
+        key === STORAGE_KEYS.currentProgramSnapshot ||
+        key === STORAGE_KEYS.activeProgram ||
+        key === STORAGE_KEYS.selectedTemplateId
+      ) {
+        hydrateFromStorage();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("workout-storage-changed", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("workout-storage-changed", handleCustomStorageChange);
+    };
   }, []);
 
   const selectTemplate = useCallback((id: string) => {
@@ -80,4 +120,3 @@ export function useActiveProgram() {
     currentProgramRef,
   };
 }
-

@@ -8,10 +8,8 @@ import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useRouteContext } from "@/hooks/useRouteContext";
 import { trainPath } from "@/lib/routes";
-import {
-  getDayNumberForToday,
-  getEffectivePlanDay,
-} from "@/features/train/domain/workoutSessionState";
+import { getDayNumberForToday } from "@/features/train/domain/workoutSessionState";
+import { pickWorkoutDayForWeekday } from "@/lib/program-templates/pick-workout-day";
 import type {
   TrainEntryScreenViewProps,
   TrainEntryStartCard,
@@ -44,14 +42,18 @@ export function TrainEntryScreen() {
   const hasDraft = Boolean(draft);
 
   const today = useMemo(() => getDayNumberForToday(), []);
+  const autoPick = useMemo(() => {
+    if (!activeProgram || selectedWorkoutDay !== "auto") return null;
+    return pickWorkoutDayForWeekday(activeProgram.plan.days, today);
+  }, [activeProgram, selectedWorkoutDay, today]);
+
   const todaysPlan = useMemo(() => {
     if (!activeProgram) return null;
-    return getEffectivePlanDay({
-      days: activeProgram.plan.days,
-      selectedWorkoutDay,
-      today,
-    });
-  }, [activeProgram, today, selectedWorkoutDay]);
+    if (selectedWorkoutDay === "auto") return autoPick?.day ?? null;
+    return activeProgram.plan.days.find((d) => d.day === selectedWorkoutDay) ?? null;
+  }, [activeProgram, selectedWorkoutDay, autoPick]);
+
+  const isScheduleMatch = selectedWorkoutDay === "auto" ? Boolean(autoPick?.isExactMatch) : true;
 
   const statusText = useMemo(() => {
     if (!hydrated) return "Loading…";
@@ -76,12 +78,20 @@ export function TrainEntryScreen() {
       const exerciseCount = todaysPlan?.items.length ?? 0;
       const setsProgress = exerciseCount > 0 ? `${exerciseCount} exercises` : null;
 
+      const primary = isScheduleMatch
+        ? { label: "Start today's workout", href: trainPath(routeContext, "log"), variant: "default" }
+        : { label: "View next workout", href: trainPath(routeContext, "overview"), variant: "default" };
+      const secondary = isScheduleMatch
+        ? { label: "View overview", href: trainPath(routeContext, "overview"), variant: "outline" }
+        : { label: "Change program", href: trainPath(routeContext, "templates"), variant: "outline" };
+      const nextLabel = !isScheduleMatch && dayLabel ? `Next workout: ${dayLabel}` : dayLabel;
+
       return {
         kind: "program",
-        primary: { label: "Start today's workout", href: trainPath(routeContext, "log"), variant: "default" },
-        secondary: { label: "View overview", href: trainPath(routeContext, "overview"), variant: "outline" },
+        primary,
+        secondary,
         programName: activeProgram.name,
-        dayLabel,
+        dayLabel: nextLabel,
         setsProgress,
       };
     }
@@ -96,7 +106,17 @@ export function TrainEntryScreen() {
       primary: { label: "Quick onboarding", href: trainPath(routeContext, "onboarding"), variant: "default" },
       secondary: { label: "Browse templates", href: trainPath(routeContext, "templates"), variant: "outline" },
     };
-  }, [hydrated, hasDraft, draft, hasProgram, activeProgram, hasProfile, todaysPlan, routeContext]);
+  }, [
+    hydrated,
+    hasDraft,
+    draft,
+    hasProgram,
+    activeProgram,
+    hasProfile,
+    todaysPlan,
+    routeContext,
+    isScheduleMatch,
+  ]);
 
   const recentWorkouts: RecentWorkoutItem[] = useMemo(() => {
     if (!hydrated) return [];

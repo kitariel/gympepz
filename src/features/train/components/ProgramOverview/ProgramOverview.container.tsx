@@ -38,7 +38,7 @@ export function ProgramOverview() {
       return pickWorkoutDayForWeekday(activeProgram.plan.days, today);
     }
     const manual = activeProgram.plan.days.find((d) => d.day === selectedWorkoutDay) ?? null;
-    if (manual) return { day: manual, isExactMatch: false };
+    if (manual) return { day: manual, isExactMatch: true };
     return pickWorkoutDayForWeekday(activeProgram.plan.days, today);
   }, [activeProgram, selectedWorkoutDay, today]);
 
@@ -91,8 +91,10 @@ export function ProgramOverview() {
 
     const hasDraft = Boolean(draft);
     const repeatPromptEnabled = !hasDraft && completedToday;
+    const canStartToday = selectedWorkoutDay !== "auto" || Boolean(pickedRaw?.isExactMatch);
 
     const onPrimaryCta = () => {
+      if (!canStartToday) return;
       if (hasDraft) {
         router.push(trainPath(routeContext, "log"));
         return;
@@ -108,7 +110,8 @@ export function ProgramOverview() {
       onClearProgram: () => clearActiveProgram(),
       picked,
       week,
-      primaryCtaText: hasDraft ? "Resume" : "Start workout",
+      primaryCtaText: canStartToday ? (hasDraft ? "Resume" : "Start workout") : "Rest day",
+      primaryCtaDisabled: !canStartToday,
       onPrimaryCta,
       repeatPromptEnabled,
       onConfirmRepeat: () => router.push(startHref),
@@ -132,4 +135,3 @@ export function ProgramOverview() {
 
   return <ProgramOverviewView {...viewProps} />;
 }
-
