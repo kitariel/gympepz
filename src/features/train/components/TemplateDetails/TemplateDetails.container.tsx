@@ -49,6 +49,7 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
       description: template.description,
       daysPerWeek: template.daysPerWeek,
       days,
+      template,
       onUse: () => {
         clearDraft();
         selectTemplate(template.id);

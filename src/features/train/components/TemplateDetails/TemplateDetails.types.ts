@@ -20,6 +20,7 @@ export type TemplateDetailsViewProps =
       description: string;
       daysPerWeek: number;
       days: TemplateDetailsDayVM[];
+      template: import("@/lib/program-templates/types").ProgramTemplate;
       onUse: () => void;
       backHref: string;
     };
