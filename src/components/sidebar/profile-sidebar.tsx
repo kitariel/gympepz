@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import {
   ProfileHeader,
   QuickActions,
   RecentPRs,
   RecentActivity,
-  BodyStats,
   MonthlyStats,
+  MonthlyCalendar,
   EmptyState,
 } from "./profile_parts";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
@@ -75,14 +75,25 @@ export default function ProfileSidebar(props: Props) {
       /* empty */
     });
 
-  // API Queries
+  // Calendar month state
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  // Local workout draft state (source of truth for active workout)
+  const { draft, hydrated: draftHydrated } = useWorkoutDraft();
+  const { activeProgram } = useActiveProgram();
+
+  // API Queries with refetch intervals to stay in sync
   const userQuery = api.user.getByEmail.useQuery(
     { email },
     { enabled: !!email },
   );
   const streakQuery = api.workoutLog.getStreak.useQuery(
     { userId },
-    { enabled: !!userId },
+    {
+      enabled: !!userId,
+      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchOnWindowFocus: true,
+    },
   );
   const thirtyDaysAgo = useMemo(() => {
     const date = new Date();
@@ -94,36 +105,40 @@ export default function ProfileSidebar(props: Props) {
     { userId, startDate: thirtyDaysAgo },
     {
       enabled: !!userId,
-      refetchInterval: 20000, // Refetch every 20 seconds
-      refetchOnWindowFocus: false, // Prevent refetch on window focus
+      refetchInterval: 30000,
+      refetchOnWindowFocus: true,
     },
   );
   const recentWorkouts = api.workoutLog.list.useQuery(
     { userId, limit: 3 },
-    { enabled: !!userId },
+    {
+      enabled: !!userId,
+      refetchInterval: 30000,
+      refetchOnWindowFocus: true,
+    },
   );
   const prsQuery = api.progress.getPRs.useQuery(
     { userId, limit: 3 },
-    { enabled: !!userId },
+    {
+      enabled: !!userId,
+      refetchInterval: 60000, // PRs change less frequently
+      refetchOnWindowFocus: true,
+    },
   );
-  const latestProgress = api.progress.latest.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
+
+  // Calendar data for the selected month
   const calendarQuery = api.workoutLog.calendar.useQuery(
     {
       userId,
-      year: new Date().getFullYear(),
-      month: new Date().getMonth() + 1,
+      year: calendarMonth.getFullYear(),
+      month: calendarMonth.getMonth() + 1,
     },
-    { enabled: !!userId },
+    {
+      enabled: !!userId,
+      refetchInterval: 30000,
+      refetchOnWindowFocus: true,
+    },
   );
-  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
-  const { activeProgram } = useActiveProgram();
-  const { draft } = useWorkoutDraft();
 
   // Computed values
   const user = userQuery.data;
@@ -133,70 +148,26 @@ export default function ProfileSidebar(props: Props) {
     ? format(new Date(user.createdAt), "MMM yyyy")
     : "Recently";
 
-  const stats = {
-    plans: 0,
-    workouts: analyticsQuery.data?.totalWorkouts ?? 0,
-    prs: prsQuery.data?.length ?? 0,
-  };
-
-  // Calculate this week's progress - aligned with active program
-  const thisWeekProgress = useMemo(() => {
-    const today = new Date();
-    // Start week on Sunday (0) to match plan day orders (0-6)
-    const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday = 0
-    const workoutDates =
+  // Prepare calendar data
+  const workoutDays = useMemo(() => {
+    return (
       calendarQuery.data?.map((w) => ({
         date: new Date(w.date),
         completed: w.completed ?? true,
-      })) ?? [];
+      })) ?? []
+    );
+  }, [calendarQuery.data]);
 
+  const scheduledDays = useMemo(() => {
     const planDays = activeProgram?.plan.days ?? [];
-    const planDayByWeekday = new Map<number, ProgramTemplateDay>();
-    for (const day of planDays) {
-      const jsDay = day.day === 7 ? 0 : day.day;
-      planDayByWeekday.set(jsDay, day);
-    }
+    return planDays.map((day: ProgramTemplateDay) => ({
+      dayOfWeek: day.day === 7 ? 0 : day.day, // Convert Sunday from 7 to 0
+      isRestDay: Boolean(day.isRestDay || day.items.length === 0),
+    }));
+  }, [activeProgram?.plan.days]);
 
-    // Check if there's an active workout
-    const hasActiveWorkout =
-      !!activeWorkout.data && !activeWorkout.data.completed;
-
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = addDays(weekStart, i);
-      const dayOfWeek = date.getDay();
-      const planDayForThisDay = planDayByWeekday.get(dayOfWeek);
-      const isRestDay = Boolean(
-        planDayForThisDay?.isRestDay ??
-          (planDayForThisDay ? planDayForThisDay.items.length === 0 : false),
-      );
-
-      // Find matching workout for this date
-      const workoutForDate = workoutDates.find((w) => isSameDay(w.date, date));
-      const hasWorkout = !!workoutForDate && workoutForDate.completed;
-
-      // Check if this is today and has an active workout for today's plan day
-      const isToday = isSameDay(date, today);
-      const isInProgress = isToday && (hasActiveWorkout || Boolean(draft));
-
-      const isPast = date < today && !isToday;
-
-      return {
-        day: format(date, "EEE"),
-        date,
-        hasWorkout,
-        isPast,
-        isToday,
-        isMissed: isPast && !hasWorkout && !isRestDay && !!planDayForThisDay,
-        isRestDay: isRestDay && !hasWorkout && !isInProgress,
-        isInProgress: !!isInProgress,
-      };
-    });
-  }, [
-    calendarQuery.data,
-    activeProgram?.plan.days,
-    activeWorkout.data,
-    draft,
-  ]);
+  // Use local draft state for accurate active workout detection
+  const hasActiveWorkout = draftHydrated && !!draft && !draft.completed;
 
   const hasWorkouts =
     recentWorkouts.data?.items && recentWorkouts.data.items.length > 0;
@@ -204,38 +175,47 @@ export default function ProfileSidebar(props: Props) {
   // Content component to be reused in both Sheet and Sidebar
   const sidebarContent = (
     <>
-      <SidebarHeader className="border-b-0 p-0">
+      <SidebarHeader className="border-b border-border/50 p-0">
         <ProfileHeader
           name={name}
           image={image}
           memberSince={memberSince}
-          stats={stats}
-          weekProgress={thisWeekProgress}
           currentStreak={streakQuery.data?.currentStreak ?? 0}
           longestStreak={streakQuery.data?.longestStreak ?? 0}
-          totalVolume={analyticsQuery.data?.totalVolume ?? 0}
-          averageDuration={analyticsQuery.data?.avgDuration ?? 0}
+          totalWorkouts={analyticsQuery.data?.totalWorkouts ?? 0}
         />
       </SidebarHeader>
 
       <SidebarContent className="space-y-4 py-4">
-        {/* Actions */}
+        {/* Quick Actions */}
         <QuickActions />
 
         <SidebarSeparator className="mx-4 opacity-50" />
 
-        {/* Stats Overview */}
+        {/* Monthly Calendar */}
         <SidebarGroup className="p-0">
-          <SidebarGroupContent className="space-y-4 px-4">
+          <SidebarGroupContent className="px-4">
+            <MonthlyCalendar
+              currentMonth={calendarMonth}
+              onMonthChange={setCalendarMonth}
+              workoutDays={workoutDays}
+              scheduledDays={scheduledDays}
+              hasActiveWorkout={hasActiveWorkout}
+              hasDraft={hasActiveWorkout}
+            />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator className="mx-4 opacity-50" />
+
+        {/* 30-Day Stats */}
+        <SidebarGroup className="p-0">
+          <SidebarGroupContent className="px-4">
             <MonthlyStats
-              workouts={stats.workouts}
+              workouts={analyticsQuery.data?.totalWorkouts ?? 0}
               volume={analyticsQuery.data?.totalVolume ?? 0}
               averageDuration={analyticsQuery.data?.avgDuration}
-            />
-
-            <BodyStats
-              weight={latestProgress.data?.weight ?? undefined}
-              bodyFat={latestProgress.data?.bodyFat ?? undefined}
+              prs={prsQuery.data?.length ?? 0}
             />
           </SidebarGroupContent>
         </SidebarGroup>
@@ -255,12 +235,15 @@ export default function ProfileSidebar(props: Props) {
         </SidebarGroup>
 
         {/* PRs */}
-        {stats.prs > 0 && (
-          <SidebarGroup className="p-0">
-            <SidebarGroupContent className="px-4">
-              <RecentPRs prs={prsQuery.data ?? []} />
-            </SidebarGroupContent>
-          </SidebarGroup>
+        {(prsQuery.data?.length ?? 0) > 0 && (
+          <>
+            <SidebarSeparator className="mx-4 opacity-50" />
+            <SidebarGroup className="p-0">
+              <SidebarGroupContent className="px-4">
+                <RecentPRs prs={prsQuery.data ?? []} />
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
 
         {/* Empty State */}
@@ -278,7 +261,7 @@ export default function ProfileSidebar(props: Props) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent side="right" className="w-[20rem] p-0 sm:w-[20rem]">
-          <div className="bg-sidebar text-sidebar-foreground flex h-full w-full flex-col">
+          <div className="bg-sidebar text-sidebar-foreground flex h-full w-full flex-col overflow-y-auto">
             {sidebarContent}
           </div>
         </SheetContent>
@@ -288,7 +271,7 @@ export default function ProfileSidebar(props: Props) {
 
   return (
     <Sidebar
-      className="border-l p-0"
+      className="border-l border-border/50 p-0"
       side="right"
       variant="inset"
       collapsible="offcanvas"

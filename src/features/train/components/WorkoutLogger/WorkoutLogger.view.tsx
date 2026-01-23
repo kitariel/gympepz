@@ -249,9 +249,10 @@ function SingleExerciseView({
               onUpdateWeight={(value) =>
                 onUpdateSet(set.id, { actualWeight: value })
               }
-              onToggleComplete={(completed) =>
-                onUpdateSet(set.id, { completed })
-              }
+              onToggleComplete={(completed) => {
+                if (set.completed) return;
+                if (completed) onUpdateSet(set.id, { completed: true });
+              }}
               onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
             />
 

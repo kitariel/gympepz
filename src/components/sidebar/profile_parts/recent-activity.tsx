@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Dumbbell, ChevronRight, CheckCircle2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Workout {
   id: string;
@@ -28,68 +28,98 @@ export function RecentActivity({ workouts }: RecentActivityProps) {
   }
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardContent className="p-3">
-        <div className="space-y-1.5">
-          <div className="mb-1.5 flex items-center justify-between">
-            <h4 className="text-foreground flex items-center gap-1.5 text-xs font-semibold">
-              <Dumbbell className="text-primary h-3.5 w-3.5" />
-              Recent Activity
-            </h4>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary hover:text-primary/80 h-auto p-0 text-[10px]"
-              onClick={() => router.push("/portal/train/history")}
-            >
-              View All
-              <ChevronRight className="ml-0.5 h-3 w-3" />
-            </Button>
-          </div>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Dumbbell className="h-3.5 w-3.5 text-primary" />
+          Recent Activity
+        </h4>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-auto p-0 text-[10px] text-primary hover:text-primary/80"
+          onClick={() => router.push("/portal/train/history")}
+        >
+          View All
+          <ChevronRight className="ml-0.5 h-3 w-3" />
+        </Button>
+      </div>
 
-          <div className="space-y-1">
-            {workouts.map((workout) => (
+      <div className="space-y-1.5">
+        {workouts.map((workout, index) => (
+          <div
+            key={workout.id}
+            className={cn(
+              "group relative flex items-center gap-3 rounded-xl p-2.5 transition-all cursor-pointer",
+              "bg-muted/50 hover:bg-muted",
+              "border border-transparent hover:border-primary/20"
+            )}
+            onClick={() => router.push("/portal/train/history")}
+          >
+            {/* Timeline indicator */}
+            <div className="relative flex flex-col items-center">
               <div
-                key={workout.id}
-                className="bg-primary/5 hover:bg-primary/10 group flex cursor-pointer items-center gap-1.5 rounded-lg p-1.5 transition-all"
-                onClick={() => router.push("/portal/train/history")}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full transition-all",
+                  workout.completed
+                    ? "bg-green-500 text-white"
+                    : "bg-primary text-primary-foreground"
+                )}
               >
-                <div className="bg-primary/10 shrink-0 rounded-full p-1 transition-transform group-hover:scale-110">
-                  <Dumbbell className="text-primary h-2.5 w-2.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-foreground truncate text-xs font-semibold">
-                    Workout
-                  </div>
-                  <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[9px]">
-                    <span>
-                      {formatDistanceToNow(new Date(workout.date), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                    {workout._count?.exercises &&
-                      workout._count.exercises > 0 && (
-                        <>
-                          <span>•</span>
-                          <span>{workout._count.exercises} ex</span>
-                        </>
-                      )}
-                    {workout.duration && (
-                      <>
-                        <span>•</span>
-                        <span>{workout.duration}m</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {workout.completed && (
-                  <CheckCircle2 className="text-primary h-3 w-3 shrink-0 transition-transform group-hover:scale-110" />
+                {workout.completed ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Dumbbell className="h-4 w-4" />
                 )}
               </div>
-            ))}
+              {index < workouts.length - 1 && (
+                <div className="absolute top-9 h-4 w-0.5 bg-border/50" />
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground truncate">
+                  Workout Session
+                </span>
+                {workout.completed && (
+                  <span className="text-[9px] font-semibold text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+                    DONE
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                <span>
+                  {formatDistanceToNow(new Date(workout.date), {
+                    addSuffix: true,
+                  })}
+                </span>
+                {workout._count?.exercises && workout._count.exercises > 0 && (
+                  <>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-0.5">
+                      <Dumbbell className="h-2.5 w-2.5" />
+                      {workout._count.exercises} exercises
+                    </span>
+                  </>
+                )}
+                {workout.duration && (
+                  <>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-0.5">
+                      <Clock className="h-2.5 w-2.5" />
+                      {workout.duration}m
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 }

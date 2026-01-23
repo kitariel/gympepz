@@ -8,6 +8,13 @@
       "enabled": true
     },
     {
+      "title": "Train Activity",
+      "url": "/portal/train/activity",
+      "iconName": "Activity",
+      "iconPlatform": "lucide",
+      "enabled": true
+    },
+    {
       "title": "Goal",
       "url": "/portal/goals",
       "iconName": "Target",

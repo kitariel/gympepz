@@ -9,6 +9,7 @@ import {
   type WorkoutSetEntry,
   type RestTimerState,
 } from "@/lib/storage/workoutRepo";
+import { activityStorage } from "@/lib/storage/activityStorage";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -222,6 +223,7 @@ export function useWorkoutDraft() {
       updatedAt: nowIso(),
     };
     workoutRepo.addToHistory(finished);
+    activityStorage.addPending(finished);
     workoutRepo.clearActiveWorkoutDraft();
     setDraft(null);
     setHistory(workoutRepo.getHistory());
@@ -317,4 +319,3 @@ export function useWorkoutDraft() {
     stopRestTimer,
   };
 }
-

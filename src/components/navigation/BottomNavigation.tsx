@@ -7,6 +7,7 @@ import {
   Sparkles,
   Target,
   Dumbbell,
+  Activity,
   ChevronLeft,
   ChevronRight,
   History,
@@ -206,6 +207,7 @@ function getTrainNavTabs(
       isActive:
         isTrainNavActive(basePath) &&
         !isTrainNavActive(`${basePath}/log`) &&
+        !isTrainNavActive(`${basePath}/activity`) &&
         !isTrainNavActive(`${basePath}/history`) &&
         !isTrainNavActive(`${basePath}/templates`) &&
         !isTrainNavActive(`${basePath}/plans`) &&
@@ -216,6 +218,12 @@ function getTrainNavTabs(
       href: `${basePath}/log`,
       icon: logIcon,
       isActive: isTrainNavActive(`${basePath}/log`),
+    },
+    {
+      label: "Activity",
+      href: `${basePath}/activity`,
+      icon: Activity,
+      isActive: isTrainNavActive(`${basePath}/activity`),
     },
     {
       label: "History",
@@ -402,7 +410,8 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
   };
 
   const handlePortalClick = () => {
-    router.push("/portal");
+    // Navigate to goals page since /portal redirects to /portal/train
+    router.push("/portal/goals");
   };
 
   const portalTabs = getPortalNavTabs(pathname, trainBasePath, handleTrainClick);

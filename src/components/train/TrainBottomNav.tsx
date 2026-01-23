@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  Activity,
   ChevronRight,
   Dumbbell,
   FolderOpen,
@@ -326,7 +327,7 @@ export function TrainBottomNav() {
 
   const basePath = trainPath(routeContext);
 
-  // Simplified to 4 tabs: Home, Log, History, More
+  // Simplified to 5 tabs: Home, Log, Activity, History, More
   const tabs: TrainBottomNavTabVM[] = [
     {
       href: basePath,
@@ -335,6 +336,7 @@ export function TrainBottomNav() {
       isActive:
         isTrainNavActive(pathname, basePath) &&
         !isTrainNavActive(pathname, trainPath(routeContext, "log")) &&
+        !isTrainNavActive(pathname, trainPath(routeContext, "activity")) &&
         !isTrainNavActive(pathname, trainPath(routeContext, "history")) &&
         !isTrainNavActive(pathname, trainPath(routeContext, "templates")) &&
         !isTrainNavActive(pathname, trainPath(routeContext, "plans")) &&
@@ -345,6 +347,12 @@ export function TrainBottomNav() {
       label: logLabel,
       icon: logIcon,
       isActive: isTrainNavActive(pathname, trainPath(routeContext, "log")),
+    },
+    {
+      href: trainPath(routeContext, "activity"),
+      label: "Activity",
+      icon: Activity,
+      isActive: isTrainNavActive(pathname, trainPath(routeContext, "activity")),
     },
     {
       href: trainPath(routeContext, "history"),

@@ -11,7 +11,7 @@ import {
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { workoutRepo } from "@/lib/storage/workoutRepo";
-import type { WorkoutHistoryItem } from "@/lib/storage/workoutRepo";
+import { useSyncWorkouts } from "@/hooks/useSyncWorkouts";
 
 type TrainMode = "online" | "offline";
 
@@ -36,16 +36,7 @@ export function TrainModeProvider({ children }: { children: ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  const utils = api.useUtils();
-
-  // Sync mutation for going online
-  const syncMutation = api.workoutLog.syncFromOffline.useMutation({
-    onSuccess: () => {
-      void utils.workoutLog.list.invalidate();
-      void utils.workoutLog.calendar.invalidate();
-      void utils.workoutLog.getAnalytics.invalidate();
-    },
-  });
+  const { syncOfflineWorkouts } = useSyncWorkouts();
 
   // Query for fetching workouts when going offline
   const { refetch: fetchWorkouts } = api.workoutLog.list.useQuery(
@@ -105,39 +96,8 @@ export function TrainModeProvider({ children }: { children: ReactNode }) {
 
     setIsSyncing(true);
     try {
-      // Get completed workouts from localStorage
-      const history = workoutRepo.getHistory();
-      const completedWorkouts = history.filter((w) => w.completed);
-
-      if (completedWorkouts.length > 0) {
-        // Transform to sync format
-        const workoutsToSync = completedWorkouts.map((workout: WorkoutHistoryItem) => ({
-          date: workout.date,
-          startTime: workout.startedAt,
-          endTime: workout.endedAt ?? null,
-          completed: workout.completed,
-          notes: workout.notes,
-          sets: workout.sets.map((set) => ({
-            exerciseId: set.exerciseId,
-            exerciseName: set.exerciseName,
-            setNumber: set.setNumber,
-            targetReps: set.targetReps,
-            actualReps: set.actualReps,
-            targetWeight: set.targetWeight,
-            actualWeight: set.actualWeight,
-            rpe: null,
-            completed: set.completed,
-          })),
-        }));
-
-        // Sync to database
-        const result = await syncMutation.mutateAsync({
-          userId,
-          workouts: workoutsToSync,
-        });
-
-        console.log(`[TrainMode] Synced ${result.synced} workouts to database`);
-      }
+      const result = await syncOfflineWorkouts();
+      console.log(`[TrainMode] Synced ${result.synced} workouts to database`);
 
       setMode("online");
     } catch (error) {
@@ -146,7 +106,7 @@ export function TrainModeProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsSyncing(false);
     }
-  }, [userId, syncMutation]);
+  }, [userId, syncOfflineWorkouts]);
 
   const toggleMode = useCallback(async () => {
     if (mode === "online") {

@@ -4,29 +4,31 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Play, BarChart3, Target } from "lucide-react";
+import { Play, BarChart3, Target, Loader2 } from "lucide-react";
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import { api } from "@/trpc/react";
 import { WorkoutRestWarning } from "@/components/workout-rest-warning";
+import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { cn } from "@/lib/utils";
 
 export function QuickActions() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
-  
-  // Check if Analytics tab is active
+
   const isAnalyticsActive = pathname?.startsWith("/portal/train/history");
+  const isTemplatesActive = pathname?.startsWith("/portal/train/templates");
 
   const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
+
+  // Use local draft state for accurate active workout detection
+  const { draft, hydrated: draftHydrated } = useWorkoutDraft();
+
+  // Database query for recent workout check (for rest warning)
   const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
     { userId, hoursBack: 6 },
     { enabled: !!userId },
@@ -36,14 +38,17 @@ export function QuickActions() {
     onSuccess: () => router.push("/portal/train/log"),
   });
 
+  // Check if there's an active local draft (not completed)
+  const hasActiveWorkout = draftHydrated && draft && !draft.completed;
+
   const handleStartWorkout = () => {
     if (!userId) {
       router.push("/portal/train");
       return;
     }
 
-    // Check if there's already an active workout - redirect to it
-    if (activeWorkout.data && !activeWorkout.data.completed) {
+    // If there's an active local draft, resume it
+    if (hasActiveWorkout) {
       router.push("/portal/train/log");
       return;
     }
@@ -62,80 +67,63 @@ export function QuickActions() {
 
   return (
     <SidebarGroup className="p-0">
-      <SidebarGroupLabel className="text-muted-foreground px-4 py-2 text-xs font-medium">
-        Actions
-      </SidebarGroupLabel>
-      <SidebarGroupContent className="grid grid-cols-2 gap-2 px-3">
-        {(() => {
-          const hasActiveWorkout =
-            activeWorkout.data && !activeWorkout.data.completed;
-          const buttonContent = quickStart.isPending
-            ? {
-                icon: (
-                  <Play className="mr-2 h-4 w-4 animate-spin fill-current" />
-                ),
-                text: "Starting...",
-              }
-            : hasActiveWorkout
-              ? {
-                  icon: <Play className="mr-2 h-4 w-4 fill-current" />,
-                  text: "Resume Workout",
-                }
-              : {
-                  icon: <Play className="mr-2 h-4 w-4 fill-current" />,
-                  text: "Start Workout",
-                };
-
-          return (
-            <Button
-              className="bg-primary text-primary-foreground hover:bg-primary/90 col-span-2 w-full shadow-sm"
-              onClick={handleStartWorkout}
-              disabled={quickStart.isPending}
-            >
-              {buttonContent.icon}
-              {buttonContent.text}
-            </Button>
-          );
-        })()}
-
+      <SidebarGroupContent className="space-y-2 px-4">
+        {/* Primary Action - Start Workout */}
         <Button
-          variant="outline"
-          size="sm"
-          className={`h-8 justify-start text-xs ${
-            isAnalyticsActive
-              ? "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
-              : ""
-          }`}
-          onClick={() => router.push("/portal/train/history")}
+          className="w-full h-11 text-sm font-semibold"
+          onClick={handleStartWorkout}
+          disabled={quickStart.isPending}
         >
-          <BarChart3
-            className={`mr-2 h-3.5 w-3.5 ${
-              isAnalyticsActive
-                ? "text-primary"
-                : "text-muted-foreground"
-            }`}
-          />
-          Analytics
+          {quickStart.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Starting...
+            </>
+          ) : hasActiveWorkout ? (
+            <>
+              <Play className="mr-2 h-4 w-4 fill-current" />
+              Resume Workout
+            </>
+          ) : (
+            <>
+              <Play className="mr-2 h-4 w-4 fill-current" />
+              Start Workout
+            </>
+          )}
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 justify-start text-xs"
-          onClick={() => router.push("/portal/train/templates")}
-        >
-          <Target
-            className={`mr-2 h-3.5 w-3.5 ${
-              pathname?.startsWith("/portal/train/templates")
-                ? "text-primary"
-                : "text-muted-foreground"
-            }`}
-          />
-          Templates
-        </Button>
+        {/* Secondary Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-9 text-xs font-medium transition-all",
+              isAnalyticsActive &&
+                "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
+            )}
+            onClick={() => router.push("/portal/train/history")}
+          >
+            <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
+            Analytics
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-9 text-xs font-medium transition-all",
+              isTemplatesActive &&
+                "bg-primary/10 border-primary/50 text-primary hover:bg-primary/20"
+            )}
+            onClick={() => router.push("/portal/train/templates")}
+          >
+            <Target className="mr-1.5 h-3.5 w-3.5" />
+            Templates
+          </Button>
+        </div>
       </SidebarGroupContent>
 
-      {/* Rest Warning Dialog */}
       <WorkoutRestWarning
         open={showWarningDialog}
         onOpenChange={setShowWarningDialog}

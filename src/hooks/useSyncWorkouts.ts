@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { workoutRepo, type WorkoutHistoryItem } from "@/lib/storage/workoutRepo";
+import { activityStorage, type StoredWorkout } from "@/lib/storage/activityStorage";
 import {
   readOfflineWorkoutLogQueue,
   markOfflineWorkoutLogSynced,
@@ -110,30 +111,44 @@ export function useSyncWorkouts() {
     },
   });
 
+  const [pendingState, setPendingState] = useState<StoredWorkout[]>(() =>
+    activityStorage.listPending(),
+  );
+
+  useEffect(() => {
+    const refresh = () => setPendingState(activityStorage.listPending());
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ key?: string }>).detail;
+      if (!detail?.key) return;
+      if (detail.key === "gympepz.pending_workouts") {
+        refresh();
+      }
+    };
+    window.addEventListener("workout-storage-changed", handler);
+    return () => window.removeEventListener("workout-storage-changed", handler);
+  }, []);
+
   // Get unsynced workouts from both sources
   const unsyncedWorkouts = useMemo(() => {
-    if (!userId) return { workoutRepo: [], offlineLogs: [] };
+    if (!userId) return { pending: [], offlineLogs: [] };
 
-    // From workoutRepo (train mode - offline)
-    const history = workoutRepo.getHistory();
-    // Note: workoutRepo doesn't have a synced flag, so we sync all completed workouts.
-    // The backend handles conflicts by checking for existing workouts on the same date,
-    // so duplicate syncs won't create duplicate records.
-    const workoutRepoItems = history.filter((w) => w.completed);
+    const pending = pendingState.filter(
+      (w) => w.status === "pending" || w.status === "failed",
+    );
 
     // From offlineWorkoutLogQueue (guest mode)
     const queue = readOfflineWorkoutLogQueue();
     const offlineLogs = queue.logs.filter((log) => !log.synced && log.completed);
 
     return {
-      workoutRepo: workoutRepoItems,
+      pending,
       offlineLogs,
     };
-  }, [userId]);
+  }, [userId, pendingState]);
 
   const hasUnsyncedWorkouts = useMemo(
     () =>
-      unsyncedWorkouts.workoutRepo.length > 0 ||
+      unsyncedWorkouts.pending.length > 0 ||
       unsyncedWorkouts.offlineLogs.length > 0,
     [unsyncedWorkouts],
   );
@@ -143,13 +158,29 @@ export function useSyncWorkouts() {
       throw new Error("User must be logged in to sync workouts");
     }
 
+    if (unsyncedWorkouts.pending.length === 0) {
+      const history = workoutRepo.getHistory();
+      const completed = history.filter((w) => w.completed);
+      for (const workout of completed) {
+        activityStorage.addPending(workout);
+      }
+    }
+
+    const pendingToSync = activityStorage
+      .listPending()
+      .filter((w) => w.status === "pending" || w.status === "failed");
+
     const workoutsToSync: Array<
       ReturnType<typeof transformWorkoutRepoToSync> | ReturnType<typeof transformOfflineLogToSync>
     > = [];
 
-    // Transform workoutRepo workouts
-    for (const workout of unsyncedWorkouts.workoutRepo) {
-      workoutsToSync.push(transformWorkoutRepoToSync(workout));
+    // Transform local pending workouts
+    const pendingIds: string[] = [];
+    const pendingIndexMap = new Map<number, string>();
+    for (const entry of pendingToSync) {
+      pendingIds.push(entry.id);
+      pendingIndexMap.set(workoutsToSync.length, entry.id);
+      workoutsToSync.push(transformWorkoutRepoToSync(entry.workout));
     }
 
     // Transform offline log workouts
@@ -161,11 +192,54 @@ export function useSyncWorkouts() {
       return { synced: 0, failed: 0, syncedIds: [], errors: [] };
     }
 
+    if (pendingIds.length > 0) {
+      activityStorage.markSyncing(pendingIds);
+    }
+
     // Call sync endpoint
     const result = await syncMutation.mutateAsync({
       userId,
       workouts: workoutsToSync,
     });
+
+    const duplicateIndices = new Set(
+      result.errors
+        .filter((e) =>
+          e.error.toLowerCase().includes("already exists for this date"),
+        )
+        .map((e) => e.workoutIndex),
+    );
+    const errorIndices = new Set(
+      result.errors
+        .filter((e) => !duplicateIndices.has(e.workoutIndex))
+        .map((e) => e.workoutIndex),
+    );
+    const syncedEntries: Array<{ id: string; syncedId?: string }> = [];
+    let syncedCursor = 0;
+
+    for (let i = 0; i < workoutsToSync.length; i += 1) {
+      if (errorIndices.has(i)) continue;
+      const syncedId = result.syncedIds[syncedCursor];
+      syncedCursor += 1;
+      const pendingId = pendingIndexMap.get(i);
+      if (pendingId) syncedEntries.push({ id: pendingId, syncedId });
+    }
+
+    if (syncedEntries.length > 0) {
+      activityStorage.markSynced(syncedEntries);
+    }
+    if (duplicateIndices.size > 0) {
+      const duplicateIds = Array.from(pendingIndexMap.entries())
+        .filter(([index]) => duplicateIndices.has(index))
+        .map(([, id]) => ({ id }));
+      activityStorage.markSynced(duplicateIds);
+    }
+    if (errorIndices.size > 0) {
+      const failedIds = Array.from(pendingIndexMap.entries())
+        .filter(([index]) => errorIndices.has(index))
+        .map(([, id]) => id);
+      activityStorage.markFailed(failedIds, "Sync failed");
+    }
 
     // Mark offline logs as synced
     for (const log of unsyncedWorkouts.offlineLogs) {
@@ -183,7 +257,7 @@ export function useSyncWorkouts() {
     isSyncing: syncMutation.isPending,
     hasUnsyncedWorkouts,
     unsyncedCount:
-      unsyncedWorkouts.workoutRepo.length + unsyncedWorkouts.offlineLogs.length,
+      unsyncedWorkouts.pending.length + unsyncedWorkouts.offlineLogs.length,
     error: syncMutation.error,
   };
 }
