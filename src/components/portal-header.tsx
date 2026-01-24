@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -21,24 +21,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, Bell, Settings, User, LogOut, Home } from "lucide-react";
+import { Bell, Settings, User, LogOut, Home } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { WorkoutRestWarning } from "@/components/workout-rest-warning";
 import { useProfileSidebar } from "@/components/sidebar/profile-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
-import { useActiveProgram } from "@/hooks/useActiveProgram";
-import { useTrainPrefs } from "@/hooks/useTrainPrefs";
-import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
-import {
-  getDayNumberForToday,
-  getEffectivePlanDay,
-  getWorkoutSessionState,
-  isWorkoutCompletedTodayForDay,
-} from "@/features/train/domain/workoutSessionState";
 
 const routeLabels: Record<string, string> = {
   "/portal": "Dashboard",
@@ -49,7 +39,6 @@ const routeLabels: Record<string, string> = {
 
 export function PortalHeader() {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: session } = useSession();
   const isMobile = useIsMobile();
   const { setOpen: setProfileSidebarOpen } = useProfileSidebar();
@@ -102,86 +91,6 @@ export function PortalHeader() {
     });
   }, [pathname]);
 
-  const userId = session?.user?.id ?? "";
-  const activeWorkout = api.workoutLog.getActiveWorkout.useQuery(
-    { userId },
-    { enabled: !!userId },
-  );
-
-  const recentWorkoutCheck = api.workoutLog.checkRecentWorkout.useQuery(
-    { userId, hoursBack: 6 },
-    { enabled: !!userId },
-  );
-
-  const [showWarningDialog, setShowWarningDialog] = useState(false);
-
-  const quickStart = api.workoutLog.quickStart.useMutation({
-    onSuccess: () => router.push("/portal/train/log"),
-  });
-
-  const { activeProgram, currentProgramRef, hydrated: programHydrated } =
-    useActiveProgram();
-  const { hydrated: prefsHydrated, selectedWorkoutDay } = useTrainPrefs();
-  const { draft, history, hydrated: draftHydrated } = useWorkoutDraft();
-
-  const localHydrated = programHydrated && prefsHydrated && draftHydrated;
-  const today = useMemo(() => getDayNumberForToday(), []);
-  const todaysPlan = useMemo(() => {
-    if (!activeProgram) return null;
-    return getEffectivePlanDay({
-      days: activeProgram.plan.days,
-      selectedWorkoutDay,
-      today,
-    });
-  }, [activeProgram, selectedWorkoutDay, today]);
-
-  const isRestDay = Boolean(
-    todaysPlan?.isRestDay ??
-      (todaysPlan ? todaysPlan.items.length === 0 : false),
-  );
-  const programId =
-    localHydrated && activeProgram
-      ? currentProgramRef?.id ?? activeProgram.templateId
-      : null;
-  const isCompletedToday =
-    localHydrated &&
-    programId != null &&
-    todaysPlan?.day != null &&
-    !isRestDay &&
-    isWorkoutCompletedTodayForDay({
-      history,
-      programId,
-      dayIndex: todaysPlan.day,
-    });
-  const sessionState = getWorkoutSessionState({
-    hasDraft: Boolean(draft),
-    isRestDay,
-    isCompletedToday,
-  });
-
-  const handleQuickStart = () => {
-    if (!userId) {
-      router.push("/portal/train");
-      return;
-    }
-
-    // Check if there's already an active workout - redirect to it (match quick-actions behavior)
-    if (activeWorkout.data && !activeWorkout.data.completed) {
-      router.push("/portal/train/log");
-      return;
-    }
-
-    if (recentWorkoutCheck.data?.hasRecentWorkout) {
-      setShowWarningDialog(true);
-      return;
-    }
-    quickStart.mutate({ userId });
-  };
-
-  const handleConfirmStart = () => {
-    setShowWarningDialog(false);
-    quickStart.mutate({ userId });
-  };
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 rounded-t-xl border-b px-4 backdrop-blur">
       {/* Sidebar Trigger */}
@@ -238,51 +147,6 @@ export function PortalHeader() {
             Guest mode
           </Badge>
         ) : null}
-        {/* Quick Start Workout Button */}
-        {!isGuest &&
-          (() => {
-            const hasActiveWorkout =
-              Boolean(draft) ||
-              (activeWorkout.data && !activeWorkout.data.completed);
-            const effectiveState = hasActiveWorkout ? "active" : sessionState;
-            const buttonContent = quickStart.isPending
-              ? {
-                  icon: <Play className="h-3.5 w-3.5 animate-spin" />,
-                  text: "Starting...",
-                }
-              : effectiveState === "active"
-                ? {
-                    icon: <Play className="h-3.5 w-3.5" />,
-                    text: "Resume workout",
-                  }
-                : effectiveState === "rest"
-                  ? {
-                      icon: <Play className="h-3.5 w-3.5" />,
-                      text: "Rest day",
-                    }
-                  : effectiveState === "completed"
-                    ? {
-                        icon: <Play className="h-3.5 w-3.5" />,
-                        text: "Completed",
-                      }
-                    : {
-                        icon: <Play className="h-3.5 w-3.5" />,
-                        text: "Start workout",
-                      };
-
-            return (
-              <Button
-                size="sm"
-                onClick={handleQuickStart}
-                disabled={quickStart.isPending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 gap-1.5 text-xs"
-              >
-                {buttonContent.icon}
-                <span className="hidden sm:inline">{buttonContent.text}</span>
-              </Button>
-            );
-          })()}
-
         {/* Profile Sidebar Button - Mobile/Tablet */}
         {isMobile && (
           <Button
@@ -372,14 +236,6 @@ export function PortalHeader() {
         </DropdownMenu>
       </div>
 
-      {/* Rest Warning Dialog */}
-      <WorkoutRestWarning
-        open={showWarningDialog}
-        onOpenChange={setShowWarningDialog}
-        onConfirm={handleConfirmStart}
-        onCancel={() => setShowWarningDialog(false)}
-        recentWorkout={recentWorkoutCheck.data?.workout ?? null}
-      />
     </header>
   );
 }
