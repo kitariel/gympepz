@@ -1,11 +1,14 @@
-# Train Polish Plan (Portal Train First)
+# Train Polish Plan (Portal + Train)
 
-Goal: polish `/portal/train/*` before adding new features by tightening UX, improving error handling, and clarifying separation of concerns.
+Goal: polish `/portal/train/*` and `/train/*` before adding new features by tightening UX, improving error handling, and clarifying separation of concerns.
 
 ## 1) Map the surface area
 - [x] Inventory all `/portal/train/*` routes and shared components.
 - [x] Identify entry points, data sources, and UI state ownership.
 - [x] Note any duplicated logic or inconsistent UX patterns.
+- [x] Inventory all `/train/*` routes and shared components.
+- [x] Identify entry points, data sources, and UI state ownership for `/train`.
+- [x] Note any duplicated logic or inconsistent UX patterns across portal vs. non-portal train.
 
 Notes:
 - Routes:
@@ -20,8 +23,20 @@ Notes:
   - `/portal/train/plans` → inline page + hooks (`useCustomPrograms`, `useActiveProgram`, `useWorkoutDraft`)
   - `/portal/train/onboarding` → `OnboardingWizard` (`src/components/train/OnboardingWizard`)
   - `/portal/train/summary` → inline page + hooks (`useActiveProgram`, `useWorkoutDraft`)
+  - `/train` → `TrainEntryScreen` (`src/features/train/components/TrainEntryScreen/*`)
+  - `/train/log` → `WorkoutLogger` (`src/components/train/WorkoutLogger`)
+  - `/train/overview` → `ProgramOverview` (`src/components/train/ProgramOverview`)
+  - `/train/history` → `HistoryList` (`src/components/train/HistoryList`)
+  - `/train/activity` → `ActivityList` (`src/features/train/components/ActivityList`)
+  - `/train/templates` → `TemplateList` (`src/components/train/TemplateList`)
+  - `/train/template/[templateId]` → `TemplateDetails` (`src/components/train/TemplateDetails`)
+  - `/train/build` → `CustomProgramBuilder` (`src/components/train/CustomProgramBuilder`)
+  - `/train/plans` → inline page + hooks (`useCustomPrograms`, `useActiveProgram`, `useWorkoutDraft`)
+  - `/train/onboarding` → `OnboardingWizard` (`src/components/train/OnboardingWizard`)
+  - `/train/summary` → inline page + hooks (`useActiveProgram`, `useWorkoutDraft`)
 - Layout:
   - `src/app/portal/train/layout.tsx` wraps all with `TrainModeProvider`.
+  - `src/app/train/layout.tsx` provides `TrainHeader`, `TrainBottomNav`, `WorkoutSessionDock`.
 - Core data sources (entry screen):
   - Offline: `useTrainingProfile`, `useActiveProgram`, `useWorkoutDraft`, `useTrainPrefs`, `useTrainMode`.
   - Online: `api.workoutLog.list`, `api.workoutLog.getActiveWorkout`, `api.workoutLog.getStreak`, `useSession`.
@@ -31,12 +46,14 @@ Notes:
   - Hardcoded `/portal/train/*` strings appear in multiple components and pages.
   - Multiple “Loading…” states are inconsistent across pages (plain text vs. suspense fallback vs. cards).
   - `/portal/train/plans` and `/portal/train/summary` mix data, actions, and view logic in-page.
+  - `/train/plans` and `/train/summary` mix data, actions, and view logic in-page.
 
 ## 2) Error handling pass
 - [x] Define a consistent error model for train screens (network, auth, empty, server).
 - [x] Add view-level error states with clear recovery actions.
 - [x] Ensure errors are surfaced near the user action that triggered them.
 - [x] Verify loading, empty, and error states are visually distinct.
+- [x] Extend error handling to `/train/*` where missing.
 
 Notes:
 - Error model applied:
@@ -46,44 +63,53 @@ Notes:
 - Updates:
   - Added inline sync error banner + retry to train entry views (portal + non-portal).
   - Added route-level error boundary for `/portal/train/*`.
+  - Added route-level error boundary for `/train/*`.
 
 ## 3) Separation of concerns
 - [x] Split containers from views where mixed.
 - [x] Move data fetching and side effects into hooks/containers.
 - [x] Keep presentational components pure and prop-driven.
 - [x] Document each component’s responsibilities in brief comments where needed.
+- [x] Apply the same separation pattern to `/train/*` screens where mixed.
 
 Notes:
 - `/portal/train/summary` moved to `PortalTrainSummary` container/view split.
 - `/portal/train/plans` moved to `PortalTrainPlans` container/view split.
 - View components are prop-driven; routing/data hooks live in containers.
+- `/train/summary` and `/train/plans` moved to `TrainSummary` and `TrainPlans` container/view splits.
 
 ## 4) Code splitting and performance
 - [x] Identify heavy components and split by route or feature.
 - [x] Lazy load non-critical panels (e.g., history/programs sections).
 - [x] Verify suspense/fallback UX feels intentional.
+- [x] Review `/train/*` for any remaining heavy routes to lazy load.
 
 Notes:
 - Portal train routes now use dynamic imports with simple, consistent fallbacks.
 - Heavy pages split: activity, build, history, log, onboarding, overview, templates, template details.
+- Train routes now use dynamic imports with matching fallbacks (templates detail remains server-rendered).
 
 ## 5) UX consistency pass
 - [x] Align header, CTA, and action placements across `/portal/train/*`.
 - [x] Normalize spacing, card hierarchy, and button sizing.
 - [x] Ensure navigation back to `/train` is clear and consistent.
+- [x] Align UX across `/train/*` to match the polished portal patterns where appropriate.
 
 Notes:
 - Added shared `PortalTrainShell` for consistent padding and spacing.
 - Added “Single view” link on key portal train screens (summary + plans) for quick `/train` access.
+- Added shared `TrainShell` and applied to `/train` entry + summary/plans for spacing parity.
 
 ## 6) Accessibility and resilience
 - [x] Audit keyboard flow and focus states for key actions.
 - [x] Check icon-only buttons for labels.
 - [x] Verify offline/online state is readable and actionable.
+- [x] Confirm the same accessibility pass on `/train/*`.
 
 Notes:
 - Added live status announcements for train status badges/labels.
 - Verified icon-only controls in train UI use labels (sr-only/aria-label).
+- `/train` entry status badge uses live status for screen readers.
 
 ## 7) Testing & validation
 - [ ] Add/extend tests for error states and route transitions.
@@ -99,9 +125,11 @@ Notes:
 - [x] Every async path has loading + error handling.
 - [x] No duplicate UI patterns across portal train routes.
 - [x] Performance improves or stays neutral.
+- [x] Portal + train parity review complete.
 
 Notes:
 - Mixed concerns were split for summary + plans screens.
 - Async entry data has inline error handling and route error boundary.
 - Shared portal layout shell normalizes spacing.
 - Dynamic imports added for heavy pages.
+- `/train` now mirrors portal structure for summary/plans, shells, and lazy-loaded routes.

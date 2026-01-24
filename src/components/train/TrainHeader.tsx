@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
-import { useRouteContext } from "@/hooks/useRouteContext";
-import { trainPath } from "@/lib/routes";
 import { InstallPWAButton } from "@/components/pwa-install-button";
 
 function useIsOnline(): boolean {
@@ -30,8 +29,8 @@ function useIsOnline(): boolean {
 
 export function TrainHeader() {
   const isOnline = useIsOnline();
-  const routeContext = useRouteContext();
   const { activeProgram, hydrated } = useActiveProgram();
+  const { data: session } = useSession();
 
   const programName = useMemo(() => {
     if (!hydrated || !activeProgram) return null;
@@ -63,10 +62,10 @@ export function TrainHeader() {
 
         <div className="flex shrink-0 items-center gap-2">
           <Link
-            href="/login"
+            href={session ? "/portal" : "/login"}
             className="text-xs font-medium text-foreground/80 transition hover:text-foreground"
           >
-            Log in
+            {session ? "Go to portal" : "Log in"}
           </Link>
           <InstallPWAButton />
           <Badge variant="secondary">Offline-first</Badge>

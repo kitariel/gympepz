@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TrainShell } from "@/components/train/TrainShell";
 import { cn } from "@/lib/utils";
 import type { TrainEntryScreenViewProps } from "./TrainEntryScreen.types";
 
@@ -366,7 +367,7 @@ function ProgramsSection({
 
 export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+    <TrainShell>
       {props.syncError ? (
         <Alert variant="destructive" className="animate-fade-up">
           <AlertTitle>{props.syncError.title}</AlertTitle>
@@ -416,6 +417,6 @@ export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
         buildHref={props.buildHref}
         plansHref={props.plansHref}
       />
-    </div>
+    </TrainShell>
   );
 }
