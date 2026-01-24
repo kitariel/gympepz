@@ -203,6 +203,11 @@ function SingleExerciseView({
                 {exercise.targetText}
               </p>
             ) : null}
+            {exercise.goalHint ? (
+              <Badge variant="outline" className="mt-2 text-[10px]">
+                {exercise.goalHint}
+              </Badge>
+            ) : null}
           </div>
           <Badge variant="secondary" className="shrink-0 tabular-nums">
             {completedSets}/{totalSets}

@@ -13,6 +13,7 @@ export type WorkoutLoggerExerciseVM = {
   name: string;
   targetLabel: string | null;
   targetText: string | null;
+  goalHint?: string | null;
   previousPerformance: PreviousSetData | null;
   setRows: Array<{
     id: string;

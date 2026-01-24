@@ -11,6 +11,7 @@ import { programRouter } from "./routers/program";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
 import { goalRouter } from "./routers/goal";
+import { templateRouter } from "./routers/template";
 
 /**
  * This is the primary router for your server.
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   progress: progressRouter,
   analytics: analyticsRouter,
   goal: goalRouter,
+  template: templateRouter,
 });
 
 // export type definition of API

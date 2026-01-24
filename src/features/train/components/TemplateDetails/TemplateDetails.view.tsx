@@ -101,6 +101,32 @@ function ScheduleDialog({ prompt }: { prompt: TemplateDetailsSchedulePrompt }) {
 export function TemplateDetailsView(props: TemplateDetailsViewProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "calendar">("overview");
 
+  if (props.kind === "loading") {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">
+        <Button asChild variant="ghost" size="sm" className="h-8 px-2">
+          <Link href={props.backHref}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to templates
+          </Link>
+        </Button>
+        <div className="space-y-3">
+          <div className="bg-muted h-8 w-64 animate-pulse rounded-md" />
+          <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
+        </div>
+        <Card className="border-dashed">
+          <CardContent className="p-8">
+            <div className="space-y-3">
+              <div className="bg-muted h-5 w-40 animate-pulse rounded-md" />
+              <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
+              <div className="bg-muted h-4 w-5/6 animate-pulse rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (props.kind === "notFound") {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-4 p-6 pt-4">

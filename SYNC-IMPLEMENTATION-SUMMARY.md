@@ -203,6 +203,92 @@ function MyComponent() {
 
 ---
 
+# Goal Templates - Schema + Seeding Summary
+
+**Status:** ✅ **COMPLETE**  
+**Date:** 2025-01-22
+
+## ✅ What Was Implemented
+
+### **1. Prisma Schema**
+
+**Files:**
+- `prisma/schema/goal.prisma`
+- `prisma/schema/exercise.prisma`
+
+**Added:** `GoalTemplate` model with optional Exercise relation
+
+**Fields:**
+- `id`, `name`, `description`, `category`, `icon`, `type`
+- `exerciseId` (nullable), `exerciseName` (nullable)
+- `targetValue`, `unit`, `suggestedDeadlineDays`
+- `createdAt`, `updatedAt`
+
+**Indexes:**
+- `category`, `type`, `exerciseId`
+
+**Relation:**
+- `GoalTemplate.exercise` → `Exercise` (nullable, `onDelete: SetNull`)
+- `Exercise.goalTemplates` → `GoalTemplate[]`
+
+---
+
+### **2. Seed Script**
+
+**File:** `scripts/seed-goal-templates.ts`
+
+**Features:**
+- ✅ Loads `GOAL_TEMPLATES` from `src/lib/goal-templates.ts`
+- ✅ Normalizes exercise names for matching
+- ✅ Resolves `exerciseId` when a match is found
+- ✅ Stores both `exerciseId` and `exerciseName` for traceability
+- ✅ Clears existing `GoalTemplate` rows before insert
+- ✅ Logs match rate + missing exercises
+
+---
+
+### **3. Package Script**
+
+**File:** `package.json`
+
+**Added:**
+```json
+"db:seed:goals": "npx tsx scripts/seed-goal-templates.ts"
+```
+
+---
+
+## 📊 Seed Flow
+
+```
+GOAL_TEMPLATES (src/lib/goal-templates.ts)
+          │
+          ▼
+Normalize exercise names
+          │
+          ▼
+Match against Exercise table
+          │
+          ▼
+Insert GoalTemplate rows
+```
+
+---
+
+## ✅ Usage
+
+1) Ensure schema is applied:
+```
+pnpm db:push
+```
+
+2) Seed goal templates:
+```
+pnpm db:seed:goals
+```
+
+---
+
 ## ✅ Testing Checklist
 
 - [x] Sync endpoint accepts both formats

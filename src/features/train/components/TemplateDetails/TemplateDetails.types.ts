@@ -33,6 +33,10 @@ export type TemplateDetailsViewProps =
       backHref: string;
     }
   | {
+      kind: "loading";
+      backHref: string;
+    }
+  | {
       kind: "ready";
       name: string;
       description: string;

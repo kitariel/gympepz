@@ -108,3 +108,9 @@ Notes:
 
 Notes:
 - Final review complete after polish passes on goals screens.
+
+Summary:
+- Added consistent error handling + retry across goals screens.
+- Split goals create/detail into container/view pairs.
+- Improved goals UX (navigation, dialogs, templates toggle, padding).
+- Reduced duplicate fetching and added progress loading skeletons.

@@ -7,6 +7,7 @@ import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useGoals, useGoalMutations } from "@/hooks/useGoals";
 import { trainPath } from "@/lib/routes";
 import {
   getDayNumberForToday,
@@ -31,6 +32,12 @@ function makeId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+function parseNumber(value: string | null | undefined): number | null {
+  if (value == null) return null;
+  const n = Number(String(value).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
 export function WorkoutLogger() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -38,6 +45,9 @@ export function WorkoutLogger() {
   const [error, setError] = useState<{ title: string; message: string } | null>(
     null,
   );
+
+  const { activeGoals } = useGoals();
+  const { recordProgress, userId } = useGoalMutations();
 
   const {
     activeProgram,
@@ -106,6 +116,29 @@ export function WorkoutLogger() {
       ? Boolean(autoPick?.isExactMatch)
       : true;
 
+  const goalsByExerciseId = useMemo(() => {
+    const map = new Map<string, typeof activeGoals>();
+    for (const goal of activeGoals) {
+      if (!goal.exerciseId) continue;
+      const list = map.get(goal.exerciseId) ?? [];
+      list.push(goal);
+      map.set(goal.exerciseId, list);
+    }
+    return map;
+  }, [activeGoals]);
+
+  const formatGoalHint = useCallback((goals: typeof activeGoals) => {
+    if (!goals.length) return null;
+    const [first, ...rest] = goals;
+    if (!first) return null;
+    const base =
+      first.type === "reps"
+        ? `Goal: ${first.targetValue} reps`
+        : `Goal: ${first.targetValue} ${first.unit}`;
+    if (rest.length === 0) return base;
+    return `${base} +${rest.length} more`;
+  }, []);
+
   const createDraftForDay = useCallback(() => {
     try {
       if (!hydrated) return;
@@ -119,7 +152,7 @@ export function WorkoutLogger() {
         .slice()
         .sort((a, b) => a.order - b.order)
         .map((it) => ({
-          id: makeId("ex"),
+          id: it.exerciseId ?? makeId("ex"),
           name: it.nameFallback ?? "Exercise",
           order: it.order,
           targetSets: it.sets ?? null,
@@ -253,6 +286,60 @@ export function WorkoutLogger() {
     [draft, saveDraft],
   );
 
+  const updateGoalsForSet = useCallback(
+    async (exerciseId: string, setId: string, patch: Partial<Pick<WorkoutSetEntry, "actualReps" | "actualWeight" | "completed">>) => {
+      if (routeContext !== "portal") return;
+      if (!userId) return;
+      if (!draft) return;
+      if (!patch.completed) return;
+
+      const set = draft.sets.find((s) => s.id === setId);
+      if (!set || set.completed) return;
+
+      const goals = goalsByExerciseId.get(exerciseId) ?? [];
+      if (goals.length === 0) return;
+
+      const repsValue = parseNumber(patch.actualReps ?? set.actualReps);
+      const weightValue = parseNumber(patch.actualWeight ?? set.actualWeight);
+
+      for (const goal of goals) {
+        if (goal.type === "strength") {
+          if (weightValue == null) continue;
+          if (weightValue <= goal.currentValue) continue;
+          try {
+            await recordProgress({ goalId: goal.id, value: weightValue });
+          } catch (err) {
+            console.error("Failed to update goal progress:", err);
+          }
+          continue;
+        }
+        if (goal.type === "reps") {
+          if (repsValue == null) continue;
+          if (repsValue <= goal.currentValue) continue;
+          try {
+            await recordProgress({ goalId: goal.id, value: repsValue });
+          } catch (err) {
+            console.error("Failed to update goal progress:", err);
+          }
+        }
+      }
+    },
+    [routeContext, userId, draft, goalsByExerciseId, recordProgress],
+  );
+
+  const handleUpdateSet = useCallback(
+    (setId: string, patch: Partial<Pick<WorkoutSetEntry, "actualReps" | "actualWeight" | "completed">>) => {
+      if (!draft) return;
+      const set = draft.sets.find((s) => s.id === setId);
+      if (!set) return;
+      updateSet(setId, patch);
+      if (patch.completed && !set.completed) {
+        void updateGoalsForSet(set.exerciseId, setId, patch);
+      }
+    },
+    [draft, updateSet, updateGoalsForSet],
+  );
+
   const viewProps: WorkoutLoggerViewProps = useMemo(() => {
     if (!hydrated) return { kind: "loading" };
 
@@ -384,6 +471,7 @@ export function WorkoutLogger() {
           name: ex.name,
           targetLabel,
           targetText,
+          goalHint: formatGoalHint(goalsByExerciseId.get(ex.id) ?? []),
           previousPerformance: previousPerformance
             ? {
                 weight: previousPerformance.weight,
@@ -422,7 +510,7 @@ export function WorkoutLogger() {
       exercises,
       restTimer: draft.restTimer,
       onAddSet: (exerciseId) => addSet(exerciseId),
-      onUpdateSet: (setId, patch) => updateSet(setId, patch),
+      onUpdateSet: (setId, patch) => handleUpdateSet(setId, patch),
       onCopyPrevious: (exerciseId, setId) => copyPrevious(exerciseId, setId),
       onCopyLastSet: (exerciseId, setId) => copyLastSet(exerciseId, setId),
       onStartRestTimer: (durationMs) => startRestTimer(durationMs),
@@ -470,6 +558,8 @@ export function WorkoutLogger() {
     startRestTimer,
     stopRestTimer,
     finish,
+    goalsByExerciseId,
+    formatGoalHint,
   ]);
 
   return <WorkoutLoggerView {...viewProps} />;

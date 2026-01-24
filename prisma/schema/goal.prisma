@@ -32,3 +32,25 @@ model GoalProgress {
 
   @@index([goalId, date])
 }
+
+model GoalTemplate {
+  id                     String   @id
+  name                   String
+  description            String
+  category               String
+  icon                   String
+  type                   String
+  exerciseId             String?
+  exerciseName           String?
+  targetValue            Float
+  unit                   String
+  suggestedDeadlineDays  Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  exercise Exercise? @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([type])
+  @@index([exerciseId])
+}

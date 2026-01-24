@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getTemplateById } from "@/lib/program-templates/templates";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useRouteContext } from "@/hooks/useRouteContext";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import type { ProgramTemplate, TemplateDayNumber } from "@/lib/program-templates/types";
 import { getDayNumberForToday } from "@/features/train/domain/workoutSessionState";
 import { trainPath } from "@/lib/routes";
+import { api } from "@/trpc/react";
 import type { TemplateDetailsDayVM, TemplateDetailsViewProps } from "./TemplateDetails.types";
 import { TemplateDetailsView } from "./TemplateDetails.view";
 
@@ -26,6 +26,25 @@ const WEEKDAY_ORDER: TemplateDayNumber[] = [1, 2, 3, 4, 5, 6, 7];
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+function normalizeExerciseName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\(.*?\)/g, "")
+    .replace(/^circuit:\s*/g, "")
+    .replace(/[-/]/g, " ")
+    .replace(/\bor\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function baseExerciseName(value: string): string {
+  const withoutParens = value.replace(/\(.*?\)/g, "").trim();
+  const splitOnSlash = withoutParens.split(" / ")[0];
+  const splitOnOr = splitOnSlash.split(" or ")[0];
+  return splitOnOr.replace(/^circuit:\s*/i, "").trim();
 }
 
 function getWorkoutDays(plan: ProgramTemplate["plan"]): ProgramTemplate["plan"]["days"] {
@@ -68,14 +87,73 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
   const routeContext = useRouteContext();
   const { selectTemplate, saveActiveProgram } = useActiveProgram();
   const { clearDraft } = useWorkoutDraft();
+  const { data: templateData, isLoading } = api.template.getById.useQuery({
+    id: templateId,
+  });
+  const { data: exercises = [] } = api.exercise.list.useQuery(
+    { take: 1000 },
+    { enabled: Boolean(templateData) },
+  );
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"default" | "custom">("default");
   const [selectedDays, setSelectedDays] = useState<TemplateDayNumber[]>([]);
 
-  const template = useMemo(() => getTemplateById(templateId), [templateId]);
+  const template = useMemo<ProgramTemplate | null>(() => {
+    if (!templateData) return null;
+    const exerciseIndex = new Map(
+      exercises.map((ex) => [normalizeExerciseName(ex.name), ex]),
+    );
+    const resolveExerciseId = (fallback?: string | null, exerciseId?: string | null) => {
+      if (exerciseId) return exerciseId;
+      if (!fallback) return undefined;
+      const base = normalizeExerciseName(baseExerciseName(fallback));
+      const exact = exerciseIndex.get(base);
+      if (exact) return exact.id;
+      const startsWith = Array.from(exerciseIndex.entries()).find(([key]) =>
+        key.startsWith(base),
+      );
+      if (startsWith) return startsWith[1].id;
+      const includes = Array.from(exerciseIndex.entries()).find(([key]) =>
+        key.includes(base),
+      );
+      if (includes) return includes[1].id;
+      return undefined;
+    };
+
+    return {
+      id: templateData.id,
+      name: templateData.name,
+      description: templateData.description,
+      tags: templateData.tags as ProgramTemplate["tags"],
+      daysPerWeek: templateData.daysPerWeek,
+      weeks: templateData.weeks ?? undefined,
+      plan: {
+        days: templateData.days.map((day) => ({
+          day: day.day as TemplateDayNumber,
+          label: day.label,
+          isRestDay: day.isRestDay,
+          items: day.items.map((item) => ({
+            order: item.order,
+            sets: item.sets,
+            reps: item.reps,
+            weight: item.weight ?? undefined,
+            exerciseId: resolveExerciseId(
+              item.nameFallback ?? item.exercise?.name ?? undefined,
+              item.exerciseId,
+            ),
+            nameFallback: item.nameFallback ?? item.exercise?.name ?? "Exercise",
+          })),
+        })),
+      },
+    };
+  }, [templateData, exercises]);
   const today = useMemo(() => getDayNumberForToday(), []);
 
   const viewProps: TemplateDetailsViewProps = useMemo(() => {
+    if (isLoading) {
+      return { kind: "loading", backHref: trainPath(routeContext, "templates") };
+    }
+
     if (!template) {
       return { kind: "notFound", backHref: trainPath(routeContext, "templates") };
     }
@@ -178,6 +256,7 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
     };
   }, [
     template,
+    isLoading,
     clearDraft,
     selectTemplate,
     saveActiveProgram,

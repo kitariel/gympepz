@@ -2,11 +2,12 @@
 
 import { useMemo } from "react";
 
-import { getTemplates } from "@/lib/program-templates/templates";
+import type { ProgramTemplate } from "@/lib/program-templates/types";
 import { useTrainingProfile } from "@/hooks/useTrainingProfile";
 import { useRouteContext } from "@/hooks/useRouteContext";
 import { trainPath } from "@/lib/routes";
 import { recommendTemplates } from "@/features/train/domain/recommendTemplates";
+import { api } from "@/trpc/react";
 import type { TemplateCardVM } from "../TemplateCard/TemplateCard.types";
 import type { TemplateListViewProps } from "./TemplateList.types";
 import { TemplateListView } from "./TemplateList.view";
@@ -14,6 +15,8 @@ import { TemplateListView } from "./TemplateList.view";
 export function TemplateList() {
   const { profile, hydrated } = useTrainingProfile();
   const routeContext = useRouteContext();
+  const { data: templates = [], isLoading: templatesLoading } =
+    api.template.list.useQuery();
 
   const toVm = (input: { id: string; name: string; description: string; daysPerWeek: number }): TemplateCardVM => ({
     id: input.id,
@@ -24,14 +27,25 @@ export function TemplateList() {
     useHref: trainPath(routeContext, `template/${input.id}`),
   });
 
-  const all = useMemo(() => getTemplates(), []);
+  const all = useMemo<ProgramTemplate[]>(
+    () =>
+      templates.map((t) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        tags: t.tags as ProgramTemplate["tags"],
+        daysPerWeek: t.daysPerWeek,
+        plan: { days: [] },
+      })),
+    [templates],
+  );
   const recommended = useMemo(() => {
     if (!profile) return [];
     return recommendTemplates(profile, all);
   }, [profile, all]);
 
   const viewProps: TemplateListViewProps = useMemo(() => {
-    if (!hydrated) return { kind: "loading" };
+    if (!hydrated || templatesLoading) return { kind: "loading" };
 
     if (!profile) {
       return {
@@ -56,8 +70,7 @@ export function TemplateList() {
         toVm({ id: t.id, name: t.name, description: t.description, daysPerWeek: t.daysPerWeek }),
       ),
     };
-  }, [hydrated, profile, recommended, all, routeContext, toVm]);
+  }, [hydrated, templatesLoading, profile, recommended, all, routeContext, toVm]);
 
   return <TemplateListView {...viewProps} />;
 }
-
