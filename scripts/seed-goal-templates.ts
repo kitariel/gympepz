@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { GOAL_TEMPLATES } from "../src/lib/goal-templates";
+import { GOAL_TEMPLATES } from "../src/server/data/goal-templates";
 
 const prisma = new PrismaClient();
 

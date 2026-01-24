@@ -11,6 +11,7 @@ import { programRouter } from "./routers/program";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
 import { goalRouter } from "./routers/goal";
+import { goalTemplateRouter } from "./routers/goal-template";
 import { templateRouter } from "./routers/template";
 
 /**
@@ -31,6 +32,7 @@ export const appRouter = createTRPCRouter({
   progress: progressRouter,
   analytics: analyticsRouter,
   goal: goalRouter,
+  goalTemplate: goalTemplateRouter,
   template: templateRouter,
 });
 

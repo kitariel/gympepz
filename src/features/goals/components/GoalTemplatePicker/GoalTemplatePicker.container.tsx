@@ -2,21 +2,11 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  getTemplatesByCategory,
-  GOAL_TEMPLATE_CATEGORIES,
-  type GoalTemplateCategory,
-} from "@/lib/goal-templates";
-import type { GoalTemplate } from "@/lib/goal-templates";
+import { useGoalTemplates } from "@/hooks/useGoalTemplates";
+import { groupGoalTemplatesByCategory } from "@/lib/goal-template-utils";
+import type { GoalTemplate } from "@/types/goal-template.types";
 import type { GoalTemplatePickerProps, GoalTemplatePickerViewModel } from "./GoalTemplatePicker.types";
 import { GoalTemplatePickerView } from "./GoalTemplatePicker.view";
-
-const CATEGORY_ORDER: GoalTemplateCategory[] = [
-  "strength",
-  "reps",
-  "consistency",
-  "bodyweight",
-];
 
 export function GoalTemplatePickerContainer({
   open,
@@ -25,17 +15,13 @@ export function GoalTemplatePickerContainer({
   onGoalCreated,
 }: GoalTemplatePickerProps) {
   const router = useRouter();
+  const { templates } = useGoalTemplates();
   const [step, setStep] = useState<"grid" | "confirm">("grid");
   const [selectedTemplate, setSelectedTemplate] = useState<GoalTemplate | null>(null);
 
   const categories = useMemo(() => {
-    const byCat = getTemplatesByCategory();
-    return CATEGORY_ORDER.map((id) => ({
-      id,
-      label: GOAL_TEMPLATE_CATEGORIES[id].label,
-      templates: byCat[id],
-    })).filter((c) => c.templates.length > 0);
-  }, []);
+    return groupGoalTemplatesByCategory(templates);
+  }, [templates]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {

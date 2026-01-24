@@ -1,35 +1,4 @@
-import type { GoalType } from "@/types/goal.types";
-
-export type GoalTemplateCategory =
-  | "strength"
-  | "reps"
-  | "consistency"
-  | "bodyweight";
-
-export interface GoalTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: GoalTemplateCategory;
-  icon: "dumbbell" | "flame" | "target" | "scale";
-  type: GoalType;
-  /** Exercise name for lookup (e.g. "Bench Press"). Used to resolve exerciseId. */
-  exerciseName?: string;
-  targetValue: number;
-  unit: "lbs" | "kg" | "reps" | "workouts";
-  /** Suggested deadline in days from now (e.g. 90 = 3 months). */
-  suggestedDeadlineDays?: number;
-}
-
-export const GOAL_TEMPLATE_CATEGORIES: Record<
-  GoalTemplateCategory,
-  { label: string; icon: GoalTemplate["icon"] }
-> = {
-  strength: { label: "Strength", icon: "dumbbell" },
-  reps: { label: "Reps", icon: "flame" },
-  consistency: { label: "Consistency", icon: "target" },
-  bodyweight: { label: "Bodyweight", icon: "scale" },
-};
+import type { GoalTemplate } from "@/types/goal-template.types";
 
 export const GOAL_TEMPLATES: GoalTemplate[] = [
   // Strength (6)
@@ -267,23 +236,3 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     suggestedDeadlineDays: 180,
   },
 ];
-
-export function getTemplatesByCategory(): Record<
-  GoalTemplateCategory,
-  GoalTemplate[]
-> {
-  const map: Record<GoalTemplateCategory, GoalTemplate[]> = {
-    strength: [],
-    reps: [],
-    consistency: [],
-    bodyweight: [],
-  };
-  for (const t of GOAL_TEMPLATES) {
-    map[t.category].push(t);
-  }
-  return map;
-}
-
-export function getGoalTemplateById(id: string): GoalTemplate | undefined {
-  return GOAL_TEMPLATES.find((t) => t.id === id);
-}

@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  GOAL_TEMPLATE_CATEGORIES,
-  type GoalTemplate,
-} from "@/lib/goal-templates";
+import { GOAL_TEMPLATE_CATEGORIES } from "@/lib/goal-template-categories";
+import type { GoalTemplate } from "@/types/goal-template.types";
 import type { GoalTemplateCardProps, GoalTemplateCardViewModel } from "./GoalTemplateCard.types";
 import { GoalTemplateCardView } from "./GoalTemplateCard.view";
 

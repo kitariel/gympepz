@@ -16,12 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  getTemplatesByCategory,
-  GOAL_TEMPLATE_CATEGORIES,
-  type GoalTemplate,
-  type GoalTemplateCategory,
-} from "@/lib/goal-templates";
+import { useGoalTemplates } from "@/hooks/useGoalTemplates";
+import { groupGoalTemplatesByCategory } from "@/lib/goal-template-utils";
+import type { GoalTemplate } from "@/types/goal-template.types";
 import { useGoals, useGoalMutations } from "@/hooks/useGoals";
 import { GoalTemplatePicker } from "@/features/goals/components/GoalTemplatePicker";
 import { GoalTemplateConfirm } from "@/features/goals/components/GoalTemplateConfirm";
@@ -29,32 +26,9 @@ import type { Goal } from "@/types/goal.types";
 import type {
   GoalsDashboardProps,
   GoalsDashboardViewModel,
-  TemplateCategoryGroup,
   GoalsDashboardState,
 } from "./GoalsDashboard.types";
 import { GoalsDashboardView } from "./GoalsDashboard.view";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-const CATEGORY_ORDER: GoalTemplateCategory[] = [
-  "strength",
-  "reps",
-  "consistency",
-  "bodyweight",
-];
-
-const CATEGORY_ICON_MAP: Record<GoalTemplateCategory, TemplateCategoryGroup["icon"]> = {
-  strength: "dumbbell",
-  reps: "flame",
-  consistency: "target",
-  bodyweight: "scale",
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
 
 function goalShortLabel(g: Goal): string {
   if (g.exercise?.name) return g.exercise.name;
@@ -70,16 +44,6 @@ function goalShortLabel(g: Goal): string {
     default:
       return "This goal";
   }
-}
-
-function buildTemplateCategories(): TemplateCategoryGroup[] {
-  const byCat = getTemplatesByCategory();
-  return CATEGORY_ORDER.map((id) => ({
-    id,
-    label: GOAL_TEMPLATE_CATEGORIES[id].label,
-    icon: CATEGORY_ICON_MAP[id],
-    templates: byCat[id],
-  })).filter((c) => c.templates.length > 0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,6 +62,12 @@ export function GoalsDashboardContainer({
     error,
     refetch,
   } = useGoals();
+  const {
+    templates,
+    isLoading: templatesLoading,
+    error: templatesError,
+    refetch: refetchTemplates,
+  } = useGoalTemplates();
   const { delete: deleteGoal } = useGoalMutations();
 
   // Local state
@@ -110,7 +80,10 @@ export function GoalsDashboardContainer({
   });
 
   // Memoized template categories
-  const templateCategories = useMemo(() => buildTemplateCategories(), []);
+  const templateCategories = useMemo(
+    () => groupGoalTemplatesByCategory(templates),
+    [templates],
+  );
 
   // ─────────────────────────────────────────────────────────────────────────
   // Handlers
@@ -183,12 +156,20 @@ export function GoalsDashboardContainer({
 
   const hasGoals = activeGoals.length > 0 || completedGoals.length > 0;
 
+  const isAuthenticated = Boolean(userId);
+  const showTemplateError = Boolean(templatesError) && !hasGoals;
+  const errorMessage =
+    isAuthenticated && (error || showTemplateError)
+      ? error?.message ??
+        templatesError?.message ??
+        "Failed to load goals."
+      : null;
+
   const viewModel: GoalsDashboardViewModel = {
-    isLoading,
-    isAuthenticated: Boolean(userId),
+    isLoading: isLoading || (!hasGoals && templatesLoading),
+    isAuthenticated,
     hasGoals,
-    errorMessage:
-      userId && error ? error.message ?? "Failed to load goals." : null,
+    errorMessage,
     activeGoals: activeGoals as Goal[],
     completedGoals: completedGoals as Goal[],
     templateCategories,
@@ -199,6 +180,7 @@ export function GoalsDashboardContainer({
     onGoalDelete: handleGoalDelete,
     onRetry: () => {
       void refetch();
+      void refetchTemplates();
     },
     paths: {
       startWorkout: "/portal/train/log",

@@ -1,4 +1,7 @@
-import type { GoalTemplate } from "@/lib/goal-templates";
+import type {
+  GoalTemplate,
+  GoalTemplateCategory,
+} from "@/types/goal-template.types";
 
 export type GoalTemplatePickerProps = {
   open: boolean;
@@ -11,7 +14,7 @@ export type GoalTemplatePickerViewModel = {
   step: "grid" | "confirm";
   selectedTemplate: GoalTemplate | null;
   categories: Array<{
-    id: string;
+    id: GoalTemplateCategory;
     label: string;
     templates: GoalTemplate[];
   }>;

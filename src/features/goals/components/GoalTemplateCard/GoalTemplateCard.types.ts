@@ -1,4 +1,4 @@
-import type { GoalTemplate } from "@/lib/goal-templates";
+import type { GoalTemplate } from "@/types/goal-template.types";
 
 export type GoalTemplateCardProps = {
   template: GoalTemplate;

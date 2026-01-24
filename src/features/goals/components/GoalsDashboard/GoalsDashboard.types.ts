@@ -1,4 +1,8 @@
-import type { GoalTemplate, GoalTemplateCategory } from "@/lib/goal-templates";
+import type {
+  GoalTemplate,
+  GoalTemplateCategory,
+  GoalTemplateIcon,
+} from "@/types/goal-template.types";
 import type { Goal } from "@/types/goal.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,7 +52,7 @@ export type GoalsDashboardViewModel = {
 export type TemplateCategoryGroup = {
   id: GoalTemplateCategory;
   label: string;
-  icon: "dumbbell" | "flame" | "target" | "scale";
+  icon: GoalTemplateIcon;
   templates: GoalTemplate[];
 };
 

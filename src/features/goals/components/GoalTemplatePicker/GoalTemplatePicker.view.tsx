@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { GoalTemplateCard } from "@/features/goals/components/GoalTemplateCard";
 import { GoalTemplateConfirm } from "@/features/goals/components/GoalTemplateConfirm";
-import type { GoalTemplate } from "@/lib/goal-templates";
+import type { GoalTemplate } from "@/types/goal-template.types";
 import type { GoalTemplatePickerViewModel } from "./GoalTemplatePicker.types";
 
 const CATEGORY_ICONS = {

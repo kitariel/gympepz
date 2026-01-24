@@ -10,6 +10,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "db:seed": "pnpm db:seed:exercises && pnpm db:seed:templates && pnpm db:seed:goals",
     "db:seed:exercises": "node prisma/seed-exercises.js",
     "db:seed:goals": "npx tsx scripts/seed-goal-templates.ts",
     "db:seed:templates": "npx tsx scripts/seed-templates.ts",
