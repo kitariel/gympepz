@@ -1,7 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import { WorkoutLogger } from "@/components/train/WorkoutLogger";
+import dynamic from "next/dynamic";
+
+const WorkoutLogger = dynamic(
+  () => import("@/components/train/WorkoutLogger").then((mod) => mod.WorkoutLogger),
+  { suspense: true }
+);
 
 export default function PortalTrainLogPage() {
   return (

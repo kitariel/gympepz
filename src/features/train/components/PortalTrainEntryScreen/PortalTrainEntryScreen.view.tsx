@@ -15,11 +15,13 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useTrainMode } from "@/features/train/context/TrainModeContext";
+import { PortalTrainShell } from "@/features/train/components/PortalTrainShell";
 import type { TrainEntryScreenViewProps } from "../TrainEntryScreen/TrainEntryScreen.types";
 
 function CtaButton({
@@ -400,12 +402,30 @@ export function PortalTrainEntryScreenView(props: TrainEntryScreenViewProps) {
   const { isOnline } = useTrainMode();
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+    <PortalTrainShell>
+      {props.syncError ? (
+        <Alert variant="destructive" className="animate-fade-up">
+          <AlertTitle>{props.syncError.title}</AlertTitle>
+          <AlertDescription>
+            <p>{props.syncError.message}</p>
+            {props.syncError.onAction ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={props.syncError.onAction}
+              >
+                {props.syncError.actionLabel ?? "Try again"}
+              </Button>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Train</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm" role="status" aria-live="polite">
             {isOnline ? "Synced workouts" : "Offline mode"}
           </p>
         </div>
@@ -441,6 +461,6 @@ export function PortalTrainEntryScreenView(props: TrainEntryScreenViewProps) {
         buildHref={props.buildHref}
         plansHref={props.plansHref}
       />
-    </div>
+    </PortalTrainShell>
   );
 }

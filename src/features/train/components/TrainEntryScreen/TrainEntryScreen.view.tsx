@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -366,6 +367,24 @@ function ProgramsSection({
 export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pt-4">
+      {props.syncError ? (
+        <Alert variant="destructive" className="animate-fade-up">
+          <AlertTitle>{props.syncError.title}</AlertTitle>
+          <AlertDescription>
+            <p>{props.syncError.message}</p>
+            {props.syncError.onAction ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={props.syncError.onAction}
+              >
+                {props.syncError.actionLabel ?? "Try again"}
+              </Button>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -375,7 +394,9 @@ export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">{props.statusText}</Badge>
+          <Badge variant="secondary" role="status" aria-live="polite">
+            {props.statusText}
+          </Badge>
           <Badge variant="outline">{props.sessionsText}</Badge>
         </div>
       </div>

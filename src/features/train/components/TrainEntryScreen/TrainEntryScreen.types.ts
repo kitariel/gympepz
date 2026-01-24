@@ -34,4 +34,10 @@ export type TrainEntryScreenViewProps = {
   templatesHref: string;
   buildHref: string;
   plansHref: string;
+  syncError?: {
+    title: string;
+    message: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  };
 };

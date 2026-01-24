@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 
@@ -41,17 +41,31 @@ export function PortalTrainEntryScreen() {
   const { selectedWorkoutDay, hydrated: prefsHydrated } = useTrainPrefs();
 
   // Online mode queries (database)
-  const { data: dbWorkouts, isLoading: isLoadingWorkouts } = api.workoutLog.list.useQuery(
+  const {
+    data: dbWorkouts,
+    isLoading: isLoadingWorkouts,
+    isError: isWorkoutsError,
+    refetch: refetchWorkouts,
+  } = api.workoutLog.list.useQuery(
     { userId: userId ?? "", limit: 10 },
     { enabled: isOnline && Boolean(userId) }
   );
 
-  const { data: activeWorkout, isLoading: isLoadingActive } = api.workoutLog.getActiveWorkout.useQuery(
+  const {
+    data: activeWorkout,
+    isLoading: isLoadingActive,
+    isError: isActiveWorkoutError,
+    refetch: refetchActiveWorkout,
+  } = api.workoutLog.getActiveWorkout.useQuery(
     { userId: userId ?? "" },
     { enabled: isOnline && Boolean(userId) }
   );
 
-  const { data: streakData } = api.workoutLog.getStreak.useQuery(
+  const {
+    data: streakData,
+    isError: isStreakError,
+    refetch: refetchStreak,
+  } = api.workoutLog.getStreak.useQuery(
     { userId: userId ?? "" },
     { enabled: isOnline && Boolean(userId) }
   );
@@ -79,6 +93,26 @@ export function PortalTrainEntryScreen() {
   }, [activeProgram, selectedWorkoutDay, autoPick]);
 
   const isScheduleMatch = selectedWorkoutDay === "auto" ? Boolean(autoPick?.isExactMatch) : true;
+
+  const handleSyncRetry = useCallback(() => {
+    if (!isOnline || !userId) return;
+    void refetchWorkouts();
+    void refetchActiveWorkout();
+    void refetchStreak();
+  }, [isOnline, userId, refetchWorkouts, refetchActiveWorkout, refetchStreak]);
+
+  const syncError = useMemo(() => {
+    if (!isOnline || !userId) return undefined;
+    if (isWorkoutsError || isActiveWorkoutError || isStreakError) {
+      return {
+        title: "Sync issue",
+        message: "We couldn't load your latest training data. Check your connection and try again.",
+        actionLabel: "Retry",
+        onAction: handleSyncRetry,
+      };
+    }
+    return undefined;
+  }, [isOnline, userId, isWorkoutsError, isActiveWorkoutError, isStreakError, handleSyncRetry]);
 
   // Build status text
   const statusText = useMemo(() => {
@@ -234,6 +268,7 @@ export function PortalTrainEntryScreen() {
     templatesHref: "/portal/train/templates",
     buildHref: "/portal/train/build",
     plansHref: "/portal/train/plans",
+    syncError,
   };
 
   return <PortalTrainEntryScreenView {...viewProps} />;
