@@ -13,6 +13,7 @@ import {
   Trash2,
   RefreshCw,
   ArrowLeft,
+  Target,
 } from "lucide-react";
 
 import {
@@ -197,21 +198,16 @@ function SingleExerciseView({
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-xl font-bold">{exercise.name}</h2>
-            {exercise.targetText ? (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {exercise.targetText}
-              </p>
-            ) : null}
-            {exercise.goalHint || exercise.goalUpdate ? (
-              <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex flex-row items-center gap-4">
+              <h2 className="truncate text-xl font-bold">{exercise.name}</h2>
+              <div className="flex flex-wrap gap-2">
                 {exercise.goalHint ? (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-200">
                     {exercise.goalHint}
                   </Badge>
                 ) : null}
                 {exercise.goalUpdate ? (
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge className="border-emerald-600/40 bg-emerald-600/15 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-100">
                     Goal updated: {exercise.goalUpdate.label}
                     {exercise.goalUpdate.extraCount > 0
                       ? ` +${exercise.goalUpdate.extraCount}`
@@ -219,7 +215,13 @@ function SingleExerciseView({
                   </Badge>
                 ) : null}
               </div>
+            </div>
+            {exercise.targetText ? (
+              <p className="text-muted-foreground mt-1 text-sm">
+                {exercise.targetText}
+              </p>
             ) : null}
+
           </div>
           <Badge variant="secondary" className="shrink-0 tabular-nums">
             {completedSets}/{totalSets}
@@ -249,57 +251,59 @@ function SingleExerciseView({
       </div>
 
       {/* Set rows */}
-      <div className="space-y-3">
-        {exercise.setRows.map((set, setIndex) => (
-          <div key={set.id} className="space-y-1">
-            <SwipeableSetRow
-              id={set.id}
-              setNumber={set.setNumber}
-              repsValue={set.repsValue}
-              repsPlaceholder={set.repsPlaceholder}
-              weightValue={set.weightValue}
-              weightPlaceholder={set.weightPlaceholder}
-              completed={set.completed}
-              onUpdateReps={(value) =>
-                onUpdateSet(set.id, { actualReps: value })
-              }
-              onUpdateWeight={(value) =>
-                onUpdateSet(set.id, { actualWeight: value })
-              }
-              onToggleComplete={(completed) => {
-                if (set.completed) return;
-                if (completed) onUpdateSet(set.id, { completed: true });
-              }}
-              onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
-            />
+      <div className="overflow-hidden rounded-2xl border border-border/60">
+        <div className="divide-y divide-border/60 bg-background">
+          {exercise.setRows.map((set, setIndex) => (
+            <div key={set.id} className="px-3 py-2">
+              <SwipeableSetRow
+                id={set.id}
+                setNumber={set.setNumber}
+                repsValue={set.repsValue}
+                repsPlaceholder={set.repsPlaceholder}
+                weightValue={set.weightValue}
+                weightPlaceholder={set.weightPlaceholder}
+                completed={set.completed}
+                onUpdateReps={(value) =>
+                  onUpdateSet(set.id, { actualReps: value })
+                }
+                onUpdateWeight={(value) =>
+                  onUpdateSet(set.id, { actualWeight: value })
+                }
+                onToggleComplete={(completed) => {
+                  if (set.completed) return;
+                  if (completed) onUpdateSet(set.id, { completed: true });
+                }}
+                onSwipeComplete={() => onUpdateSet(set.id, { completed: true })}
+              />
 
-            {/* Quick copy buttons */}
-            {!set.completed && (
-              <div className="flex justify-center gap-2">
-                {exercise.previousPerformance && setIndex === 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground h-7 text-[10px]"
-                    onClick={() => onCopyPrevious(exercise.id, set.id)}
-                  >
-                    Copy previous
-                  </Button>
-                ) : null}
-                {set.canCopyLastSet && setIndex !== 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground h-7 text-[10px]"
-                    onClick={() => onCopyLastSet(exercise.id, set.id)}
-                  >
-                    Copy set {set.setNumber - 1}
-                  </Button>
-                ) : null}
-              </div>
-            )}
-          </div>
-        ))}
+              {/* Quick copy buttons */}
+              {!set.completed && (
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  {exercise.previousPerformance && setIndex === 0 ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground h-7 text-[10px]"
+                      onClick={() => onCopyPrevious(exercise.id, set.id)}
+                    >
+                      Copy previous
+                    </Button>
+                  ) : null}
+                  {set.canCopyLastSet && setIndex !== 0 ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground h-7 text-[10px]"
+                      onClick={() => onCopyLastSet(exercise.id, set.id)}
+                    >
+                      Copy set {set.setNumber - 1}
+                    </Button>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {showNextWorkout ? (
@@ -329,8 +333,8 @@ function SingleExerciseView({
       <div className="md:hidden">{content}</div>
 
       {/* Desktop: with card wrapper */}
-      <Card elevation="hero" className="hidden md:flex">
-        <CardContent className="p-5">{content}</CardContent>
+      <Card elevation="hero" className="hidden bg-transparent border-none shadow-none md:flex">
+        <CardContent className="p-1">{content}</CardContent>
       </Card>
     </div>
   );

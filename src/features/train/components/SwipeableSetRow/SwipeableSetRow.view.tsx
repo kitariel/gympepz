@@ -35,11 +35,11 @@ export function SwipeableSetRow({
   const showDeleteIndicator = direction === "left" && Math.abs(offset) > 30;
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-lg">
       {/* Swipe action backgrounds */}
       <div
         className={cn(
-          "absolute inset-y-0 left-0 flex w-24 items-center justify-center bg-emerald-500 transition-opacity",
+          "absolute inset-y-0 left-0 flex w-28 items-center justify-center bg-emerald-500 transition-opacity",
           showCompleteIndicator ? "opacity-100" : "opacity-0"
         )}
       >
@@ -47,7 +47,7 @@ export function SwipeableSetRow({
       </div>
       <div
         className={cn(
-          "absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-destructive transition-opacity",
+          "absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-destructive transition-opacity",
           showDeleteIndicator ? "opacity-100" : "opacity-0"
         )}
       >
@@ -62,64 +62,67 @@ export function SwipeableSetRow({
           transition: isSwiping ? "none" : "transform 0.3s ease-out",
         }}
         className={cn(
-          "bg-card relative grid touch-pan-y grid-cols-12 items-center gap-3 rounded-xl border p-3",
-          completed && "bg-muted/50 opacity-75"
+          "relative flex touch-pan-y items-center gap-3 rounded-md px-2 py-2 sm:gap-4",
+          completed
+            ? "bg-emerald-50/80 ring-1 ring-emerald-500/30 dark:bg-emerald-500/15 dark:ring-emerald-400/40"
+            : "bg-gradient-to-r from-muted/20 via-transparent to-muted/10 dark:from-white/5 dark:to-white/10"
         )}
       >
         {/* Set number */}
-        <div className="col-span-2 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <span
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
+              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold",
               completed
-                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                : "bg-muted text-muted-foreground"
+                ? "bg-emerald-500 text-white shadow-sm dark:bg-emerald-400 dark:text-emerald-950"
+                : "bg-muted text-muted-foreground dark:bg-white/10 dark:text-white/70"
             )}
           >
             {setNumber}
           </span>
         </div>
 
-        {/* Reps input */}
-        <div className="col-span-4">
-          <Input
-            type="text"
-            inputMode="numeric"
-            value={repsValue}
-            placeholder={repsPlaceholder}
-            onChange={(e) => onUpdateReps(e.target.value)}
-            className="touch-target h-12 text-center text-base"
-            disabled={completed}
-          />
-          <span className="text-muted-foreground mt-1 block text-center text-[10px]">
-            reps
-          </span>
-        </div>
+        {/* Inputs */}
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex items-baseline gap-2">
+            <Input
+              type="text"
+              inputMode="numeric"
+              value={repsValue}
+              placeholder={repsPlaceholder}
+              onChange={(e) => onUpdateReps(e.target.value)}
+              className="h-8 w-50 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-24"
+              disabled={completed}
+            />
+            <span className="text-muted-foreground text-sm dark:text-white/60">reps</span>
+          </div>
 
-        {/* Weight input */}
-        <div className="col-span-4">
-          <Input
-            type="text"
-            inputMode="decimal"
-            value={weightValue}
-            placeholder={weightPlaceholder}
-            onChange={(e) =>
-              onUpdateWeight(e.target.value.trim() ? e.target.value : null)
-            }
-            className="touch-target h-12 text-center text-base"
-            disabled={completed}
-          />
-          <span className="text-muted-foreground mt-1 block text-center text-[10px]">
-            weight
-          </span>
+          <div className="flex items-baseline gap-2">
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={weightValue}
+              placeholder={weightPlaceholder}
+              onChange={(e) =>
+                onUpdateWeight(e.target.value.trim() ? e.target.value : null)
+              }
+              className="h-8 w-50 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-28"
+              disabled={completed}
+            />
+            <span className="text-muted-foreground text-sm dark:text-white/60">weight</span>
+          </div>
         </div>
 
         {/* Checkbox */}
-        <div className="col-span-2 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <Checkbox
             checked={completed}
             onCheckedChange={(v) => onToggleComplete(Boolean(v))}
-            className="h-6 w-6"
+            className={cn(
+              "h-6 w-6 rounded-md",
+              completed &&
+              "border-emerald-500 bg-emerald-500 text-white dark:border-emerald-400 dark:bg-emerald-400"
+            )}
           />
         </div>
       </div>
