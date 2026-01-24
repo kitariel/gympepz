@@ -2,6 +2,21 @@
 
 Use this to validate `/portal/train/*` before feature work.
 
+## Validation run log
+Use a fresh copy of the checklist per run.
+
+Run date:
+Build/branch:
+Tester:
+Notes:
+
+### Run status
+- [ ] Critical paths complete
+- [ ] Offline/online complete
+- [ ] Plans & templates complete
+- [ ] UX/accessibility complete
+- [ ] Performance complete
+
 ## Critical paths
 - [ ] Open `/portal/train` and verify entry card renders for: new user, profile ready, program, draft.
 - [ ] Start workout from entry → `/portal/train/log` loads and resumes correctly.

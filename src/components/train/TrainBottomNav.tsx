@@ -266,7 +266,11 @@ function MoreMenu({
   );
 }
 
-export function TrainBottomNav() {
+export function TrainBottomNav({
+  variant = "both",
+}: {
+  variant?: "both" | "mobile" | "dock";
+}) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const routeContext = useRouteContext();
@@ -369,10 +373,25 @@ export function TrainBottomNav() {
     },
   ];
 
+  const showMobile = variant !== "dock";
+  const showDock = variant !== "mobile";
+
+  if (!showMobile && !showDock) return null;
+
   return (
     <>
-      <TrainBottomNavMobileView tabs={tabs} onMoreClick={() => setMoreOpen(true)} />
-      <TrainBottomNavDockView tabs={tabs} onMoreClick={() => setMoreOpen(true)} />
+      {showMobile && (
+        <TrainBottomNavMobileView
+          tabs={tabs}
+          onMoreClick={() => setMoreOpen(true)}
+        />
+      )}
+      {showDock && (
+        <TrainBottomNavDockView
+          tabs={tabs}
+          onMoreClick={() => setMoreOpen(true)}
+        />
+      )}
       <MoreMenu open={moreOpen} onOpenChange={setMoreOpen} />
     </>
   );

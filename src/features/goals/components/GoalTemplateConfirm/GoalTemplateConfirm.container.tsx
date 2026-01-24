@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useGoalMutations } from "@/hooks/useGoals";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
@@ -18,19 +18,47 @@ export function GoalTemplateConfirmContainer({
   const [deadlineInput, setDeadlineInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: exercises } = api.exercise.list.useQuery(
-    { q: template.exerciseName ?? "", take: 5 },
-    { enabled: !!template.exerciseName && (template.type === "strength" || template.type === "reps") },
-  );
-
-  const exerciseId = (() => {
-    if (!template.exerciseName || (template.type !== "strength" && template.type !== "reps"))
-      return undefined;
-    const match = exercises?.find(
-      (e) => e.name.toLowerCase() === template.exerciseName!.toLowerCase(),
+  const { data: exercises, isLoading: isExercisesLoading } =
+    api.exercise.list.useQuery(
+      { q: template.exerciseName ?? "", take: 25 },
+      {
+        enabled:
+          !!template.exerciseName &&
+          (template.type === "strength" || template.type === "reps"),
+      },
     );
-    return match?.id;
-  })();
+
+  const exerciseMatch = useMemo(() => {
+    if (
+      !template.exerciseName ||
+      (template.type !== "strength" && template.type !== "reps") ||
+      !exercises?.length
+    ) {
+      return null;
+    }
+
+    const normalize = (value: string) =>
+      value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const needle = normalize(template.exerciseName);
+
+    const exact = exercises.find((e) => normalize(e.name) === needle);
+    if (exact) return exact;
+
+    const startsWith = exercises.find((e) =>
+      normalize(e.name).startsWith(needle),
+    );
+    if (startsWith) return startsWith;
+
+    const includes = exercises.find((e) => {
+      const name = normalize(e.name);
+      return name.includes(needle) || needle.includes(name);
+    });
+    if (includes) return includes;
+
+    return exercises[0] ?? null;
+  }, [exercises, template.exerciseName, template.type]);
+
+  const exerciseId = exerciseMatch?.id;
 
   const handleSubmit = useCallback(async () => {
     setError(null);
@@ -47,7 +75,17 @@ export function GoalTemplateConfirmContainer({
       setError("Sign in to create goals.");
       return;
     }
-    if ((template.type === "strength" || template.type === "reps") && !exerciseId) {
+    if (
+      (template.type === "strength" || template.type === "reps") &&
+      isExercisesLoading
+    ) {
+      setError("Loading exercise details. Please try again.");
+      return;
+    }
+    if (
+      (template.type === "strength" || template.type === "reps") &&
+      !exerciseId
+    ) {
       setError(
         template.exerciseName
           ? `Exercise "${template.exerciseName}" not found. Create a custom goal instead.`
@@ -111,6 +149,7 @@ export function GoalTemplateConfirmContainer({
     deadlineInput,
     error,
     isSubmitting: isCreating,
+    customGoalHref: "/portal/goals/new",
     onTargetChange: setTargetInput,
     onCurrentChange: setCurrentInput,
     onDeadlineChange: setDeadlineInput,

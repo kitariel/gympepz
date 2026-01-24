@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { GoalTemplateConfirmViewModel } from "./GoalTemplateConfirm.types";
@@ -16,6 +17,7 @@ export function GoalTemplateConfirmView({
   deadlineInput,
   error,
   isSubmitting,
+  customGoalHref,
   onTargetChange,
   onCurrentChange,
   onDeadlineChange,
@@ -33,11 +35,19 @@ export function GoalTemplateConfirmView({
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{templateName}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Start "{templateName}"</h2>
+            <p className="text-muted-foreground text-sm">
+              Customize your target before you begin.
+            </p>
+          </div>
+        </div>
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="confirm-target">
               Target {unit === "workouts" ? "Workouts" : unit === "reps" ? "Reps" : "Value"} ({unit})
@@ -51,6 +61,9 @@ export function GoalTemplateConfirmView({
               value={targetInput}
               onChange={(e) => onTargetChange(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Suggested: {targetValue} {unit}
+            </p>
           </div>
 
           {(unit === "lbs" || unit === "kg") && (
@@ -83,7 +96,14 @@ export function GoalTemplateConfirmView({
           </div>
 
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <div className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2">
+              <p className="text-sm text-destructive">{error}</p>
+              {customGoalHref && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={customGoalHref}>Create custom goal</Link>
+                </Button>
+              )}
+            </div>
           )}
 
           <div className="flex flex-wrap gap-2 pt-2">
@@ -100,11 +120,11 @@ export function GoalTemplateConfirmView({
               onClick={onSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating…" : "Start This Goal"}
+              {isSubmitting ? "Creating…" : "Start goal"}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

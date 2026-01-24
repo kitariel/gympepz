@@ -56,9 +56,13 @@ export function useGoals() {
   };
 }
 
-export function useGoal(goalId: string) {
+export function useGoal(
+  goalId: string,
+  options?: { enabled?: boolean },
+) {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
+  const enabled = options?.enabled ?? true;
 
   const {
     data: goal,
@@ -67,17 +71,19 @@ export function useGoal(goalId: string) {
     refetch,
   } = api.goal.getById.useQuery(
     { userId, id: goalId },
-    { enabled: !!userId && !!goalId },
+    { enabled: !!userId && !!goalId && enabled },
   );
 
-  const { data: progress } = api.goal.getProgress.useQuery(
+  const { data: progress, isLoading: progressLoading } =
+    api.goal.getProgress.useQuery(
     { userId, goalId },
-    { enabled: !!userId && !!goalId },
+    { enabled: !!userId && !!goalId && enabled },
   );
 
   return {
     goal,
     progress,
+    progressLoading,
     isLoading,
     error,
     refetch,

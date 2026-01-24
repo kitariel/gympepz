@@ -14,7 +14,32 @@ export function GoalProgressView({
   unit,
   trend,
   history,
+  isLoading,
 }: GoalProgressViewModel) {
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="bg-muted h-6 w-40 animate-pulse rounded-md" />
+          <div className="bg-muted h-4 w-56 animate-pulse rounded-md" />
+        </div>
+        <div className="space-y-2">
+          <div className="bg-muted h-4 w-24 animate-pulse rounded-md" />
+          <div className="bg-muted h-3 w-full animate-pulse rounded-full" />
+          <div className="bg-muted h-3 w-32 animate-pulse rounded-md" />
+        </div>
+        <div className="space-y-2">
+          <div className="bg-muted h-4 w-36 animate-pulse rounded-md" />
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-muted h-8 w-full animate-pulse rounded-md" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const TrendIcon =
     trend === "improving"
       ? TrendingUp

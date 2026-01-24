@@ -18,6 +18,7 @@ export type GoalTemplateConfirmViewModel = {
   deadlineInput: string;
   error: string | null;
   isSubmitting: boolean;
+  customGoalHref?: string;
   onTargetChange: (v: string) => void;
   onCurrentChange: (v: string) => void;
   onDeadlineChange: (v: string) => void;

@@ -90,7 +90,14 @@ export function GoalsDashboardContainer({
   basePath = "/portal/goals",
 }: GoalsDashboardProps) {
   const router = useRouter();
-  const { activeGoals, completedGoals, isLoading, userId, refetch } = useGoals();
+  const {
+    activeGoals,
+    completedGoals,
+    isLoading,
+    userId,
+    error,
+    refetch,
+  } = useGoals();
   const { delete: deleteGoal } = useGoalMutations();
 
   // Local state
@@ -180,6 +187,8 @@ export function GoalsDashboardContainer({
     isLoading,
     isAuthenticated: Boolean(userId),
     hasGoals,
+    errorMessage:
+      userId && error ? error.message ?? "Failed to load goals." : null,
     activeGoals: activeGoals as Goal[],
     completedGoals: completedGoals as Goal[],
     templateCategories,
@@ -188,6 +197,9 @@ export function GoalsDashboardContainer({
     onAddGoalClick: handleAddGoalClick,
     onTemplateSelect: handleTemplateSelect,
     onGoalDelete: handleGoalDelete,
+    onRetry: () => {
+      void refetch();
+    },
     paths: {
       startWorkout: "/portal/train/log",
       createCustomGoal: `${basePath}/new`,

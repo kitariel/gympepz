@@ -4,11 +4,28 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 
 import { useGoal } from "@/hooks/useGoals";
-import type { GoalProgressProps, GoalProgressViewModel } from "./GoalProgress.types";
+import type {
+  GoalProgressProps,
+  GoalProgressViewModel,
+} from "./GoalProgress.types";
 import { GoalProgressView } from "./GoalProgress.view";
 
-export function GoalProgressContainer({ goalId }: GoalProgressProps) {
-  const { goal, progress } = useGoal(goalId);
+export function GoalProgressContainer({
+  goalId,
+  goal: goalProp,
+  progress: progressProp,
+  progressLoading: progressLoadingProp,
+}: GoalProgressProps) {
+  const shouldFetch = !goalProp || !progressProp;
+  const {
+    goal: fetchedGoal,
+    progress: fetchedProgress,
+    progressLoading: fetchedProgressLoading,
+  } = useGoal(goalId, { enabled: shouldFetch });
+  const goal = goalProp ?? fetchedGoal;
+  const progress = progressProp ?? fetchedProgress;
+  const progressLoading =
+    progressLoadingProp ?? (shouldFetch ? fetchedProgressLoading : false);
 
   const viewModel: GoalProgressViewModel | null = useMemo(() => {
     if (!goal) return null;
@@ -54,8 +71,9 @@ export function GoalProgressContainer({ goalId }: GoalProgressProps) {
       unit: goal.unit,
       trend: progress?.trend,
       history,
+      isLoading: progressLoading,
     };
-  }, [goal, progress]);
+  }, [goal, progress, progressLoading]);
 
   if (!viewModel) return null;
 

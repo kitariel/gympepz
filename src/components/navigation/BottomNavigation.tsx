@@ -133,9 +133,10 @@ function TrainMoreMenu({
 function getPortalNavTabs(
   pathname: string,
   trainBasePath: string,
-  onTrainClick: () => void
+  onTrainClick: () => void,
+  showContextSwitch: boolean
 ): NavTab[] {
-  return [
+  const tabs: NavTab[] = [
     {
       label: "Goals",
       href: "/portal/goals",
@@ -151,21 +152,27 @@ function getPortalNavTabs(
         pathname === "/portal/exercises" ||
         pathname.startsWith("/portal/exercises/"),
     },
-    {
+  ];
+
+  if (showContextSwitch) {
+    tabs.push({
       label: "Train",
       onClick: onTrainClick,
       icon: ChevronRight,
       isActive: false,
       isContextSwitch: true,
-    },
-  ];
+    });
+  }
+
+  return tabs;
 }
 
 function getTrainNavTabs(
   pathname: string,
   basePath: string,
   sessionState: "active" | "idle" | "rest" | "completed",
-  onPortalClick: () => void
+  onPortalClick: () => void,
+  showContextSwitch: boolean
 ): NavTab[] {
   // Map session state to log button label and icon
   const logLabel =
@@ -192,14 +199,19 @@ function getTrainNavTabs(
     return pathname === href || pathname.startsWith(href + "/");
   }
 
-  return [
-    {
+  const tabs: NavTab[] = [];
+
+  if (showContextSwitch) {
+    tabs.push({
       label: "Portal",
       onClick: onPortalClick,
       icon: ChevronLeft,
       isActive: false,
       isContextSwitch: true,
-    },
+    });
+  }
+
+  tabs.push(
     {
       label: "Train",
       href: basePath,
@@ -237,7 +249,9 @@ function getTrainNavTabs(
       isActive: false,
       isMore: true,
     },
-  ];
+  );
+
+  return tabs;
 }
 
 // =============================================================================
@@ -357,7 +371,8 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const { navContext, trainBasePath } = useNavigationContext();
+  const { navContext, trainBasePath, canSwitchContext } =
+    useNavigationContext();
 
   // Train navigation state
   const {
@@ -414,12 +429,18 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
     router.push("/portal/goals");
   };
 
-  const portalTabs = getPortalNavTabs(pathname, trainBasePath, handleTrainClick);
+  const portalTabs = getPortalNavTabs(
+    pathname,
+    trainBasePath,
+    handleTrainClick,
+    canSwitchContext
+  );
   const trainTabs = getTrainNavTabs(
     pathname,
     trainBasePath,
     sessionState,
-    handlePortalClick
+    handlePortalClick,
+    canSwitchContext
   );
 
   const isTrain = navContext === "train";

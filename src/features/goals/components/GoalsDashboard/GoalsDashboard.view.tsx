@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  ChevronDown,
   Plus,
   Play,
   Target,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GoalCard } from "@/features/goals/components/GoalCard";
 import { GoalTemplateCard } from "@/features/goals/components/GoalTemplateCard";
+import { useState } from "react";
 import type {
   GoalsDashboardViewModel,
   GoalsHeaderProps,
@@ -135,6 +137,34 @@ function GoalsEmptyState({ loginPath }: GoalsEmptyStateProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Error State
+// ─────────────────────────────────────────────────────────────────────────────
+
+function GoalsErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <Card className="border-destructive/50 bg-destructive/10">
+      <CardContent className="flex flex-col gap-4 py-8 text-center sm:py-10">
+        <div className="mx-auto max-w-sm space-y-2">
+          <h2 className="text-base font-semibold">Something went wrong</h2>
+          <p className="text-destructive text-sm">{message}</p>
+        </div>
+        <div className="flex items-center justify-center">
+          <Button variant="outline" size="sm" onClick={onRetry}>
+            Retry
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Template Grid (for new users)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -142,21 +172,23 @@ function GoalsTemplateGrid({
   categories,
   onTemplateSelect,
   createCustomGoalPath,
+  showIntro = true,
 }: GoalsTemplateGridProps) {
   return (
     <div className="space-y-10">
-      {/* Hero prompt */}
-      <div className="rounded-2xl border border-dashed border-muted-foreground/25 bg-muted/20 px-4 py-6 text-center sm:px-6 sm:py-8">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
-          <Sparkles className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+      {showIntro && (
+        <div className="rounded-2xl border border-dashed border-muted-foreground/25 bg-muted/20 px-4 py-6 text-center sm:px-6 sm:py-8">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+            <Sparkles className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <h2 className="mb-1 text-lg font-semibold tracking-tight">
+            Choose your first goal
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Tap a template to customize and start, or create one from scratch.
+          </p>
         </div>
-        <h2 className="mb-1 text-lg font-semibold tracking-tight">
-          Choose your first goal
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Tap a template to customize and start, or create one from scratch.
-        </p>
-      </div>
+      )}
 
       {/* Category sections */}
       <div className="space-y-8">
@@ -260,6 +292,7 @@ export function GoalsDashboardView({
   isLoading,
   isAuthenticated,
   hasGoals,
+  errorMessage,
   activeGoals,
   completedGoals,
   templateCategories,
@@ -268,8 +301,11 @@ export function GoalsDashboardView({
   onAddGoalClick,
   onTemplateSelect,
   onGoalDelete,
+  onRetry,
   paths,
 }: GoalsDashboardViewModel) {
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+
   if (isLoading) {
     return <GoalsDashboardSkeleton />;
   }
@@ -285,20 +321,55 @@ export function GoalsDashboardView({
         startWorkoutPath={paths.startWorkout}
       />
 
-      {!isAuthenticated ? (
+      {errorMessage ? (
+        <GoalsErrorState message={errorMessage} onRetry={onRetry} />
+      ) : !isAuthenticated ? (
         <GoalsEmptyState loginPath={paths.login} />
-      ) : !hasGoals ? (
-        <GoalsTemplateGrid
-          categories={templateCategories}
-          onTemplateSelect={onTemplateSelect}
-          createCustomGoalPath={paths.createCustomGoal}
-        />
       ) : (
-        <GoalsList
-          activeGoals={activeGoals}
-          completedGoals={completedGoals}
-          onDelete={onGoalDelete}
-        />
+        <>
+          {hasGoals ? (
+            <GoalsList
+              activeGoals={activeGoals}
+              completedGoals={completedGoals}
+              onDelete={onGoalDelete}
+            />
+          ) : null}
+
+          {hasGoals ? (
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setTemplatesOpen((open) => !open)}
+                className="flex w-full items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+              >
+                <div>
+                  <p className="text-base font-semibold">Add another goal</p>
+                  <p className="text-muted-foreground text-sm">
+                    Pick from templates or create your own
+                  </p>
+                </div>
+                <ChevronDown
+                  className={`h-5 w-5 text-muted-foreground transition-transform ${templatesOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {templatesOpen && (
+                <GoalsTemplateGrid
+                  categories={templateCategories}
+                  onTemplateSelect={onTemplateSelect}
+                  createCustomGoalPath={paths.createCustomGoal}
+                  showIntro={false}
+                />
+              )}
+            </div>
+          ) : (
+            <GoalsTemplateGrid
+              categories={templateCategories}
+              onTemplateSelect={onTemplateSelect}
+              createCustomGoalPath={paths.createCustomGoal}
+              showIntro
+            />
+          )}
+        </>
       )}
     </div>
   );

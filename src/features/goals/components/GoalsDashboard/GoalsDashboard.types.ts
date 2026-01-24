@@ -19,6 +19,7 @@ export type GoalsDashboardViewModel = {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasGoals: boolean;
+  errorMessage?: string | null;
 
   // Data
   activeGoals: Goal[];
@@ -33,6 +34,7 @@ export type GoalsDashboardViewModel = {
   onAddGoalClick: () => void;
   onTemplateSelect: (template: GoalTemplate) => void;
   onGoalDelete: (goal: Goal) => void;
+  onRetry: () => void;
 
   // Navigation paths
   paths: {
@@ -71,6 +73,7 @@ export type GoalsTemplateGridProps = {
   categories: TemplateCategoryGroup[];
   onTemplateSelect: (template: GoalTemplate) => void;
   createCustomGoalPath: string;
+  showIntro?: boolean;
 };
 
 export type GoalsListProps = {
