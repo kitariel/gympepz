@@ -186,4 +186,52 @@ export const goalRouter = createTRPCRouter({
 
       return updated;
     }),
+
+  recordProgressForExercise: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        exerciseId: z.string().min(1),
+        weight: z.number().optional(),
+        reps: z.number().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const goals = await ctx.db.goal.findMany({
+        where: {
+          userId: input.userId,
+          status: "active",
+          exerciseId: input.exerciseId,
+        },
+      });
+
+      const updatedGoalIds: string[] = [];
+      const notes = input.notes ?? `From workout set on ${new Date().toLocaleDateString()}`;
+
+      for (const goal of goals) {
+        let value: number | null = null;
+        if (goal.type === "strength" && input.weight != null) value = input.weight;
+        if (goal.type === "reps" && input.reps != null) value = input.reps;
+        if (value == null || !Number.isFinite(value) || value <= 0) continue;
+        if (value <= goal.currentValue) continue;
+
+        await ctx.db.goalProgress.create({
+          data: { goalId: goal.id, value, notes },
+        });
+
+        const reached = value >= goal.targetValue;
+        await ctx.db.goal.update({
+          where: { id: goal.id, userId: input.userId },
+          data: {
+            currentValue: value,
+            ...(reached && { status: "completed" as const, completedAt: new Date() }),
+          },
+        });
+
+        updatedGoalIds.push(goal.id);
+      }
+
+      return { updated: updatedGoalIds.length, goalIds: updatedGoalIds };
+    }),
 });

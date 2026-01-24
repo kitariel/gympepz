@@ -11,11 +11,14 @@ import {
 export function useTrainPrefs() {
   const [mode, setMode] = useState<ProgramDayMode>("auto");
   const [manualIndex, setManualIndex] = useState<ProgramDayManualIndex>(1);
+  const [trackGoalsDuringWorkout, setTrackGoalsDuringWorkoutState] =
+    useState(true);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setMode(trainPrefsRepo.getProgramDayMode());
     setManualIndex(trainPrefsRepo.getProgramDayManualIndex());
+    setTrackGoalsDuringWorkoutState(trainPrefsRepo.getTrackGoalsDuringWorkout());
     setHydrated(true);
   }, []);
 
@@ -38,6 +41,11 @@ export function useTrainPrefs() {
     setMode(next);
   }, []);
 
+  const setTrackGoalsDuringWorkout = useCallback((enabled: boolean) => {
+    trainPrefsRepo.setTrackGoalsDuringWorkout(enabled);
+    setTrackGoalsDuringWorkoutState(enabled);
+  }, []);
+
   const selectedWorkoutDay = mode === "auto" ? "auto" : manualIndex;
 
   return {
@@ -49,6 +57,7 @@ export function useTrainPrefs() {
     programDayMode: mode,
     programDayManualIndex: manualIndex,
     setProgramDayMode,
+    trackGoalsDuringWorkout,
+    setTrackGoalsDuringWorkout,
   } as const;
 }
-

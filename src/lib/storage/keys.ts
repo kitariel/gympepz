@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   // Program day selection (preferred keys)
   programDayMode: "gympepz.programDayMode",
   programDayManualIndex: "gympepz.programDayManualIndex",
+  trainTrackGoalsDuringWorkout: "gympepz.train.trackGoalsDuringWorkout",
   pendingWorkouts: "gympepz.pending_workouts",
   syncedWorkouts: "gympepz.synced_workouts",
   syncQueue: "gympepz.sync_queue",

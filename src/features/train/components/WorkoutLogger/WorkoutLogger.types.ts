@@ -14,6 +14,10 @@ export type WorkoutLoggerExerciseVM = {
   targetLabel: string | null;
   targetText: string | null;
   goalHint?: string | null;
+  goalUpdate?: {
+    label: string;
+    extraCount: number;
+  } | null;
   previousPerformance: PreviousSetData | null;
   setRows: Array<{
     id: string;
@@ -78,6 +82,8 @@ export type WorkoutLoggerViewProps =
       setsTotal: number;
       exercises: WorkoutLoggerExerciseVM[];
       restTimer: RestTimerState;
+      trackGoalsEnabled: boolean;
+      onToggleTrackGoals: () => void;
       onAddSet: (exerciseId: string) => void;
       onUpdateSet: (
         setId: string,

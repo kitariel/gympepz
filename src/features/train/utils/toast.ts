@@ -14,6 +14,11 @@ export const trainToast = {
   // Set actions
   setCompleted: () => toast.success("Set completed", { duration: 1500 }),
   setDeleted: () => toast("Set removed"),
+  goalProgressUpdated: (label: string, extraCount = 0) =>
+    toast.success(
+      extraCount > 0 ? `Goal updated: ${label} +${extraCount}` : `Goal updated: ${label}`,
+      { duration: 2000 },
+    ),
 
   // Program actions
   programActivated: (name: string) => toast.success(`${name} activated`),

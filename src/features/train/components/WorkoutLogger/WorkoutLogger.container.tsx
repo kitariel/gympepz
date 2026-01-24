@@ -18,11 +18,13 @@ import {
   formatRelativeDate,
 } from "@/features/train/domain/previousPerformance";
 import { trainToast } from "@/features/train/utils/toast";
+import type { Goal } from "@/types/goal.types";
 import type {
   WorkoutLoggerExerciseVM,
   WorkoutLoggerViewProps,
 } from "./WorkoutLogger.types";
 import { WorkoutLoggerView } from "./WorkoutLogger.view";
+import type { Goal } from "@/types/goal.types";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -47,14 +49,19 @@ export function WorkoutLogger() {
   );
 
   const { activeGoals } = useGoals();
-  const { recordProgress, userId } = useGoalMutations();
+  const { recordProgressForExercise, userId } = useGoalMutations();
 
   const {
     activeProgram,
     currentProgramRef,
     hydrated: programHydrated,
   } = useActiveProgram();
-  const { hydrated: prefsHydrated, selectedWorkoutDay } = useTrainPrefs();
+  const {
+    hydrated: prefsHydrated,
+    selectedWorkoutDay,
+    trackGoalsDuringWorkout,
+    setTrackGoalsDuringWorkout,
+  } = useTrainPrefs();
   const {
     draft,
     saveDraft,
@@ -138,6 +145,31 @@ export function WorkoutLogger() {
     if (rest.length === 0) return base;
     return `${base} +${rest.length} more`;
   }, []);
+
+  const formatGoalToastLabel = useCallback((goal: Goal | null): string => {
+    if (!goal) return "Goal";
+    if (goal.exercise?.name) return goal.exercise.name;
+    switch (goal.type) {
+      case "strength":
+        return "Strength goal";
+      case "reps":
+        return "Reps goal";
+      case "consistency":
+        return "Consistency goal";
+      case "bodyweight":
+        return "Bodyweight goal";
+      default:
+        return "Goal";
+    }
+  }, []);
+
+  const [goalUpdateByExerciseId, setGoalUpdateByExerciseId] = useState<
+    Record<string, { label: string; extraCount: number; updatedAt: number }>
+  >({});
+
+  useEffect(() => {
+    setGoalUpdateByExerciseId({});
+  }, [draft?.id]);
 
   const createDraftForDay = useCallback(() => {
     try {
@@ -291,6 +323,7 @@ export function WorkoutLogger() {
       if (routeContext !== "portal") return;
       if (!userId) return;
       if (!draft) return;
+      if (!trackGoalsDuringWorkout) return;
       if (!patch.completed) return;
 
       const set = draft.sets.find((s) => s.id === setId);
@@ -301,30 +334,36 @@ export function WorkoutLogger() {
 
       const repsValue = parseNumber(patch.actualReps ?? set.actualReps);
       const weightValue = parseNumber(patch.actualWeight ?? set.actualWeight);
+      if (repsValue == null && weightValue == null) return;
 
-      for (const goal of goals) {
-        if (goal.type === "strength") {
-          if (weightValue == null) continue;
-          if (weightValue <= goal.currentValue) continue;
-          try {
-            await recordProgress({ goalId: goal.id, value: weightValue });
-          } catch (err) {
-            console.error("Failed to update goal progress:", err);
-          }
-          continue;
+      try {
+        const result = await recordProgressForExercise({
+          exerciseId,
+          weight: weightValue ?? undefined,
+          reps: repsValue ?? undefined,
+        });
+        if (result.updated > 0) {
+          const label = formatGoalToastLabel(goals[0] ?? null) ?? "Goal";
+          const extraCount = Math.max(0, result.updated - 1);
+          trainToast.goalProgressUpdated(label, extraCount);
+          setGoalUpdateByExerciseId((prev) => ({
+            ...prev,
+            [exerciseId]: { label, extraCount, updatedAt: Date.now() },
+          }));
         }
-        if (goal.type === "reps") {
-          if (repsValue == null) continue;
-          if (repsValue <= goal.currentValue) continue;
-          try {
-            await recordProgress({ goalId: goal.id, value: repsValue });
-          } catch (err) {
-            console.error("Failed to update goal progress:", err);
-          }
-        }
+      } catch (err) {
+        console.error("Failed to update goal progress:", err);
       }
     },
-    [routeContext, userId, draft, goalsByExerciseId, recordProgress],
+    [
+      routeContext,
+      userId,
+      draft,
+      goalsByExerciseId,
+      recordProgressForExercise,
+      formatGoalToastLabel,
+      trackGoalsDuringWorkout,
+    ],
   );
 
   const handleUpdateSet = useCallback(
@@ -472,6 +511,7 @@ export function WorkoutLogger() {
           targetLabel,
           targetText,
           goalHint: formatGoalHint(goalsByExerciseId.get(ex.id) ?? []),
+          goalUpdate: goalUpdateByExerciseId[ex.id] ?? null,
           previousPerformance: previousPerformance
             ? {
                 weight: previousPerformance.weight,
@@ -509,6 +549,9 @@ export function WorkoutLogger() {
       setsTotal,
       exercises,
       restTimer: draft.restTimer,
+      trackGoalsEnabled: trackGoalsDuringWorkout,
+      onToggleTrackGoals: () =>
+        setTrackGoalsDuringWorkout(!trackGoalsDuringWorkout),
       onAddSet: (exerciseId) => addSet(exerciseId),
       onUpdateSet: (setId, patch) => handleUpdateSet(setId, patch),
       onCopyPrevious: (exerciseId, setId) => copyPrevious(exerciseId, setId),
@@ -552,7 +595,7 @@ export function WorkoutLogger() {
     getDraftStatus,
     isCompletedToday,
     addSet,
-    updateSet,
+    handleUpdateSet,
     copyPrevious,
     copyLastSet,
     startRestTimer,
@@ -560,6 +603,9 @@ export function WorkoutLogger() {
     finish,
     goalsByExerciseId,
     formatGoalHint,
+    goalUpdateByExerciseId,
+    trackGoalsDuringWorkout,
+    setTrackGoalsDuringWorkout,
   ]);
 
   return <WorkoutLoggerView {...viewProps} />;

@@ -5,6 +5,13 @@ export type ProgramDayMode = "auto" | "manual";
 export type ProgramDayManualIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export const trainPrefsRepo = {
+  getTrackGoalsDuringWorkout(): boolean {
+    const stored = getJSON<boolean>(STORAGE_KEYS.trainTrackGoalsDuringWorkout);
+    return stored ?? true;
+  },
+  setTrackGoalsDuringWorkout(enabled: boolean): void {
+    setJSON(STORAGE_KEYS.trainTrackGoalsDuringWorkout, enabled);
+  },
   // Back-compat: read old combined key if new keys are missing.
   getProgramDayMode(): ProgramDayMode {
     const mode = getJSON<ProgramDayMode>(STORAGE_KEYS.programDayMode);
@@ -39,4 +46,3 @@ export const trainPrefsRepo = {
     remove(STORAGE_KEYS.trainSelectedWorkoutDay);
   },
 };
-

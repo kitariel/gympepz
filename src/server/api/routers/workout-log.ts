@@ -32,6 +32,7 @@ async function updateGoalsFromWorkoutCompletion(
     // bodyweight: skip (not updated from workout completion)
 
     if (value == null) continue;
+    if (goal.type !== "consistency" && value <= goal.currentValue) continue;
 
     await db.goalProgress.create({
       data: { goalId: goal.id, value, notes },

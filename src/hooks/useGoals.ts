@@ -125,6 +125,15 @@ export function useGoalMutations() {
     },
   });
 
+  const recordProgressForExerciseMutation =
+    api.goal.recordProgressForExercise.useMutation({
+      onSuccess: () => {
+        void utils.goal.getById.invalidate();
+        void utils.goal.getProgress.invalidate();
+        void utils.goal.getAll.invalidate();
+      },
+    });
+
   return {
     create: (
       input: Omit<
@@ -142,9 +151,17 @@ export function useGoalMutations() {
         "userId"
       >,
     ) => recordProgressMutation.mutateAsync({ ...input, userId }),
+    recordProgressForExercise: (
+      input: Omit<
+        Parameters<typeof recordProgressForExerciseMutation.mutateAsync>[0],
+        "userId"
+      >,
+    ) => recordProgressForExerciseMutation.mutateAsync({ ...input, userId }),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isRecordingProgress: recordProgressMutation.isPending,
+    isRecordingExerciseProgress: recordProgressForExerciseMutation.isPending,
     userId,
   };
 }

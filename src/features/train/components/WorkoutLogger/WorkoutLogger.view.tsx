@@ -203,10 +203,22 @@ function SingleExerciseView({
                 {exercise.targetText}
               </p>
             ) : null}
-            {exercise.goalHint ? (
-              <Badge variant="outline" className="mt-2 text-[10px]">
-                {exercise.goalHint}
-              </Badge>
+            {exercise.goalHint || exercise.goalUpdate ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {exercise.goalHint ? (
+                  <Badge variant="outline" className="text-[10px]">
+                    {exercise.goalHint}
+                  </Badge>
+                ) : null}
+                {exercise.goalUpdate ? (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Goal updated: {exercise.goalUpdate.label}
+                    {exercise.goalUpdate.extraCount > 0
+                      ? ` +${exercise.goalUpdate.extraCount}`
+                      : ""}
+                  </Badge>
+                ) : null}
+              </div>
             ) : null}
           </div>
           <Badge variant="secondary" className="shrink-0 tabular-nums">
@@ -781,6 +793,17 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           </Badge>
         </div>
         <Progress value={progressPercent} className="h-2" />
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span>Goal tracking during workout</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-[11px]"
+            onClick={props.onToggleTrackGoals}
+          >
+            {props.trackGoalsEnabled ? "On" : "Off"}
+          </Button>
+        </div>
       </div>
 
       {/* Action bar - moved to top */}
