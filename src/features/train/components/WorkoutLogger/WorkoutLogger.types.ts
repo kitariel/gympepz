@@ -82,6 +82,7 @@ export type WorkoutLoggerViewProps =
       setsTotal: number;
       exercises: WorkoutLoggerExerciseVM[];
       restTimer: RestTimerState;
+      showTrackGoalsToggle: boolean;
       trackGoalsEnabled: boolean;
       onToggleTrackGoals: () => void;
       onAddSet: (exerciseId: string) => void;

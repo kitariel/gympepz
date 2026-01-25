@@ -9,8 +9,8 @@ const cardVariants = cva(
     variants: {
       elevation: {
         hero: "border-2 border-primary/20 shadow-lg shadow-primary/10",
-        default: "border-0 shadow-sm",
-        subtle: "bg-muted/30 border border-border/50 shadow-none",
+        default: "border border-border/60 shadow-sm",
+        subtle: "bg-card/80 border border-border/40 shadow-none",
       },
     },
     defaultVariants: {

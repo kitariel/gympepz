@@ -12,6 +12,8 @@ export interface Exercise {
   description?: string | null;
   howTo?: string | null;
   imageUrl?: string | null;
+  youtubeVideo?: string | null;
+  youtubeVideoIds?: string[];
 }
 
 /**

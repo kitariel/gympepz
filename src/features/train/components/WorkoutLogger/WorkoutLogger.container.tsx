@@ -24,7 +24,6 @@ import type {
   WorkoutLoggerViewProps,
 } from "./WorkoutLogger.types";
 import { WorkoutLoggerView } from "./WorkoutLogger.view";
-import type { Goal } from "@/types/goal.types";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -170,6 +169,21 @@ export function WorkoutLogger() {
   useEffect(() => {
     setGoalUpdateByExerciseId({});
   }, [draft?.id]);
+
+  useEffect(() => {
+    if (Object.keys(goalUpdateByExerciseId).length === 0) return;
+    const timeout = window.setTimeout(() => {
+      const cutoff = Date.now() - 4000;
+      setGoalUpdateByExerciseId((prev) => {
+        const next: typeof prev = {};
+        for (const [key, value] of Object.entries(prev)) {
+          if (value.updatedAt >= cutoff) next[key] = value;
+        }
+        return next;
+      });
+    }, 4500);
+    return () => window.clearTimeout(timeout);
+  }, [goalUpdateByExerciseId]);
 
   const createDraftForDay = useCallback(() => {
     try {
@@ -542,6 +556,8 @@ export function WorkoutLogger() {
         };
       });
 
+    const hasActiveGoals = activeGoals.length > 0;
+
     return {
       kind: "logging",
       programName: draft.programName,
@@ -549,6 +565,7 @@ export function WorkoutLogger() {
       setsTotal,
       exercises,
       restTimer: draft.restTimer,
+      showTrackGoalsToggle: hasActiveGoals,
       trackGoalsEnabled: trackGoalsDuringWorkout,
       onToggleTrackGoals: () =>
         setTrackGoalsDuringWorkout(!trackGoalsDuringWorkout),

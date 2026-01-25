@@ -56,7 +56,7 @@ export default function WeeklyPlanSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl"
             >
-              Build your plan manually—or generate one with AI
+              Build your plan manually
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, x: -20 }}
@@ -64,11 +64,11 @@ export default function WeeklyPlanSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              GymPepz supports both workflows: full manual control when you want
-              it, and AI-generated structure when you want a faster start.
+              GymPepz gives you full control to build workouts your way, with
+              flexible days, exercises, sets, and progression.
             </motion.p>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -80,19 +80,6 @@ export default function WeeklyPlanSection() {
                   <li>Build days your way</li>
                   <li>Choose exercises, sets, reps, order</li>
                   <li>Keep full control of structure</li>
-                </ul>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="rounded-xl border bg-background p-4 transition-shadow hover:shadow-md"
-              >
-                <p className="text-sm font-semibold">AI planning</p>
-                <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                  <li>Personalized to goals and fitness level</li>
-                  <li>Organized week you can execute immediately</li>
-                  <li>Edit anytime—your plan stays yours</li>
                 </ul>
               </motion.div>
             </div>

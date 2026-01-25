@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Copy, TrendingUp, Zap, Sparkles, Timer, Database } from "lucide-react";
+import { Clock, Copy, TrendingUp, Zap, Timer, Database } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
@@ -41,14 +41,6 @@ export default function FeaturesSection() {
         "Log workouts even when gym WiFi fails. Everything saves locally first.",
       gradient: "from-orange-500/10 to-yellow-500/10",
       iconColor: "text-orange-600 dark:text-orange-400",
-    },
-    {
-      icon: Sparkles,
-      title: "AI-Powered Plans",
-      description:
-        "Generate personalized workout plans tailored to your goals and fitness level.",
-      gradient: "from-indigo-500/10 to-violet-500/10",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
     },
     {
       icon: Timer,

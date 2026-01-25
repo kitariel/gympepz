@@ -91,7 +91,7 @@ export function SwipeableSetRow({
               value={repsValue}
               placeholder={repsPlaceholder}
               onChange={(e) => onUpdateReps(e.target.value)}
-              className="h-8 w-50 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-24"
+              className="h-8 w-full min-w-0 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-24"
               disabled={completed}
             />
             <span className="text-muted-foreground text-sm dark:text-white/60">reps</span>
@@ -106,7 +106,7 @@ export function SwipeableSetRow({
               onChange={(e) =>
                 onUpdateWeight(e.target.value.trim() ? e.target.value : null)
               }
-              className="h-8 w-50 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-28"
+              className="h-8 w-full min-w-0 border-0 bg-transparent p-0 px-2 text-lg font-semibold shadow-none focus-visible:ring-0 dark:text-white sm:w-28"
               disabled={completed}
             />
             <span className="text-muted-foreground text-sm dark:text-white/60">weight</span>

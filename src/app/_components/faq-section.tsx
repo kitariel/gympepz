@@ -12,19 +12,9 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
   {
-    question: "Is GymPepz free?",
-    answer:
-      "Yes! GymPepz is 100% free forever. All core features including workout tracking, AI planning, progress analytics, and the exercise library are available at no cost. No credit card required.",
-  },
-  {
     question: "Do I need a gym membership?",
     answer:
       "Not at all! GymPepz works for any training environment. Our exercise library includes bodyweight exercises, home equipment options, and gym-based workouts. You can filter exercises by available equipment.",
-  },
-  {
-    question: "How does AI workout planning work?",
-    answer:
-      "Our AI planner asks about your goals, experience level, available equipment, and training frequency. It then generates a personalized workout plan with exercises, sets, reps, and a weekly schedule tailored to your specific needs.",
   },
   {
     question: "Can I export my data?",

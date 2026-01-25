@@ -14,7 +14,7 @@ export default function HowItWorksSection() {
       step: "1",
       title: "Set your goals",
       description:
-        "Create a workout plan manually or use AI to generate one based on your fitness level and goals.",
+        "Create a workout plan manually based on your fitness level and goals.",
     },
     {
       icon: Calendar,

@@ -797,17 +797,19 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           </Badge>
         </div>
         <Progress value={progressPercent} className="h-2" />
-        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>Goal tracking during workout</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 px-2 text-[11px]"
-            onClick={props.onToggleTrackGoals}
-          >
-            {props.trackGoalsEnabled ? "On" : "Off"}
-          </Button>
-        </div>
+        {props.showTrackGoalsToggle ? (
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>Goal tracking during workout</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[11px]"
+              onClick={props.onToggleTrackGoals}
+            >
+              {props.trackGoalsEnabled ? "On" : "Off"}
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {/* Action bar - moved to top */}

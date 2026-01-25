@@ -8,6 +8,7 @@ model Exercise {
   description String?
   howTo       String?
   imageUrl    String?
+  youtubeVideoIds String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

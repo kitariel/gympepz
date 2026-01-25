@@ -161,6 +161,8 @@ function AuthenticatedExercisesPage() {
               difficulty={exercise.difficulty ?? undefined}
               category={exercise.category ?? undefined}
               imageUrl={exercise.imageUrl ?? undefined}
+              youtubeVideo={exercise.youtubeVideo ?? undefined}
+              youtubeVideoIds={exercise.youtubeVideoIds ?? undefined}
               isFavorite={favorites.has(exercise.id)}
               onToggleFavorite={() => handleToggleFavorite(exercise.id)}
               onViewDetails={() => handleViewDetails(exercise)}

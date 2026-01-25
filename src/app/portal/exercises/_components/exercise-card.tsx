@@ -5,6 +5,32 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const normalizeYouTubeId = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    const host = url.hostname.replace("www.", "");
+    if (host === "youtu.be") {
+      return url.pathname.split("/")[1] || null;
+    }
+    if (host.endsWith("youtube.com")) {
+      const idParam = url.searchParams.get("v");
+      if (idParam) return idParam;
+      const parts = url.pathname.split("/").filter(Boolean);
+      const embedIndex = parts.indexOf("embed");
+      if (embedIndex !== -1) return parts[embedIndex + 1] || null;
+      const shortsIndex = parts.indexOf("shorts");
+      if (shortsIndex !== -1) return parts[shortsIndex + 1] || null;
+    }
+  } catch {
+    // Not a URL; assume it's already a video ID.
+  }
+
+  return trimmed;
+};
+
 interface ExerciseCardProps {
   id: string;
   name: string;
@@ -13,6 +39,8 @@ interface ExerciseCardProps {
   difficulty?: string;
   category?: string;
   imageUrl?: string;
+  youtubeVideo?: string;
+  youtubeVideoIds?: string[];
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   onViewDetails?: () => void;
@@ -26,6 +54,8 @@ export function ExerciseCard({
   difficulty,
   category,
   imageUrl,
+  youtubeVideo,
+  youtubeVideoIds,
   isFavorite = false,
   onToggleFavorite,
   onViewDetails,
@@ -75,6 +105,14 @@ export function ExerciseCard({
   const duration = getDuration(id);
   const instructor = getInstructor(muscleGroup);
 
+  const videoId =
+    (youtubeVideoIds ?? [])
+      .map((id) => normalizeYouTubeId(id))
+      .find(Boolean) || normalizeYouTubeId(youtubeVideo ?? "");
+  const thumbnailUrl = videoId
+    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    : imageUrl;
+
   const getEquipmentColor = (equip?: string) => {
     const lower = equip?.toLowerCase() ?? "";
     if (lower.includes("yoga") || lower.includes("mat"))
@@ -94,10 +132,20 @@ export function ExerciseCard({
       {/* Image with Gradient Overlay */}
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         {/* Gradient Background (placeholder for image) */}
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={name}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
         <div
           className={cn(
             "absolute inset-0 bg-gradient-to-br",
             gradient,
+            thumbnailUrl ? "opacity-40" : "",
           )}
         />
         

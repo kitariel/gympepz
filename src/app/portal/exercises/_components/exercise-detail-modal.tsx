@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -13,6 +15,32 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dumbbell, Target, Wrench, BarChart3, Heart } from "lucide-react";
 
 import type { Exercise } from "@/types/exercise";
+
+const normalizeYouTubeId = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    const host = url.hostname.replace("www.", "");
+    if (host === "youtu.be") {
+      return url.pathname.split("/")[1] || null;
+    }
+    if (host.endsWith("youtube.com")) {
+      const idParam = url.searchParams.get("v");
+      if (idParam) return idParam;
+      const parts = url.pathname.split("/").filter(Boolean);
+      const embedIndex = parts.indexOf("embed");
+      if (embedIndex !== -1) return parts[embedIndex + 1] || null;
+      const shortsIndex = parts.indexOf("shorts");
+      if (shortsIndex !== -1) return parts[shortsIndex + 1] || null;
+    }
+  } catch {
+    // Not a URL; assume it's already a video ID.
+  }
+
+  return trimmed;
+};
 
 interface ExerciseDetailModalProps {
   open: boolean;
@@ -30,6 +58,27 @@ export function ExerciseDetailModal({
   onToggleFavorite,
 }: ExerciseDetailModalProps) {
   if (!exercise) return null;
+
+  const videoIds = useMemo(
+    () => {
+      const inputs = [
+        ...(exercise.youtubeVideoIds ?? []),
+        exercise.youtubeVideo ?? "",
+      ];
+      const normalized = inputs
+        .map((id) => normalizeYouTubeId(id))
+        .filter(Boolean) as string[];
+      return Array.from(new Set(normalized));
+    },
+    [exercise.youtubeVideo, exercise.youtubeVideoIds],
+  );
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(
+    videoIds[0] ?? null,
+  );
+
+  useEffect(() => {
+    setActiveVideoId(videoIds[0] ?? null);
+  }, [exercise.id, videoIds]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,10 +176,62 @@ export function ExerciseDetailModal({
                         {step}
                       </p>
                     </div>
-                  ))}
+                ))}
               </div>
             </div>
           )}
+
+          {/* Videos */}
+          {videoIds.length > 0 && activeVideoId ? (
+            <div>
+              <h3 className="mb-3 font-semibold">Video demo</h3>
+              <div className="space-y-3">
+                <div className="aspect-video overflow-hidden rounded-xl border bg-muted/30">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${activeVideoId}`}
+                    title={`${exercise.name} video`}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+                {videoIds.length > 1 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {videoIds.map((id, index) => (
+                      <button
+                        key={`${id}-${index}`}
+                        type="button"
+                        onClick={() => setActiveVideoId(id)}
+                        className={`overflow-hidden rounded-lg border transition ${
+                          id === activeVideoId
+                            ? "border-primary/60 ring-2 ring-primary/20"
+                            : "border-border/60"
+                        }`}
+                      >
+                        <img
+                          src={`https://img.youtube.com/vi/${id}/hqdefault.jpg`}
+                          alt={`${exercise.name} video ${index + 1}`}
+                          className="h-16 w-28 object-cover"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <Button asChild variant="outline" className="w-full">
+                  <a
+                    href={`https://www.youtube.com/watch?v=${activeVideoId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Watch on YouTube
+                  </a>
+                </Button>
+              </div>
+            </div>
+          ) : null}
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">

@@ -11,11 +11,6 @@ export default function FAQSection() {
 
   const faqs = [
     {
-      question: "Is GymPepz free to use?",
-      answer:
-        "Yes! GymPepz offers a free tier with all essential features for tracking your workouts. We believe everyone should have access to quality fitness tracking tools.",
-    },
-    {
       question: "Does it work offline?",
       answer:
         "Absolutely. GymPepz is built with offline-first functionality. All your workouts are saved locally on your device first, then synced to the cloud when you're back online. You'll never lose a workout due to poor gym WiFi.",
@@ -24,11 +19,6 @@ export default function FAQSection() {
       question: "Can I use it on multiple devices?",
       answer:
         "Yes! Your data syncs across all your devices when you're logged in. Start a workout on your phone at the gym, and view your progress on your tablet at home.",
-    },
-    {
-      question: "How does the AI plan generator work?",
-      answer:
-        "Our AI analyzes your fitness goals, current level, and preferences to create a personalized workout plan. You can customize any generated plan or build one from scratch—you're always in control.",
     },
     {
       question: "What kind of exercises are supported?",

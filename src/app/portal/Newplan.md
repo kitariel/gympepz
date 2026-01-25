@@ -7,16 +7,7 @@ Change of plan
         - when user login it will redirect to start working out
         - but the requirements to start a workout plan 
             - workout plan is not yet created by user
-            - it will ask user to create a workout plan do want to create using AI planner or Manual builder
-            - if user choose to create using AI planner ( this is for future will do manual first )
-                - it will ask user to select a goal
-                - it will ask user to select a experience level
-                - it will ask user to select a equipment
-                - it will ask user to select a schedule
-                - it will ask user to select a frequency
-                - it will ask user to select a duration
-                - it will ask user to select a intensity
-                - it will ask user to select a duration
+            - it will ask user to create a workout plan using Manual builder
             - if user choose to create using Manual builder
                 - it will ask user to select a day
                 - if user select a day it will suggest a body part first like : Push, Pull, Legs
@@ -29,7 +20,7 @@ Change of plan
             - after user created first workout it will ask to create for future days like tomorrow or following days like weekly, monthly, yearly
             or also user will be asking to auto create for 5 days workout plan automatically by system but will be adjust base on what user created base like Pull , Push , Legs
             Note: this scenario will be fast so that user can start working out immediately and also can edit the workout plan later
-            Note: this creation will be reroute to my plans page if Ai planner will rederict to Ai workout creator
+            Note: this creation will be reroute to my plans page
 
 so mean this our menu will be this arrangement
 
@@ -37,7 +28,6 @@ Start Working Out now
 Separator
 Dashboard  or Home 
 Workouts
- - AI workout creator
  - My plans
  - Exercise library
 Separator

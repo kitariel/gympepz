@@ -61,8 +61,8 @@
 :root {
   --radius: 0.75rem;
 
-  /* Base - Clean white with subtle blue tint */
-  --background: #ffffff;
+  /* Base - Clean white with soft slate */
+  --background: #f8fafc; /* Slate 50 */
   --foreground: #0f172a; /* Slate 900 */
 
   /* Cards */
@@ -78,11 +78,11 @@
   --primary-foreground: #ffffff;
 
   /* Secondary surfaces */
-  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary: #e2e8f0; /* Slate 200 */
   --secondary-foreground: #0f172a;
 
   /* Muted */
-  --muted: #f8fafc; /* Slate 50 */
+  --muted: #f1f5f9; /* Slate 100 */
   --muted-foreground: #64748b; /* Slate 500 */
 
   /* Accent - Emerald */
@@ -90,8 +90,8 @@
   --accent-foreground: #ffffff;
 
   /* Borders & Inputs */
-  --border: #e2e8f0; /* Slate 200 */
-  --input: #e2e8f0;
+  --border: #cbd5f5; /* Blue-tinted slate */
+  --input: #dbeafe; /* Soft blue input */
   --ring: #3b82f6;
 
   /* Destructive */
@@ -113,11 +113,11 @@
 -------------------------------- */
 .dark {
   /* Base - Balanced warmth with depth */
-  --background: #1a1f2e; /* Warmer dark blue (lighter than #0f172a) */
-  --foreground: #f8fafc; /* Softer white (easier on eyes) */
+  --background: #0f1422; /* Deep slate */
+  --foreground: #f8fafc; /* Soft white */
 
   /* Cards - Better separation with blue tint */
-  --card: #252f43; /* Warmer slate with subtle blue */
+  --card: #1a2234; /* Deep blue-gray */
   --card-foreground: #f8fafc;
 
   /* Popovers */
@@ -129,20 +129,20 @@
   --primary-foreground: #ffffff;
 
   /* Secondary - Enhanced depth */
-  --secondary: #2d3548; /* Lighter, warmer */
+  --secondary: #1f2a3f; /* Muted panel */
   --secondary-foreground: #f8fafc;
 
   /* Muted - Warmer grays */
-  --muted: #2d3548;
-  --muted-foreground: #a0aec0; /* Warmer gray-blue */
+  --muted: #162033;
+  --muted-foreground: #94a3b8; /* Slate 400 */
 
   /* Accent - Emerald */
   --accent: #10b981; /* Emerald 500 */
   --accent-foreground: #ffffff;
 
   /* Borders & Inputs - More visible */
-  --border: rgba(255, 255, 255, 0.15); /* Increased from 0.1 */
-  --input: rgba(255, 255, 255, 0.15);
+  --border: rgba(148, 163, 184, 0.2); /* Slate 400/20 */
+  --input: rgba(148, 163, 184, 0.18);
   --ring: #3b82f6;
 
   /* Destructive */
@@ -268,6 +268,14 @@
 
   .pill {
     @apply bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs;
+  }
+
+  .panel {
+    @apply bg-card border border-border rounded-2xl p-4 shadow-sm;
+  }
+
+  .section-stack {
+    @apply space-y-6;
   }
 
   .sidebar-item {

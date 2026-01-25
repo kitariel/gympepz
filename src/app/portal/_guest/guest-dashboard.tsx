@@ -84,9 +84,6 @@ export function GuestDashboard() {
               <Button asChild variant="outline" className="h-9">
                 <Link href="/portal/train">Start training (home-first)</Link>
               </Button>
-              <Button asChild variant="outline" className="h-9">
-                <Link href="/login">Unlock AI planning</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -169,21 +166,7 @@ export function GuestDashboard() {
               })}
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="px-4 pt-4 pb-2">
-                <CardTitle className="text-sm">AI planning (preview)</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 px-4 pb-4">
-                <p className="text-sm text-muted-foreground">
-                  Generate a personalized plan based on your goal and training level.
-                </p>
-                <Button asChild size="sm" className="h-9 w-full">
-                  <Link href="/login">Unlock AI planning</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
+          <div className="grid gap-3 md:grid-cols-2">
             <Card className="border-0 shadow-sm">
               <CardHeader className="px-4 pt-4 pb-2">
                 <CardTitle className="text-sm">Progress analytics</CardTitle>
@@ -217,4 +200,3 @@ export function GuestDashboard() {
     </div>
   );
 }
-
