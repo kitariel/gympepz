@@ -863,7 +863,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors",
                       isActive
-                        ? "bg-emerald-500/10 text-emerald-700"
+                        ? "bg-emerald-200/70 text-emerald-950 dark:bg-emerald-500/15 dark:text-emerald-200"
                         : "hover:bg-muted",
                     )}
                     aria-current={isActive ? "true" : undefined}

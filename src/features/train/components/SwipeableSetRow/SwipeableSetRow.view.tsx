@@ -64,7 +64,8 @@ export function SwipeableSetRow({
         className={cn(
           "relative flex touch-pan-y items-center gap-3 rounded-md px-2 py-2 sm:gap-4",
           completed
-            ? "bg-emerald-50/80 ring-1 ring-emerald-500/30 dark:bg-emerald-500/15 dark:ring-emerald-400/40"
+            // bg-emerald-200/70 text-emerald-950 dark:bg-emerald-500/15 dark:text-emerald-200
+            ? "bg-emerald-200/70 ring-1 ring-emerald-500/30 dark:bg-emerald-500/15 dark:ring-emerald-400/40"
             : "bg-gradient-to-r from-muted/20 via-transparent to-muted/10 dark:from-white/5 dark:to-white/10"
         )}
       >
