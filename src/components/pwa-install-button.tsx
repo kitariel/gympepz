@@ -191,7 +191,7 @@ function IOSInstallDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Install GymPepz</DialogTitle>
+          <DialogTitle>Install Go-Train</DialogTitle>
           <DialogDescription>
             To install this app on your iOS device:
           </DialogDescription>
@@ -217,7 +217,7 @@ function IOSInstallDialog({
             <li>Tap &quot;Add&quot; in the top right corner</li>
           </ol>
           <p className="text-muted-foreground text-xs">
-            Once installed, you can access GymPepz directly from your home
+            Once installed, you can access Go-Train directly from your home
             screen like a native app.
           </p>
         </div>

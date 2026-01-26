@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Dumbbell className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xl font-bold">GymPepz</span>
+              <span className="text-xl font-bold">Go-Train</span>
             </div>
             <p className="text-sm text-muted-foreground">
               The workout tracker that helps you train smarter and track everything.
@@ -166,7 +166,7 @@ export default function Footer() {
         <div className="mt-12 border-t pt-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-sm text-muted-foreground">
-              &copy; {currentYear} GymPepz. All rights reserved.
+              &copy; {currentYear} Go-Train. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground">
               Made with <span className="text-red-500">❤️</span> for lifters everywhere

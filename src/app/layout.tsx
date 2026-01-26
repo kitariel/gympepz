@@ -15,14 +15,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "GymPepz - Your Fitness Journey Starts Here",
+  title: "Go-Train - Your Fitness Journey Starts Here",
   description:
     "Track workouts, analyze progress, and achieve your fitness goals with intelligent training and personalized workout plans.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "GymPepz",
+    title: "Go-Train",
   },
   formatDetection: {
     telephone: false,

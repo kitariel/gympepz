@@ -64,7 +64,7 @@ export default function WeeklyPlanSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              GymPepz gives you full control to build workouts your way, with
+              Go-Train gives you full control to build workouts your way, with
               flexible days, exercises, sets, and progression.
             </motion.p>
 

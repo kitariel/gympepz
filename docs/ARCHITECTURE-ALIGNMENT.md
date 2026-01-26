@@ -1,4 +1,4 @@
-# GymPepz – Architecture alignment
+# Go-Train – Architecture alignment
 
 **Purpose:** Map the current codebase to the architecture plan (workouts, goals, meals, community, coaching — see Untitled-3, Plan.md) and list gaps + next steps.
 

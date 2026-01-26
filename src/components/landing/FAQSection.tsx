@@ -13,7 +13,7 @@ export default function FAQSection() {
     {
       question: "Does it work offline?",
       answer:
-        "Absolutely. GymPepz is built with offline-first functionality. All your workouts are saved locally on your device first, then synced to the cloud when you're back online. You'll never lose a workout due to poor gym WiFi.",
+        "Absolutely. Go-Train is built with offline-first functionality. All your workouts are saved locally on your device first, then synced to the cloud when you're back online. You'll never lose a workout due to poor gym WiFi.",
     },
     {
       question: "Can I use it on multiple devices?",
@@ -23,12 +23,12 @@ export default function FAQSection() {
     {
       question: "What kind of exercises are supported?",
       answer:
-        "GymPepz supports all types of exercises—weightlifting, bodyweight movements, cardio, and more. You can choose from our extensive exercise library or create custom exercises tailored to your routine.",
+        "Go-Train supports all types of exercises—weightlifting, bodyweight movements, cardio, and more. You can choose from our extensive exercise library or create custom exercises tailored to your routine.",
     },
     {
       question: "Can I track cardio and other activities?",
       answer:
-        "Yes! While GymPepz is optimized for strength training, you can also log cardio sessions, stretching, and any other fitness activities you want to track.",
+        "Yes! While Go-Train is optimized for strength training, you can also log cardio sessions, stretching, and any other fitness activities you want to track.",
     },
     {
       question: "How do I copy my previous sets?",

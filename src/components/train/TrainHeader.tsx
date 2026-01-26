@@ -49,7 +49,7 @@ export function TrainHeader() {
               "hover:opacity-90",
             )}
           >
-            GymPepz
+            Go-Train
           </Link>
           {programName ? (
             <div className="min-w-0">

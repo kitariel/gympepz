@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function OfflinePage() {
   useEffect(() => {
     // Set page title since we can't use metadata in Client Components
-    document.title = "You are offline - GymPepz";
+    document.title = "You are offline - Go-Train";
   }, []);
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6">

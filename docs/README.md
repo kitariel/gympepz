@@ -1,4 +1,4 @@
-# GymPepz
+# Go-Train
 
 ## Cypress
 

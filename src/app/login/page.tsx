@@ -58,6 +58,12 @@ function LoginPageContent() {
     { enabled: googleCallback && status === "authenticated" && !!sessionEmail },
   );
   useEffect(() => {
+    if (status === "authenticated" && !googleCallback) {
+      router.replace("/portal/train");
+      router.refresh();
+    }
+  }, [status, googleCallback, router]);
+  useEffect(() => {
     if (!googleCallback || status !== "authenticated") return;
     const u = userQuery.data as {
       hasPassword?: boolean;

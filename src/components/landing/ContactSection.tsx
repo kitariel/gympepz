@@ -100,7 +100,7 @@ export default function ContactSection() {
                 <div>
                   <h3 className="font-semibold">Beta feedback</h3>
                   <p className="text-muted-foreground text-sm">
-                    Your feedback helps us improve GymPepz
+                    Your feedback helps us improve Go-Train
                   </p>
                 </div>
               </div>

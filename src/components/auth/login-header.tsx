@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Dumbbell } from "lucide-react";
+import Image from "next/image";
 import type { LoginStep } from "@/components/auth/login-form";
 
 export interface LoginHeaderProps {
@@ -12,19 +12,19 @@ export interface LoginHeaderProps {
 
 export function LoginHeader({
   step,
-  title = "GymPepz",
+  title = "Go-Train",
   subtitle,
 }: LoginHeaderProps) {
   // Dynamic subtitles based on step - mobile-first friendly
   const stepSubtitles = {
-    email: subtitle ?? "Get started with your fitness journey",
-    password_login: "Welcome back! Enter your password to continue.",
+    email: subtitle ?? "Sign in to keep your training synced.",
+    password_login: "Welcome back. Enter your password to continue.",
     otp: "Check your email for the verification code.",
-    password_set: "Create a secure password to complete your account.",
+    password_set: "Create a secure password to finish setup.",
   };
 
   const stepDescriptions = {
-    email: "Sign in with your email or continue with Google.",
+    email: "Offline-first by default. Sync whenever you're ready.",
     password_login: "",
     otp: "We sent a 6-digit code to your email address.",
     password_set: "Your password will be used for future logins.",
@@ -36,14 +36,20 @@ export function LoginHeader({
   return (
     <div className="px-4 py-4 sm:py-5 md:py-6">
       {/* Logo and Brand - Matching landing page style */}
-      <div className="flex flex-col gap-4 items-center justify-center">
-        <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <div className="bg-primary text-primary-foreground flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg shadow-sm">
-            <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5" />
-          </div>
+      <div className="flex flex-col  items-center justify-center">
+        <div className="mb-4 sm:mb-6 flex items-center">
+          <Image
+            src="/logo/go-train.png"
+            alt="Go-train logo"
+            width={80}
+            height={80}
+          />
           <div>
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-              {title}
+              <span className="text-sky-400 font-extrabold italic">go</span>
+              <span className="text-emerald-400 font-extrabold italic">
+                -train
+              </span>
             </h1>
           </div>
         </div>

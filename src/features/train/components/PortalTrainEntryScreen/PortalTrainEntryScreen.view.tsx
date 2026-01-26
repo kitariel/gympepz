@@ -214,7 +214,7 @@ function HeroCard({
               <Dumbbell className="text-primary h-6 w-6" />
             </div>
             <div>
-              <p className="font-semibold">Welcome to GymPepz</p>
+              <p className="font-semibold">Welcome to Go-Train</p>
               <p className="text-muted-foreground text-sm">
                 Start your fitness journey
               </p>

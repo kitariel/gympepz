@@ -73,7 +73,7 @@ export function GuestLogPage() {
         </CardHeader>
         <CardContent className="space-y-2 px-4 pb-4">
           <p className="text-sm text-muted-foreground">
-            GymPepz tracks strength, performance, volume, and consistency when your workouts are saved.
+            Go-Train tracks strength, performance, volume, and consistency when your workouts are saved.
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-lg border bg-background p-3">

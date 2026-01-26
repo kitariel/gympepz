@@ -17,7 +17,7 @@ export function GuestModeBanner() {
       <div className="flex items-start gap-3">
         <Badge variant="secondary">Guest mode</Badge>
         <div className="space-y-0.5">
-          <p className="text-sm font-medium">Using GymPepz without an account</p>
+          <p className="text-sm font-medium">Using Go-Train without an account</p>
           <p className="text-xs text-muted-foreground">
             {isOnline
               ? "Saved locally on this device. Create an account to sync and back up."

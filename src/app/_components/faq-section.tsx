@@ -14,7 +14,7 @@ const faqs = [
   {
     question: "Do I need a gym membership?",
     answer:
-      "Not at all! GymPepz works for any training environment. Our exercise library includes bodyweight exercises, home equipment options, and gym-based workouts. You can filter exercises by available equipment.",
+      "Not at all! Go-Train works for any training environment. Our exercise library includes bodyweight exercises, home equipment options, and gym-based workouts. You can filter exercises by available equipment.",
   },
   {
     question: "Can I export my data?",

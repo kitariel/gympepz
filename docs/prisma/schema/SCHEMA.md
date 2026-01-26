@@ -1,4 +1,4 @@
-# Prisma Schema (GymPepz)
+# Prisma Schema (Go-Train)
 
 This folder contains a **modular Prisma schema** split across multiple `*.prisma` files under `prisma/schema/`.
 

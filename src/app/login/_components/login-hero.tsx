@@ -1,27 +1,29 @@
 "use client";
 
-import { Dumbbell, BarChart3, Zap, Calendar, LineChart, Users, TrendingUp } from "lucide-react";
+import { BarChart3, Zap, Calendar, LineChart } from "lucide-react";
 import Image from "next/image";
 
 export function LoginHero() {
   return (
-    <div className="relative rounded-xl h-full w-full overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="relative h-full w-full overflow-hidden rounded-xl bg-slate-900">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        {/* <img 
-          src="/gymguywomen.png" 
-          alt="Fit athletes in a modern gym setting"
-          className="w-full h-full  object-cover ob"
-        /> */}
         <Image
-          src="/GymImage.png"
-          alt="Fit athletes in a modern gym setting"
+          src="/landing-page/light/Lucid_Origin_A_clean_modern_landing_page_hero_background_for_a_2.jpg"
+          alt="Go-train login background light"
           width={1000}
           height={1000}
-          className="w-full h-full   object-top"
+          className="h-full w-full object-cover object-center dark:hidden"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-900/70 via-slate-900/60 to-slate-900"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-dark-900/50 via-transparent to-slate-900/50"></div>
+        <Image
+          src="/landing-page/dark/AlbedoBase_XL_A_clean_modern_landing_page_hero_background_for_2.jpg"
+          alt="Go-train login background dark"
+          width={1000}
+          height={1000}
+          className="hidden h-full w-full object-cover object-center dark:block"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/60 to-slate-950/90"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-slate-950/40"></div>
       </div>
 
       {/* Mobile-first layout */}
@@ -29,27 +31,38 @@ export function LoginHero() {
         {/* Header Content - Mobile optimized */}
         <div className="space-y-4 sm:space-y-6">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Dumbbell className="h-5 w-5 text-white" />
-            </div>
+          <div className="flex items-center">
+            <Image
+              src="/logo/go-train.png"
+              alt="Go-train logo"
+              width={80}
+              height={80}
+            />
             <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-bold tracking-tight text-white">GymPepz</span>
-              <span className="text-[10px] text-slate-300 uppercase tracking-widest font-medium">Progress Made Visible</span>
+              <span className="text-lg font-semibold tracking-tight">
+                <span className="text-sky-400 font-extrabold italic">go</span>
+                <span className="text-emerald-300 font-extrabold italic">
+                  -train
+                </span>
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-widest text-white/70">
+                Progress Made Visible
+              </span>
             </div>
           </div>
 
           {/* Hero Content */}
           <div className="space-y-3 sm:space-y-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-white">
-              Master Your<br />
+            <h1 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
+              Train smarter.
+              <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-blue-400">
-                Fitness Journey
+                Track everything.
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-md">
-              Track your workouts, analyze your progress, and achieve your goals with intelligent fitness tracking. Granular tracking for serious athletes.
+            <p className="max-w-md text-sm leading-relaxed text-white/75 sm:text-base md:text-lg">
+              Log every set, copy your last weights, and stay focused with rest timers. Offline-first, with sync when you're ready.
             </p>
           </div>
         </div>
@@ -57,7 +70,7 @@ export function LoginHero() {
         {/* Feature Grid - Glassmorphism style, mobile-first */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 md:gap-6">
           {/* Feature 1 */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-lg hover:bg-white/[0.15] hover:border-emerald-400/30">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-white/[0.15] hover:shadow-lg sm:rounded-2xl sm:p-5 md:p-6">
             <div className="bg-gradient-to-br from-blue-500/20 to-emerald-500/20 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
               <Zap className="text-emerald-400 h-5 w-5 sm:h-6 sm:w-6" />
             </div>
@@ -70,7 +83,7 @@ export function LoginHero() {
           </div>
 
           {/* Feature 2 */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-lg hover:bg-white/[0.15] hover:border-blue-400/30">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur-md transition-all hover:border-blue-400/30 hover:bg-white/[0.15] hover:shadow-lg sm:rounded-2xl sm:p-5 md:p-6">
             <div className="bg-gradient-to-br from-blue-500/20 to-emerald-500/20 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
               <LineChart className="text-blue-400 h-5 w-5 sm:h-6 sm:w-6" />
             </div>
@@ -83,7 +96,7 @@ export function LoginHero() {
           </div>
 
           {/* Feature 3 */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-lg hover:bg-white/[0.15] hover:border-emerald-400/30">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-white/[0.15] hover:shadow-lg sm:rounded-2xl sm:p-5 md:p-6">
             <div className="bg-gradient-to-br from-blue-500/20 to-emerald-500/20 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
               <Calendar className="text-emerald-400 h-5 w-5 sm:h-6 sm:w-6" />
             </div>
@@ -96,7 +109,7 @@ export function LoginHero() {
           </div>
 
           {/* Feature 4 */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm transition-all hover:shadow-lg hover:bg-white/[0.15] hover:border-blue-400/30">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur-md transition-all hover:border-blue-400/30 hover:bg-white/[0.15] hover:shadow-lg sm:rounded-2xl sm:p-5 md:p-6">
             <div className="bg-gradient-to-br from-blue-500/20 to-emerald-500/20 mb-4 sm:mb-6 flex h-10 w-10 items-center justify-center rounded-lg">
               <BarChart3 className="text-blue-400 h-5 w-5 sm:h-6 sm:w-6" />
             </div>
@@ -109,42 +122,17 @@ export function LoginHero() {
           </div>
         </div>
 
-        {/* Footer - Mobile responsive with stats */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-white/20 pt-4 sm:pt-6">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {[
-                'bg-gradient-to-br from-blue-500 to-blue-600',
-                'bg-gradient-to-br from-emerald-500 to-emerald-600',
-                'bg-gradient-to-br from-blue-400 to-emerald-500'
-              ].map((bg, i) => (
-                <div
-                  key={i}
-                  className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-2 border-slate-900 ${bg}`}
-                />
-              ))}
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm font-medium text-white">
-                Join 127K+ athletes
-              </p>
-              <p className="text-[10px] sm:text-xs text-slate-300">
-                Training smarter every day
-              </p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="hidden sm:flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs text-slate-300">
-              <Users className="h-4 w-4 text-emerald-400" />
-              <span>127K+ Active</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-300">
-              <TrendingUp className="h-4 w-4 text-blue-400" />
-              <span>85% Success</span>
-            </div>
-          </div>
+        {/* Footer - Product promises */}
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/15 pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60 sm:pt-6">
+          <span className="rounded-full border border-white/15 px-3 py-1">
+            Offline-first
+          </span>
+          <span className="rounded-full border border-white/15 px-3 py-1">
+            Auto-sync ready
+          </span>
+          <span className="rounded-full border border-white/15 px-3 py-1">
+            Private by default
+          </span>
         </div>
       </div>
     </div>

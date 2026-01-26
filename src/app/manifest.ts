@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GymPepz - Your Fitness Journey",
-    short_name: "GymPepz",
+    name: "Go-Train - Your Fitness Journey",
+    short_name: "Go-Train",
     description:
       "Track workouts, analyze progress, and achieve your fitness goals with intelligent training.",
     start_url: "/",
