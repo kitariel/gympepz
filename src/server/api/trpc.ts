@@ -6,11 +6,20 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import type { Session } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { env } from "@/env";
 import { db } from "@/server/db";
+import { auth } from "@/server/auth";
+import type { NextRequest } from "next/server";
+
+type SessionWithOptionalUser = Omit<Session, "user"> & {
+  user?: Session["user"] | null;
+};
 
 /**
  * 1. CONTEXT
@@ -24,10 +33,33 @@ import { db } from "@/server/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async (opts: {
+  headers: Headers;
+  req?: NextRequest;
+}) => {
+  const baseSession =
+  // @ts-expect-error TODO
+    (opts.req ? await auth(opts.req) : await auth()) as SessionWithOptionalUser | null;
+  let session = baseSession;
+  if (opts.req && session && !session.user) {
+    const token = await getToken({
+      req: opts.req,
+      secret: env.NEXTAUTH_SECRET,
+    });
+    if (token?.sub || token?.email) {
+      session = {
+        ...session,
+        user: {
+          id: token?.sub ?? "",
+          email: token?.email ?? null,
+        },
+      };
+    }
+  }
   return {
     db,
     ...opts,
+    session,
   };
 };
 
@@ -104,3 +136,32 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+const enforceUserIsAuthed = t.middleware(({ ctx, next, input }) => {
+  if (!ctx.session?.user?.id) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  if (
+    input &&
+    typeof input === "object" &&
+    "userId" in input &&
+    typeof (input as { userId?: unknown }).userId === "string"
+  ) {
+    const inputUserId = (input as { userId: string }).userId;
+    if (inputUserId !== ctx.session.user.id) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+  }
+  return next({
+    ctx: {
+      session: ctx.session,
+    },
+  });
+});
+
+/**
+ * Protected (authenticated) procedure
+ */
+export const protectedProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(enforceUserIsAuthed);

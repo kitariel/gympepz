@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 import { auth } from "@/server/auth";
 
 export const analyticsRouter = createTRPCRouter({
@@ -25,7 +25,7 @@ export const analyticsRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getStats: publicProcedure
+  getStats: protectedProcedure
     .input(
       z.object({
         path: z.string().optional(),

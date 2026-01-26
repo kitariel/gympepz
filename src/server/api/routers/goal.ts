@@ -1,5 +1,6 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 const CreateGoalInput = z.object({
   userId: z.string().min(1),
@@ -19,10 +20,17 @@ const UpdateGoalInput = z.object({
   status: z.enum(["active", "completed", "abandoned"]).optional(),
 });
 
+const assertUser = (ctx: { session?: { user?: { id?: string | null } } }, userId: string) => {
+  if (!ctx.session?.user?.id || ctx.session.user.id !== userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+};
+
 export const goalRouter = createTRPCRouter({
-  getAll: publicProcedure
+  getAll: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goals = await ctx.db.goal.findMany({
         where: { userId: input.userId },
         include: { exercise: { select: { id: true, name: true } } },
@@ -31,9 +39,10 @@ export const goalRouter = createTRPCRouter({
       return goals;
     }),
 
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(z.object({ userId: z.string().min(1), id: z.string() }))
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goal = await ctx.db.goal.findFirst({
         where: {
           id: input.id,
@@ -50,9 +59,10 @@ export const goalRouter = createTRPCRouter({
       return goal;
     }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(CreateGoalInput)
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goal = await ctx.db.goal.create({
         data: {
           userId: input.userId,
@@ -69,9 +79,10 @@ export const goalRouter = createTRPCRouter({
       return goal;
     }),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(UpdateGoalInput)
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const { userId, id, ...data } = input;
       const goal = await ctx.db.goal.update({
         where: {
@@ -88,9 +99,10 @@ export const goalRouter = createTRPCRouter({
       return goal;
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(z.object({ userId: z.string().min(1), id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       await ctx.db.goal.delete({
         where: {
           id: input.id,
@@ -100,11 +112,12 @@ export const goalRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getProgress: publicProcedure
+  getProgress: protectedProcedure
     .input(
       z.object({ userId: z.string().min(1), goalId: z.string().min(1) }),
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goal = await ctx.db.goal.findFirst({
         where: {
           id: input.goalId,
@@ -143,7 +156,7 @@ export const goalRouter = createTRPCRouter({
       };
     }),
 
-  recordProgress: publicProcedure
+  recordProgress: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -153,6 +166,7 @@ export const goalRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goal = await ctx.db.goal.findFirst({
         where: {
           id: input.goalId,
@@ -187,7 +201,7 @@ export const goalRouter = createTRPCRouter({
       return updated;
     }),
 
-  recordProgressForExercise: publicProcedure
+  recordProgressForExercise: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -198,6 +212,7 @@ export const goalRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       const goals = await ctx.db.goal.findMany({
         where: {
           userId: input.userId,

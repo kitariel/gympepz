@@ -2,7 +2,7 @@ import { z } from "zod";
 import { promises as fs } from "fs";
 import path from "path";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 
 const HeaderConfigSchema = z.object({
   title: z.string().min(1),
@@ -45,7 +45,7 @@ export const headerRouter = createTRPCRouter({
     const config = await readHeaderConfig();
     return config;
   }),
-  update: publicProcedure
+  update: protectedProcedure
     .input(
       z.object({
         title: z.string().min(1),

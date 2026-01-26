@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 /** Update matching goals when a workout is completed (recordProgress). */
 async function updateGoalsFromWorkoutCompletion(
@@ -49,8 +50,25 @@ async function updateGoalsFromWorkoutCompletion(
   }
 }
 
+const requireWorkoutLog = async (
+  ctx: { db: PrismaClient; session?: { user?: { id?: string | null } } },
+  workoutLogId: string,
+) => {
+  const userId = ctx.session?.user?.id;
+  if (!userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  const workout = await ctx.db.workoutLog.findFirst({
+    where: { id: workoutLogId, userId },
+  });
+  if (!workout) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return workout;
+};
+
 export const workoutLogRouter = createTRPCRouter({
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -102,7 +120,7 @@ export const workoutLogRouter = createTRPCRouter({
       return log;
     }),
 
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -133,11 +151,11 @@ export const workoutLogRouter = createTRPCRouter({
       };
     }),
 
-  get: publicProcedure
+  get: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      return ctx.db.workoutLog.findUnique({
-        where: { id: input.id },
+      return ctx.db.workoutLog.findFirst({
+        where: { id: input.id, userId: ctx.session?.user?.id },
         include: {
           exercises: {
             include: { exercise: true },
@@ -147,7 +165,7 @@ export const workoutLogRouter = createTRPCRouter({
       });
     }),
 
-  addExercise: publicProcedure
+  addExercise: protectedProcedure
     .input(
       z.object({
         workoutLogId: z.string().min(1),
@@ -160,6 +178,7 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.workoutLogId);
       // Get the current max order for this workout
       const maxOrder = await ctx.db.workoutLogExercise.findFirst({
         where: { workoutLogId: input.workoutLogId },
@@ -181,7 +200,7 @@ export const workoutLogRouter = createTRPCRouter({
       });
     }),
 
-  updateExercise: publicProcedure
+  updateExercise: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
@@ -193,8 +212,8 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.workoutLogExercise.update({
-        where: { id: input.id },
+      const updated = await ctx.db.workoutLogExercise.updateMany({
+        where: { id: input.id, workoutLog: { userId: ctx.session?.user?.id } },
         data: {
           sets: input.sets,
           reps: input.reps,
@@ -203,17 +222,27 @@ export const workoutLogRouter = createTRPCRouter({
           notes: input.notes,
         },
       });
-    }),
-
-  deleteExercise: publicProcedure
-    .input(z.object({ id: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.workoutLogExercise.delete({
-        where: { id: input.id },
+      if (updated.count === 0) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      return ctx.db.workoutLogExercise.findFirst({
+        where: { id: input.id, workoutLog: { userId: ctx.session?.user?.id } },
       });
     }),
 
-  reorderExercises: publicProcedure
+  deleteExercise: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const deleted = await ctx.db.workoutLogExercise.deleteMany({
+        where: { id: input.id, workoutLog: { userId: ctx.session?.user?.id } },
+      });
+      if (deleted.count === 0) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      return { success: true };
+    }),
+
+  reorderExercises: protectedProcedure
     .input(
       z.object({
         workoutLogId: z.string().min(1),
@@ -221,6 +250,7 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.workoutLogId);
       // Verify all exercise IDs belong to this workout
       const exercises = await ctx.db.workoutLogExercise.findMany({
         where: {
@@ -247,7 +277,7 @@ export const workoutLogRouter = createTRPCRouter({
       return { ok: true };
     }),
 
-  complete: publicProcedure
+  complete: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
@@ -257,6 +287,7 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.id);
       const workout = await ctx.db.workoutLog.update({
         where: { id: input.id },
         data: {
@@ -288,7 +319,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Quick start creates an empty workout log for today.
-  quickStart: publicProcedure
+  quickStart: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const now = new Date();
@@ -313,7 +344,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Get workout with history context
-  getWithHistory: publicProcedure
+  getWithHistory: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
@@ -321,8 +352,8 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const workout = await ctx.db.workoutLog.findUnique({
-        where: { id: input.id },
+      const workout = await ctx.db.workoutLog.findFirst({
+        where: { id: input.id, userId: ctx.session?.user?.id },
         include: {
           exercises: {
             include: { exercise: true },
@@ -364,7 +395,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Calendar view
-  calendar: publicProcedure
+  calendar: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -394,7 +425,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Get streak - Calculate from workouts (WorkoutStreak table doesn't exist yet)
-  getStreak: publicProcedure
+  getStreak: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       // Get recent completed workouts
@@ -471,7 +502,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Analytics
-  getAnalytics: publicProcedure
+  getAnalytics: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -540,9 +571,10 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Get total volume for a workout
-  getTotalVolume: publicProcedure
+  getTotalVolume: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.id);
       const sets = await ctx.db.workoutSet.findMany({
         where: { workoutLogId: input.id },
       });
@@ -555,7 +587,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Update workout duration in real-time
-  updateDuration: publicProcedure
+  updateDuration: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
@@ -563,6 +595,7 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.id);
       return ctx.db.workoutLog.update({
         where: { id: input.id },
         data: { duration: input.duration },
@@ -570,7 +603,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Check for recent completed workouts (within last 6 hours)
-  checkRecentWorkout: publicProcedure
+  checkRecentWorkout: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -616,11 +649,11 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Duplicate a workout (create a new workout with same exercises)
-  duplicate: publicProcedure
+  duplicate: protectedProcedure
     .input(z.object({ id: z.string().min(1), date: z.date().optional() }))
     .mutation(async ({ ctx, input }) => {
-      const sourceLog = await ctx.db.workoutLog.findUnique({
-        where: { id: input.id },
+      const sourceLog = await ctx.db.workoutLog.findFirst({
+        where: { id: input.id, userId: ctx.session?.user?.id },
         include: {
           exercises: {
             include: { exercise: true }, // Include exercise relation to check if it exists
@@ -669,7 +702,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Reschedule a workout (change date)
-  reschedule: publicProcedure
+  reschedule: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
@@ -677,6 +710,7 @@ export const workoutLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireWorkoutLog(ctx, input.id);
       return ctx.db.workoutLog.update({
         where: { id: input.id },
         data: {
@@ -686,7 +720,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Get active (incomplete) workout for user
-  getActiveWorkout: publicProcedure
+  getActiveWorkout: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       return ctx.db.workoutLog.findFirst({
@@ -699,7 +733,7 @@ export const workoutLogRouter = createTRPCRouter({
     }),
 
   // Sync offline workouts to database
-  syncFromOffline: publicProcedure
+  syncFromOffline: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),

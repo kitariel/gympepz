@@ -2,7 +2,7 @@ import { z } from "zod";
 import { promises as fs } from "fs";
 import path from "path";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 
 const MenuConfigSchema = z.object({
   navMain: z
@@ -64,7 +64,7 @@ export const menuRouter = createTRPCRouter({
     const config = await readConfig();
     return config;
   }),
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         label: z.string().min(1),
@@ -89,7 +89,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  createChild: publicProcedure
+  createChild: protectedProcedure
     .input(
       z.object({
         parentTitle: z.string().min(1),
@@ -111,7 +111,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  updateParentLabel: publicProcedure
+  updateParentLabel: protectedProcedure
     .input(z.object({ oldTitle: z.string().min(1), newTitle: z.string().min(1) }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
@@ -121,7 +121,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  updateChildLabel: publicProcedure
+  updateChildLabel: protectedProcedure
     .input(
       z.object({
         parentTitle: z.string().min(1),
@@ -140,7 +140,7 @@ export const menuRouter = createTRPCRouter({
       return { ok: true };
     }),
   // New: update parent URL
-  updateParentUrl: publicProcedure
+  updateParentUrl: protectedProcedure
     .input(z.object({ title: z.string().min(1), url: z.string().min(1) }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
@@ -151,7 +151,7 @@ export const menuRouter = createTRPCRouter({
       return { ok: true };
     }),
   // New: update child URL
-  updateChildUrl: publicProcedure
+  updateChildUrl: protectedProcedure
     .input(
       z.object({ parentTitle: z.string().min(1), childTitle: z.string().min(1), url: z.string().min(1) }),
     )
@@ -165,7 +165,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  reorderNavMain: publicProcedure
+  reorderNavMain: protectedProcedure
     .input(z.object({ orderedTitles: z.array(z.string().min(1)).min(1) }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
@@ -183,7 +183,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  reorderChildren: publicProcedure
+  reorderChildren: protectedProcedure
     .input(
       z.object({ parentTitle: z.string().min(1), orderedTitles: z.array(z.string().min(1)).min(1) }),
     )
@@ -202,7 +202,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  updateParentIcon: publicProcedure
+  updateParentIcon: protectedProcedure
     .input(z.object({ title: z.string().min(1), iconName: z.string().optional(), iconPlatform: z.enum(["lucide", "heroicons"]).optional() }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
@@ -220,7 +220,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  deleteParent: publicProcedure
+  deleteParent: protectedProcedure
     .input(z.object({ title: z.string().min(1) }))
     .mutation(async ({ input }) => {
       const config = await readConfig();
@@ -230,7 +230,7 @@ export const menuRouter = createTRPCRouter({
       await writeConfig(config);
       return { ok: true };
     }),
-  deleteChild: publicProcedure
+  deleteChild: protectedProcedure
     .input(z.object({ parentTitle: z.string().min(1), childTitle: z.string().min(1) }))
     .mutation(async ({ input }) => {
       const config = await readConfig();

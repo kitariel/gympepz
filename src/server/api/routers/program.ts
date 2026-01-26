@@ -1,5 +1,6 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 const ProgramExerciseInput = z.object({
   exerciseId: z.string().optional(),
@@ -34,7 +35,7 @@ function toDate(value: string): Date {
 }
 
 export const programRouter = createTRPCRouter({
-  sync: publicProcedure
+  sync: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -43,6 +44,10 @@ export const programRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const sessionUserId = ctx.session?.user?.id ?? null;
+      if (!sessionUserId || sessionUserId !== input.userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const dbPrograms = await ctx.db.program.findMany({
         where: { userId: input.userId },
         include: {

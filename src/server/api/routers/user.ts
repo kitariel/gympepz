@@ -1,10 +1,15 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
-  getByEmail: publicProcedure
+  getByEmail: protectedProcedure
     .input(z.object({ email: z.string().email() }))
     .query(async ({ ctx, input }) => {
+      const sessionEmail = ctx.session?.user?.email?.toLowerCase() ?? null;
+      if (!sessionEmail || sessionEmail !== input.email.toLowerCase()) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const user = await ctx.db.user.findUnique({
         where: { email: input.email.toLowerCase() },
       });
@@ -27,7 +32,7 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  updateProfile: publicProcedure
+  updateProfile: protectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -40,6 +45,10 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { email, name, image, fitnessGoal, experienceLevel, bio } = input;
+      const sessionEmail = ctx.session?.user?.email?.toLowerCase() ?? null;
+      if (!sessionEmail || sessionEmail !== email.toLowerCase()) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const updated = await ctx.db.user.update({
         where: { email: email.toLowerCase() },
         data: {
@@ -61,9 +70,13 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  listSessions: publicProcedure
+  listSessions: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      const sessionUserId = ctx.session?.user?.id ?? null;
+      if (!sessionUserId || sessionUserId !== input.userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const sessions = await ctx.db.session.findMany({
         where: { userId: input.userId },
         orderBy: { expires: "desc" },
@@ -72,7 +85,7 @@ export const userRouter = createTRPCRouter({
       return sessions.map((s) => ({ id: s.id, expires: s.expires }));
     }),
 
-  changePassword: publicProcedure
+  changePassword: protectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -82,6 +95,10 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { email, currentPassword, newPassword } = input;
+      const sessionEmail = ctx.session?.user?.email?.toLowerCase() ?? null;
+      if (!sessionEmail || sessionEmail !== email.toLowerCase()) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const bcrypt = await import("bcryptjs");
       
       // Find user

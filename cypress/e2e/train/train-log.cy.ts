@@ -12,7 +12,8 @@ describe("Train logging", () => {
       const text = $body.text();
 
       if (text.includes("No active program")) {
-        cy.contains("Browse templates").should("exist");
+        cy.get("[data-testid='browse-templates']").should("exist");
+        cy.get("[data-testid='create-plan']").should("exist");
         return;
       }
 

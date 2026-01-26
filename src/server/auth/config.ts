@@ -114,17 +114,19 @@ export const authConfig = {
       // Keep JWT minimal; NextAuth will set token.sub and token.email.
       return token;
     },
-    async session({ session }) {
-      // Populate id and status on session.user by looking up the user by email
-      const email = session.user?.email ?? null;
-      if (email) {
+    async session({ session, token }) {
+      // Populate id and status on session.user using token.sub when available.
+      const userId = token?.sub ?? null;
+      const email = session.user?.email ?? token?.email ?? null;
+      if (userId || email) {
         const dbUser = await db.user.findUnique({
-          where: { email },
-          select: { id: true, status: true },
+          where: userId ? { id: userId } : { email: email as string },
+          select: { id: true, status: true, email: true },
         });
         if (dbUser) {
           session.user.id = dbUser.id;
           session.user.status = dbUser.status ?? null;
+          session.user.email = dbUser.email ?? session.user.email;
         }
       }
       return session;

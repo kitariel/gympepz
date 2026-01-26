@@ -46,6 +46,7 @@ export type WorkoutLoggerViewProps =
   | {
       kind: "noProgram";
       onBrowseTemplates: () => void;
+      onCreatePlan?: () => void;
     }
   | {
       kind: "draftConflict";

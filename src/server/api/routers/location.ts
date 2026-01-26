@@ -1,10 +1,15 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 export const locationRouter = createTRPCRouter({
-  getByUserEmail: publicProcedure
+  getByUserEmail: protectedProcedure
     .input(z.object({ email: z.string().email() }))
     .query(async ({ ctx, input }) => {
+      const sessionEmail = ctx.session?.user?.email?.toLowerCase() ?? null;
+      if (!sessionEmail || sessionEmail !== input.email.toLowerCase()) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const user = await ctx.db.user.findUnique({
         where: { email: input.email.toLowerCase() },
         select: { id: true },
@@ -22,7 +27,7 @@ export const locationRouter = createTRPCRouter({
       };
     }),
 
-  upsertByUserEmail: publicProcedure
+  upsertByUserEmail: protectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -31,6 +36,10 @@ export const locationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const sessionEmail = ctx.session?.user?.email?.toLowerCase() ?? null;
+      if (!sessionEmail || sessionEmail !== input.email.toLowerCase()) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
       const email = input.email.toLowerCase();
       const user = await ctx.db.user.findUnique({
         where: { email },

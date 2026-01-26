@@ -1,8 +1,15 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+
+const assertUser = (ctx: { session?: { user?: { id?: string | null } } }, userId: string) => {
+  if (!ctx.session?.user?.id || ctx.session.user.id !== userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+};
 
 export const progressRouter = createTRPCRouter({
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -19,6 +26,7 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       return ctx.db.progressEntry.create({
         data: {
           userId: input.userId,
@@ -36,7 +44,7 @@ export const progressRouter = createTRPCRouter({
       });
     }),
 
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -44,6 +52,7 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       return ctx.db.progressEntry.findMany({
         where: { userId: input.userId },
         orderBy: { date: "asc" },
@@ -51,25 +60,28 @@ export const progressRouter = createTRPCRouter({
       });
     }),
 
-  latest: publicProcedure
+  latest: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       return ctx.db.progressEntry.findFirst({
         where: { userId: input.userId },
         orderBy: { date: "desc" },
       });
     }),
     
-  delete: publicProcedure
-    .input(z.object({ id: z.string().min(1) }))
+  delete: protectedProcedure
+    .input(z.object({ userId: z.string().min(1), id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.progressEntry.delete({
-        where: { id: input.id },
+      assertUser(ctx, input.userId);
+      await ctx.db.progressEntry.deleteMany({
+        where: { id: input.id, userId: input.userId },
       });
+      return { success: true };
     }),
 
   // Get exercise-specific progress
-  getExerciseProgress: publicProcedure
+  getExerciseProgress: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -78,12 +90,13 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       // WorkoutSet table doesn't exist yet, return empty array
       return [];
     }),
 
   // Calculate estimated 1RM for an exercise
-  calculate1RM: publicProcedure
+  calculate1RM: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -91,12 +104,13 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       // WorkoutSet table doesn't exist yet
       return { estimated1RM: 0, weight: 0, reps: 0, date: null };
     }),
 
   // Get personal records
-  getPRs: publicProcedure
+  getPRs: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -104,13 +118,14 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       // ExercisePR table doesn't exist yet, return empty array
       // After migration, this will return actual PRs
       return [];
     }),
 
   // Get volume by muscle group
-  getVolumeByMuscleGroup: publicProcedure
+  getVolumeByMuscleGroup: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -118,12 +133,13 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       // WorkoutSet table doesn't exist yet
       return {};
     }),
 
   // Upload progress photo
-  uploadPhoto: publicProcedure
+  uploadPhoto: protectedProcedure
     .input(
       z.object({
         userId: z.string().min(1),
@@ -134,6 +150,7 @@ export const progressRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      assertUser(ctx, input.userId);
       return ctx.db.progressEntry.create({
         data: {
           userId: input.userId,

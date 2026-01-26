@@ -618,16 +618,28 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
             No active program
           </h1>
           <p className="text-muted-foreground">
-            Select a template to get started.
+            Create a plan first to start logging workouts.
           </p>
         </div>
-        <Button
-          className="touch-target h-12 w-full sm:w-auto"
-          onClick={props.onBrowseTemplates}
-          data-testid="browse-templates"
-        >
-          Browse templates
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            className="touch-target h-12 flex-1"
+            onClick={props.onBrowseTemplates}
+            data-testid="browse-templates"
+          >
+            Browse templates
+          </Button>
+          {props.onCreatePlan ? (
+            <Button
+              variant="outline"
+              className="touch-target h-12 flex-1"
+              onClick={props.onCreatePlan}
+              data-testid="create-plan"
+            >
+              Create plan
+            </Button>
+          ) : null}
+        </div>
       </div>
     );
   }

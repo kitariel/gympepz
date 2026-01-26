@@ -413,6 +413,7 @@ export function WorkoutLogger() {
       return {
         kind: "noProgram",
         onBrowseTemplates: () => router.push(trainPath(routeContext, "templates")),
+        onCreatePlan: () => router.push(trainPath(routeContext, "build")),
       };
     }
 
