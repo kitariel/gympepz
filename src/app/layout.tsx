@@ -56,11 +56,14 @@ export default function RootLayout({
                 position="top-center"
                 toastOptions={{
                   classNames: {
-                    toast: "bg-background border-border text-foreground",
+                    toast:
+                      "bg-background/95 border-border text-foreground shadow-lg backdrop-blur",
                     title: "text-foreground",
-                    description: "text-muted-foreground",
-                    success: "!bg-emerald-50 !border-emerald-200 dark:!bg-emerald-950 dark:!border-emerald-800",
-                    error: "!bg-red-50 !border-red-200 dark:!bg-red-950 dark:!border-red-800",
+                    description: "text-muted-foreground dark:text-slate-300",
+                    success:
+                      "!bg-emerald-50 !border-emerald-200 !text-emerald-900 dark:!bg-emerald-950 dark:!border-emerald-800 dark:!text-emerald-50",
+                    error:
+                      "!bg-red-50 !border-red-200 !text-red-900 dark:!bg-red-950 dark:!border-red-800 dark:!text-red-50",
                   },
                 }}
               />

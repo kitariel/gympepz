@@ -2,7 +2,7 @@
 
 const query = process.argv.slice(2).join(" ") || "bench press";
 const maxResults = Number(process.env.YT_MAX_RESULTS || "5");
-const apiKey = 'AIzaSyDSdgZq0iyCX0yzit1kGI47x7x6dhlUTz0'
+const apiKey = ''
 
 if (!apiKey) {
   console.error("Missing YOUTUBE_API_KEY or YT_API_KEY environment variable.");

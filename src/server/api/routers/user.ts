@@ -2,6 +2,13 @@ import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
+const optionalTrimmed = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? undefined : trimmed;
+  }, schema.optional());
+
 export const userRouter = createTRPCRouter({
   getByEmail: protectedProcedure
     .input(z.object({ email: z.string().email() }))
@@ -36,11 +43,15 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        name: z.string().min(1).max(100).optional(),
-        image: z.string().url().optional(),
-        fitnessGoal: z.string().max(200).optional(),
-        experienceLevel: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
-        bio: z.string().max(500).optional(),
+        name: optionalTrimmed(z.string().min(1).max(100)),
+        image: optionalTrimmed(z.string().url()),
+        fitnessGoal: optionalTrimmed(z.string().max(200)),
+        experienceLevel: z.preprocess((value) => {
+          if (typeof value !== "string") return value;
+          const trimmed = value.trim();
+          return trimmed.length === 0 ? undefined : trimmed;
+        }, z.enum(["Beginner", "Intermediate", "Advanced"]).optional()),
+        bio: optionalTrimmed(z.string().max(500)),
       }),
     )
     .mutation(async ({ ctx, input }) => {

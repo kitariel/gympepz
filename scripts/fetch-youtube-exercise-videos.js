@@ -10,9 +10,9 @@ const getArg = (key) => {
   return found ? found.slice(key.length + 1) : null;
 };
 
-const apiKey = 'AIzaSyCnTJG5J8rUlS6GyNsNnsYL-7pyBauacDs'
-// const apiKey = 'AIzaSyC0ms-duYyOlLDcBTf1I0P-eVxjKrG4jNQ'
-// const apiKey = 'AIzaSyDSdgZq0iyCX0yzit1kGI47x7x6dhlUTz0'
+const apiKey = ''
+// const apiKey = 'AIzaSyC0ms--eVxjKrG4jNQ'
+// const apiKey = 'AIzaSyDSdgZq0iyCX0yzitss1kGI47x7x6dhlUTz0'
 const queryName = getArg("--name");
 const limit = Number(getArg("--limit") || "100");
 const maxResults = Number(getArg("--maxResults") || "5");

@@ -3,3 +3,9 @@ enum UserStatus {
   not_active
   active
 }
+
+enum ExperienceLevel {
+  Beginner
+  Intermediate
+  Advanced
+}

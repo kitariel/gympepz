@@ -12,6 +12,9 @@ model User {
     otpVerifyAttempts   Int        @default(0)
     otpVerifyLockUntil  DateTime?
     status              UserStatus @default(otp_sent)
+    fitnessGoal         String?
+    experienceLevel     ExperienceLevel?
+    bio                 String?
     failedLoginAttempts Int        @default(0)
     lockUntil           DateTime?
     createdAt           DateTime   @default(now())
