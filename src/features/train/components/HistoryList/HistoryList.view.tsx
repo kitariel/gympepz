@@ -29,7 +29,7 @@ function SwipeableHistoryItem({
   const showDeleteIndicator = direction === "left" && Math.abs(offset) > 40;
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-xl" data-testid="history-item">
       {/* Delete action background */}
       <div
         className={cn(
@@ -193,6 +193,7 @@ export function HistoryListView(props: HistoryListViewProps) {
             size="sm"
             onClick={props.onClear}
             disabled={props.clearDisabled}
+            data-testid="history-clear"
           >
             Clear all
           </Button>

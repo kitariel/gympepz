@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import dynamic from "next/dynamic";
 
 const TemplateDetails = dynamic(
@@ -17,8 +16,7 @@ const TemplateDetails = dynamic(
 export default function PortalTrainTemplatePage({
   params,
 }: {
-  params: Promise<{ templateId: string }>;
+  params: { templateId: string };
 }) {
-  const { templateId } = use(params);
-  return <TemplateDetails templateId={templateId} />;
+  return <TemplateDetails templateId={params.templateId} />;
 }

@@ -16,6 +16,7 @@ interface TemplateCardViewProps {
 export function TemplateCardView({ vm, isRecommended }: TemplateCardViewProps) {
   return (
     <Card
+      data-testid="template-card"
       className={cn(
         "group relative overflow-hidden transition-all hover:shadow-md",
         isRecommended
@@ -25,7 +26,11 @@ export function TemplateCardView({ vm, isRecommended }: TemplateCardViewProps) {
     >
       {isRecommended && (
         <div className="absolute top-3 right-3">
-          <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20">
+          <Badge
+            variant="secondary"
+            className="gap-1 bg-primary/10 text-primary border-primary/20"
+            data-testid="template-recommended"
+          >
             <Sparkles className="h-3 w-3" />
             <span className="text-[10px]">Recommended</span>
           </Badge>
@@ -57,7 +62,7 @@ export function TemplateCardView({ vm, isRecommended }: TemplateCardViewProps) {
             size="sm"
             className="flex-1 h-9"
           >
-            <Link href={vm.viewHref}>
+            <Link href={vm.viewHref} data-testid="template-view-link">
               View Program
               <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-0.5" />
             </Link>

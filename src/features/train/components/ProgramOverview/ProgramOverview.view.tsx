@@ -45,6 +45,7 @@ function HorizontalWeekPicker({
           variant="ghost"
           size="sm"
           onClick={() => onSelectedDayChange("auto")}
+          data-testid="overview-day-auto"
           className={cn(
             "h-7 text-xs",
             selectedDay === "auto" && "text-primary",
@@ -63,6 +64,7 @@ function HorizontalWeekPicker({
             <button
               key={day.dayIndex}
               onClick={() => onSelectedDayChange(day.dayIndex)}
+              data-testid="overview-day"
               className={cn(
                 "flex flex-1 flex-col items-center gap-1 rounded-xl py-3 transition-all",
                 isSelected

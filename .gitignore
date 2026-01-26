@@ -6,7 +6,9 @@
 .pnp.js
 
 # testing
-/coverage
+# /coverage
+/cypress/screenshots
+/cypress/videos
 
 # database
 /prisma/db.sqlite

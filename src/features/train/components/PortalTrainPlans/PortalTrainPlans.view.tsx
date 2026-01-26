@@ -26,7 +26,9 @@ export function PortalTrainPlansView(props: PortalTrainPlansViewProps) {
             Single view
           </Link>
           <Button asChild className="h-10">
-            <Link href={props.createHref}>Create new</Link>
+            <Link href={props.createHref} data-testid="plans-create">
+              Create new
+            </Link>
           </Button>
         </div>
       </div>
@@ -43,7 +45,9 @@ export function PortalTrainPlansView(props: PortalTrainPlansViewProps) {
               Create a plan to save it here.
             </p>
             <Button asChild className="h-10 w-full sm:w-auto">
-              <Link href={props.createHref}>Create your first plan</Link>
+              <Link href={props.createHref} data-testid="plans-create-first">
+                Create your first plan
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,16 +65,23 @@ export function PortalTrainPlansView(props: PortalTrainPlansViewProps) {
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 px-4 pb-4 sm:flex-row">
-                <Button className="h-10 flex-1" onClick={() => props.onUse(plan.id)}>
+                <Button
+                  className="h-10 flex-1"
+                  onClick={() => props.onUse(plan.id)}
+                  data-testid="plans-use"
+                >
                   Use
                 </Button>
                 <Button asChild variant="outline" className="h-10 flex-1">
-                  <Link href={props.getEditHref(plan.id)}>Edit</Link>
+                  <Link href={props.getEditHref(plan.id)} data-testid="plans-edit">
+                    Edit
+                  </Link>
                 </Button>
                 <Button
                   variant="outline"
                   className="h-10 flex-1"
                   onClick={() => props.onDuplicate(plan.id)}
+                  data-testid="plans-duplicate"
                 >
                   Duplicate
                 </Button>
@@ -78,6 +89,7 @@ export function PortalTrainPlansView(props: PortalTrainPlansViewProps) {
                   variant="outline"
                   className="h-10 flex-1"
                   onClick={() => props.onDelete(plan.id)}
+                  data-testid="plans-delete"
                 >
                   Delete
                 </Button>

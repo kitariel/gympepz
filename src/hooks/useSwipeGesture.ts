@@ -63,7 +63,7 @@ export function useSwipeGesture(config: SwipeGestureConfig = {}): SwipeGestureRe
   const handleEnd = useCallback(() => {
     if (!isTracking.current) return;
 
-    const deltaTime = Date.now() - startTime.current;
+    const deltaTime = Math.max(1, Date.now() - startTime.current);
     const velocity = Math.abs(offset) / deltaTime;
     const isSwipe = Math.abs(offset) >= threshold || velocity >= velocityThreshold;
 
@@ -88,8 +88,18 @@ export function useSwipeGesture(config: SwipeGestureConfig = {}): SwipeGestureRe
     setDirection(null);
   }, []);
 
+  const isInteractiveElement = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return Boolean(
+      target.closest(
+        "input, textarea, select, button, a, [contenteditable='true'], [data-swipe-ignore='true']",
+      ),
+    );
+  };
+
   const handlers = {
     onTouchStart: (e: React.TouchEvent) => {
+      if (isInteractiveElement(e.target)) return;
       const touch = e.touches[0];
       if (touch) handleStart(touch.clientX);
     },
@@ -98,7 +108,10 @@ export function useSwipeGesture(config: SwipeGestureConfig = {}): SwipeGestureRe
       if (touch) handleMove(touch.clientX);
     },
     onTouchEnd: handleEnd,
-    onMouseDown: (e: React.MouseEvent) => handleStart(e.clientX),
+    onMouseDown: (e: React.MouseEvent) => {
+      if (isInteractiveElement(e.target)) return;
+      handleStart(e.clientX);
+    },
     onMouseMove: (e: React.MouseEvent) => handleMove(e.clientX),
     onMouseUp: handleEnd,
     onMouseLeave: handleEnd,

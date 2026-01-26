@@ -74,6 +74,7 @@ export function ExerciseFilters({
             placeholder="Search exercises..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            data-testid="exercise-search"
             className="pl-10 pr-10"
           />
           {searchQuery && (
@@ -82,6 +83,7 @@ export function ExerciseFilters({
               size="icon"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
               onClick={() => onSearchChange("")}
+              data-testid="exercise-search-clear"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -91,7 +93,7 @@ export function ExerciseFilters({
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2">
           <Select value={selectedMuscle} onValueChange={onMuscleChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" data-testid="filter-muscle">
               <Target className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Muscle Group" />
             </SelectTrigger>
@@ -105,7 +107,7 @@ export function ExerciseFilters({
           </Select>
 
           <Select value={selectedEquipment} onValueChange={onEquipmentChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" data-testid="filter-equipment">
               <Wrench className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Equipment" />
             </SelectTrigger>
@@ -119,7 +121,7 @@ export function ExerciseFilters({
           </Select>
 
           <Select value={selectedDifficulty} onValueChange={onDifficultyChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" data-testid="filter-difficulty">
               <Dumbbell className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Difficulty" />
             </SelectTrigger>
@@ -138,6 +140,7 @@ export function ExerciseFilters({
               size="sm"
               onClick={onClearFilters}
               className="ml-auto"
+              data-testid="filters-clear"
             >
               <X className="h-4 w-4 mr-2" />
               Clear Filters

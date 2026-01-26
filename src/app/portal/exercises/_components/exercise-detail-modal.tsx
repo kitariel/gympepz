@@ -82,7 +82,10 @@ export function ExerciseDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[85vh] max-w-2xl overflow-y-auto"
+        data-testid="exercise-detail-modal"
+      >
         <DialogHeader>
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
@@ -183,7 +186,7 @@ export function ExerciseDetailModal({
 
           {/* Videos */}
           {videoIds.length > 0 && activeVideoId ? (
-            <div>
+            <div data-testid="exercise-video-section">
               <h3 className="mb-3 font-semibold">Video demo</h3>
               <div className="space-y-3">
                 <div className="aspect-video overflow-hidden rounded-xl border bg-muted/30">

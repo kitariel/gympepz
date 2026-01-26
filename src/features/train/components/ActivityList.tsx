@@ -184,6 +184,7 @@ export function ActivityList() {
             className="h-9"
             disabled={!pending.length || isSyncing || !isOnline}
             onClick={() => void syncOfflineWorkouts()}
+            data-testid="activity-sync"
           >
             {isSyncing ? "Syncing..." : "Sync all"}
           </Button>
@@ -197,6 +198,8 @@ export function ActivityList() {
               key={key}
               type="button"
               onClick={() => setFilter(key)}
+              data-testid={`activity-filter-${key}`}
+              aria-pressed={filter === key}
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium transition",
                 filter === key

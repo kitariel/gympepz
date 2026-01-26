@@ -81,6 +81,7 @@ function RestTimerCompact({
         variant={isFinished ? "default" : "secondary"}
         size="sm"
         onClick={onStopRestTimer}
+        data-testid="rest-timer-active"
         className={cn(
           "gap-2 tabular-nums",
           isFinished && "animate-pulse bg-emerald-500 hover:bg-emerald-600",
@@ -100,6 +101,7 @@ function RestTimerCompact({
           variant="ghost"
           size="sm"
           onClick={() => onStartRestTimer(secs * 1000)}
+          data-testid={`rest-timer-${secs}`}
           className="h-9 px-2 text-xs"
         >
           {secs}s
@@ -378,6 +380,7 @@ function FloatingActionBar({
             size="sm"
             onClick={onFinish}
             disabled={finishDisabled}
+            data-testid="finish-workout"
             className="h-9 bg-emerald-500 hover:bg-emerald-600"
           >
             <Play className="mr-1.5 h-4 w-4" />
@@ -621,6 +624,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         <Button
           className="touch-target h-12 w-full sm:w-auto"
           onClick={props.onBrowseTemplates}
+          data-testid="browse-templates"
         >
           Browse templates
         </Button>
@@ -769,6 +773,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           className="touch-target h-14 w-full text-lg font-semibold"
           onClick={props.onStart}
           disabled={props.startDisabled}
+          data-testid="start-workout"
         >
           Start workout
         </Button>
@@ -867,9 +872,13 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
                         : "hover:bg-muted",
                     )}
                     aria-current={isActive ? "true" : undefined}
+                    data-testid="workout-list-item"
                   >
                     <span className="truncate">{exercise.name}</span>
-                    <span className="flex items-center gap-2 text-xs tabular-nums text-muted-foreground">
+                    <span
+                      className="flex items-center gap-2 text-xs tabular-nums text-muted-foreground"
+                      data-testid="workout-list-count"
+                    >
                       {isComplete ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       ) : null}

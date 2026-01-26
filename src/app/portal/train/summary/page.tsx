@@ -16,7 +16,7 @@ export default function PortalTrainSummaryPage() {
         </div>
       }
     >
-      <PortalTrainSummaryPageInner />
+      <PortalTrainSummary />
     </Suspense>
   );
 }

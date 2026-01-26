@@ -91,10 +91,15 @@ export function PortalTrainSummaryView(props: SummaryViewProps) {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild className="touch-target h-12 flex-1">
+          <Button asChild className="touch-target h-12 flex-1" data-testid="summary-view-history">
             <Link href={props.historyHref}>View history</Link>
           </Button>
-          <Button asChild variant="outline" className="touch-target h-12 flex-1">
+          <Button
+            asChild
+            variant="outline"
+            className="touch-target h-12 flex-1"
+            data-testid="summary-back-overview"
+          >
             <Link href={props.overviewHref}>Back to overview</Link>
           </Button>
         </div>
@@ -195,6 +200,7 @@ export function PortalTrainSummaryView(props: SummaryViewProps) {
                   size="sm"
                   className="shrink-0 bg-emerald-500 hover:bg-emerald-600"
                   onClick={props.onStartNext}
+                  data-testid="summary-start-next"
                 >
                   Start
                   <ChevronRight className="ml-1 h-4 w-4" />

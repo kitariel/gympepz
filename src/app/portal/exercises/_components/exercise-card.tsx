@@ -126,6 +126,7 @@ export function ExerciseCard({
 
   return (
     <div
+      data-testid="exercise-card"
       className="group cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
       onClick={onViewDetails}
     >
