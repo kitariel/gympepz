@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ArrowUpRight, Dumbbell } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,13 @@ import { trainPath } from "@/lib/routes";
 type WorkoutSessionDockVM =
   | { kind: "hidden" }
   | {
-      kind: "visible";
-      title: string;
-      subtitle: string | null;
-      onFinish: () => void;
-      finishDisabled: boolean;
-      logHref: string;
-    };
+    kind: "visible";
+    title: string;
+    subtitle: string | null;
+    onFinish: () => void;
+    finishDisabled: boolean;
+    logHref: string;
+  };
 
 function getNextSetSummary(input: {
   exercises: Array<{ id: string; name: string; order: number }>;
@@ -108,11 +108,15 @@ function WorkoutSessionDockView({ vm }: { vm: WorkoutSessionDockVM }) {
 
 export function WorkoutSessionDock() {
   const router = useRouter();
+  const pathname = usePathname();
   const routeContext = useRouteContext();
   const { draft, hydrated, finish } = useWorkoutDraft();
 
   const vm: WorkoutSessionDockVM = useMemo(() => {
     if (!hydrated || !draft) return { kind: "hidden" };
+
+    const logPath = trainPath(routeContext, "log");
+    if (pathname.startsWith(logPath)) return { kind: "hidden" };
 
     const title =
       (draft.programName ?? "").trim() && (draft.programDayLabel ?? "").trim()
@@ -139,8 +143,7 @@ export function WorkoutSessionDock() {
       finishDisabled: draft.sets.length === 0,
       logHref: trainPath(routeContext, "log"),
     };
-  }, [draft, finish, hydrated, router, routeContext]);
+  }, [draft, finish, hydrated, pathname, router, routeContext]);
 
   return <WorkoutSessionDockView vm={vm} />;
 }
-

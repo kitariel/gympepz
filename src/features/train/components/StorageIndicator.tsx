@@ -17,18 +17,32 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { activityStorage } from "@/lib/storage/activityStorage";
-import { readOfflineWorkoutLogQueue, readWeeklyPlanSnapshot } from "@/lib/guest/storage";
+import { readOfflineWorkoutLogQueue } from "@/lib/guest/storage";
 import { clearLocalStorageAll } from "@/lib/storage/clearLocalStorage";
 import { useTrainMode } from "@/features/train/context/TrainModeContext";
 
 type StorageState = {
   pendingCount: number;
-  hasPlan: boolean;
+  totalCount: number;
 };
 
 function getGuestPendingCount() {
   const queue = readOfflineWorkoutLogQueue();
   return queue.logs.filter((log) => !log.synced).length;
+}
+
+function getGuestTotalCount() {
+  const queue = readOfflineWorkoutLogQueue();
+  return queue.logs.length;
+}
+
+function getGuestStorageBytes() {
+  const queue = readOfflineWorkoutLogQueue();
+  const payload = JSON.stringify(queue);
+  if (typeof TextEncoder === "undefined") {
+    return payload.length;
+  }
+  return new TextEncoder().encode(payload).length;
 }
 
 export function StorageIndicator() {
@@ -39,7 +53,7 @@ export function StorageIndicator() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [storageState, setStorageState] = useState<StorageState>({
     pendingCount: 0,
-    hasPlan: false,
+    totalCount: 0,
   });
 
   const refresh = useCallback(() => {
@@ -48,12 +62,12 @@ export function StorageIndicator() {
     if (isGuest) {
       setStorageState({
         pendingCount: getGuestPendingCount(),
-        hasPlan: Boolean(readWeeklyPlanSnapshot()),
+        totalCount: getGuestTotalCount(),
       });
     } else {
       setStorageState({
         pendingCount: activityStorage.listPending().length,
-        hasPlan: true,
+        totalCount: 0,
       });
     }
   }, [isGuest]);
@@ -78,6 +92,20 @@ export function StorageIndicator() {
   const pendingLabel =
     storageState.pendingCount > 0 ? `${storageState.pendingCount} pending` : null;
 
+  const guestBackupPercent = useMemo(() => {
+    if (!isGuest) return null;
+    if (storageState.totalCount === 0) return 0;
+    const syncedCount = storageState.totalCount - storageState.pendingCount;
+    return Math.max(0, Math.min(100, Math.round((syncedCount / storageState.totalCount) * 100)));
+  }, [isGuest, storageState.pendingCount, storageState.totalCount]);
+
+  const guestStoragePercent = useMemo(() => {
+    if (!isGuest) return null;
+    const capBytes = 10 * 1024 * 1024;
+    const usedBytes = getGuestStorageBytes();
+    return Math.max(0, Math.min(100, Math.round((usedBytes / capBytes) * 100)));
+  }, [isGuest, storageState.pendingCount, storageState.totalCount]);
+
   const handleClear = () => {
     clearLocalStorageAll();
     refresh();
@@ -86,28 +114,36 @@ export function StorageIndicator() {
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-card px-3 py-2 text-sm"
+      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-2 text-xs"
       data-testid="storage-indicator"
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-1 flex-wrap items-center gap-2">
         <Badge variant="secondary">{statusLabel}</Badge>
         {pendingLabel ? <Badge variant="outline">{pendingLabel}</Badge> : null}
-        {isGuest && !storageState.hasPlan ? (
-          <span className="text-muted-foreground text-xs">
-            No local plan yet
-          </span>
+        {isGuest ? (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Local</span>
+            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted/60">
+              <div
+                className="h-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${guestStoragePercent}%` }}
+                aria-hidden="true"
+              />
+            </div>
+            <span className="text-foreground/80">{guestStoragePercent}%</span>
+          </div>
         ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {isGuest ? (
-          <Button asChild size="sm" className="h-8" data-testid="storage-sync-cta">
+          <Button asChild size="sm" className="h-7 px-2" data-testid="storage-sync-cta">
             <Link href="/login">Sync & back up</Link>
           </Button>
         ) : isOffline ? (
           <Button
             size="sm"
-            className="h-8"
+            className="h-7 px-2"
             onClick={() => void goOnline()}
             disabled={isSyncing}
             data-testid="storage-sync-now"
@@ -118,7 +154,7 @@ export function StorageIndicator() {
         <Button
           size="sm"
           variant="outline"
-          className="h-8"
+          className="h-7 px-2"
           onClick={() => setDialogOpen(true)}
           data-testid="storage-clear"
         >

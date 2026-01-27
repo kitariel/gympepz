@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -40,16 +41,24 @@ export function TrainHeader() {
   return (
     <header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-3 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center ">
           <Link
-            href={'/'}
+            href="/"
             // href={trainPath(routeContext)}
-            className={cn(
-              "text-sm font-semibold tracking-tight",
-              "hover:opacity-90",
-            )}
+            className={cn("flex items-center  hover:opacity-90")}
           >
-            Go-Train
+            <Image
+              src="/logo/go-train.png"
+              alt="Go-train logo"
+              width={60}
+              height={60}
+            />
+            <span className="hidden text-sm font-semibold tracking-tight sm:inline-flex">
+              <span className="text-sky-400 font-extrabold italic">go</span>
+              <span className="text-emerald-300 font-extrabold italic">
+                -train
+              </span>
+            </span>
           </Link>
           {programName ? (
             <div className="min-w-0">
