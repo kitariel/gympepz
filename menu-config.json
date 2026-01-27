@@ -19,7 +19,16 @@
       "url": "/portal/goals",
       "iconName": "Target",
       "iconPlatform": "lucide",
-      "enabled": true
+      "enabled": true,
+      "items": []
+    },
+    {
+      "title": "Achievements",
+      "url": "/portal/achievements",
+      "iconName": "Award",
+      "iconPlatform": "lucide",
+      "enabled": true,
+      "items": []
     },
     {
       "title": "Exercises",

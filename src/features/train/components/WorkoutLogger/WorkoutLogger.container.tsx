@@ -8,6 +8,7 @@ import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { useGoals, useGoalMutations } from "@/hooks/useGoals";
+import { useTrainMode } from "@/features/train/context/TrainModeContext";
 import { trainPath } from "@/lib/routes";
 import {
   getDayNumberForToday,
@@ -19,6 +20,7 @@ import {
 } from "@/features/train/domain/previousPerformance";
 import { trainToast } from "@/features/train/utils/toast";
 import type { Goal } from "@/types/goal.types";
+import type { WorkoutSetEntry } from "@/lib/storage/workoutRepo";
 import type {
   WorkoutLoggerExerciseVM,
   WorkoutLoggerViewProps,
@@ -39,6 +41,12 @@ function parseNumber(value: string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function formatElapsedTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
 export function WorkoutLogger() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,9 +54,11 @@ export function WorkoutLogger() {
   const [error, setError] = useState<{ title: string; message: string } | null>(
     null,
   );
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const { activeGoals } = useGoals();
   const { recordProgressForExercise, userId } = useGoalMutations();
+  const { isOnline } = useTrainMode();
 
   const {
     activeProgram,
@@ -75,9 +85,28 @@ export function WorkoutLogger() {
     isCompletedToday,
     startRestTimer,
     stopRestTimer,
+    addRestTime,
   } = useWorkoutDraft();
 
   const hydrated = programHydrated && draftHydrated && prefsHydrated;
+
+  // Elapsed time tracking
+  useEffect(() => {
+    if (!draft?.startedAt) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const updateElapsed = () => {
+      const start = new Date(draft.startedAt).getTime();
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setElapsedSeconds(elapsed);
+    };
+
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [draft?.startedAt]);
 
   // Clear error on successful hydration
   useEffect(() => {
@@ -562,6 +591,9 @@ export function WorkoutLogger() {
     return {
       kind: "logging",
       programName: draft.programName,
+      dayLabel: draft.programDayLabel ?? null,
+      elapsedTime: formatElapsedTime(elapsedSeconds),
+      isOnline,
       setsDone,
       setsTotal,
       exercises,
@@ -575,6 +607,7 @@ export function WorkoutLogger() {
       onCopyPrevious: (exerciseId, setId) => copyPrevious(exerciseId, setId),
       onCopyLastSet: (exerciseId, setId) => copyLastSet(exerciseId, setId),
       onStartRestTimer: (durationMs) => startRestTimer(durationMs),
+      onAddRestTime: (extraMs) => addRestTime(extraMs),
       onStopRestTimer: () => stopRestTimer(),
       onFinish: () => {
         try {
@@ -618,12 +651,15 @@ export function WorkoutLogger() {
     copyLastSet,
     startRestTimer,
     stopRestTimer,
+    addRestTime,
     finish,
     goalsByExerciseId,
     formatGoalHint,
     goalUpdateByExerciseId,
     trackGoalsDuringWorkout,
     setTrackGoalsDuringWorkout,
+    elapsedSeconds,
+    isOnline,
   ]);
 
   return <WorkoutLoggerView {...viewProps} />;

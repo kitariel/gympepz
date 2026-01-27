@@ -3,17 +3,24 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock,
   Pause,
   Play,
+  Plus,
+  SkipForward,
   AlertTriangle,
   CheckCircle2,
   Trash2,
   RefreshCw,
   ArrowLeft,
   Target,
+  Wifi,
+  WifiOff,
+  X,
 } from "lucide-react";
 
 import {
@@ -107,6 +114,224 @@ function RestTimerCompact({
           {secs}s
         </Button>
       ))}
+    </div>
+  );
+}
+
+function WorkoutTopBar({
+  workoutName,
+  dayLabel,
+  elapsedTime,
+  isOnline,
+  onEnd,
+}: {
+  workoutName: string;
+  dayLabel?: string | null;
+  elapsedTime: string;
+  isOnline: boolean;
+  onEnd: () => void;
+}) {
+  return (
+    <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10 border-b backdrop-blur">
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate font-semibold">{workoutName}</h1>
+          {dayLabel && (
+            <p className="text-muted-foreground truncate text-xs">{dayLabel}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+            <Clock className="h-4 w-4" />
+            <span className="tabular-nums">{elapsedTime}</span>
+          </div>
+          <Badge variant={isOnline ? "secondary" : "outline"} className="gap-1">
+            {isOnline ? (
+              <Wifi className="h-3 w-3" />
+            ) : (
+              <WifiOff className="h-3 w-3" />
+            )}
+            {isOnline ? "Online" : "Offline"}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={onEnd} className="h-8">
+            End
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RestTimerOverlay({
+  restTimer,
+  onAddTime,
+  onSkip,
+}: {
+  restTimer: RestTimerState;
+  onAddTime: (extraMs: number) => void;
+  onSkip: () => void;
+}) {
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (restTimer.status !== "running") return;
+
+    const updateRemaining = () => {
+      const elapsed = Date.now() - restTimer.startedAt;
+      const remaining = Math.max(
+        0,
+        Math.ceil((restTimer.durationMs - elapsed) / 1000)
+      );
+      setRemainingSeconds(remaining);
+    };
+
+    updateRemaining();
+    const interval = setInterval(updateRemaining, 100);
+    return () => clearInterval(interval);
+  }, [restTimer]);
+
+  if (restTimer.status !== "running") return null;
+
+  const isFinished = remainingSeconds === 0;
+
+  return (
+    <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur pb-safe">
+      <div className="flex flex-col items-center gap-4 px-4 py-6">
+        <p className="text-muted-foreground text-sm font-medium">Rest Timer</p>
+        <div
+          className={cn(
+            "text-5xl font-bold tabular-nums",
+            isFinished && "animate-pulse text-emerald-500"
+          )}
+        >
+          {isFinished ? "Done!" : formatTime(remainingSeconds)}
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onAddTime(30000)}
+            className="h-10 gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            30s
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onSkip}
+            className="h-10 gap-1.5"
+          >
+            <SkipForward className="h-4 w-4" />
+            Skip
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UpNextPanel({
+  exercises,
+  currentExerciseIndex,
+  onNavigateToExercise,
+}: {
+  exercises: WorkoutLoggerExerciseVM[];
+  currentExerciseIndex: number;
+  onNavigateToExercise: (index: number) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Determine what's next
+  const currentExercise = exercises[currentExerciseIndex];
+  const currentSets = currentExercise?.setRows ?? [];
+  const nextIncompleteSetIndex = currentSets.findIndex((s) => !s.completed);
+  const hasNextSet = nextIncompleteSetIndex > 0;
+  const hasNextExercise = currentExerciseIndex < exercises.length - 1;
+
+  // Determine the next item to show
+  let nextItem: {
+    type: "set" | "exercise";
+    label: string;
+    sublabel?: string;
+  } | null = null;
+
+  if (hasNextSet && nextIncompleteSetIndex >= 0) {
+    const nextSet = currentSets[nextIncompleteSetIndex];
+    nextItem = {
+      type: "set",
+      label: `Set ${nextSet?.setNumber ?? nextIncompleteSetIndex + 1}`,
+      sublabel: currentExercise?.name,
+    };
+  } else if (hasNextExercise) {
+    const nextExercise = exercises[currentExerciseIndex + 1];
+    nextItem = {
+      type: "exercise",
+      label: nextExercise?.name ?? "Next exercise",
+      sublabel: `${nextExercise?.setRows.length ?? 0} sets`,
+    };
+  }
+
+  if (!nextItem) return null;
+
+  return (
+    <div className="bg-background border-t">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="hover:bg-muted/50 flex w-full items-center justify-between px-4 py-3 transition-colors"
+      >
+        <div className="text-left">
+          <p className="text-muted-foreground text-xs">Up next</p>
+          <p className="font-medium">{nextItem.label}</p>
+          {nextItem.sublabel && (
+            <p className="text-muted-foreground text-xs">{nextItem.sublabel}</p>
+          )}
+        </div>
+        {isExpanded ? (
+          <ChevronDown className="text-muted-foreground h-5 w-5" />
+        ) : (
+          <ChevronUp className="text-muted-foreground h-5 w-5" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="max-h-[40vh] overflow-y-auto border-t px-4 py-2">
+          <div className="space-y-1">
+            {exercises.map((exercise, index) => {
+              const completedSets = exercise.setRows.filter(
+                (s) => s.completed
+              ).length;
+              const totalSets = exercise.setRows.length;
+              const isComplete = totalSets > 0 && completedSets === totalSets;
+              const isActive = index === currentExerciseIndex;
+
+              return (
+                <button
+                  key={exercise.id}
+                  onClick={() => {
+                    onNavigateToExercise(index);
+                    setIsExpanded(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-muted"
+                  )}
+                >
+                  <span className="truncate">{exercise.name}</span>
+                  <span className="text-muted-foreground flex items-center gap-2 text-xs tabular-nums">
+                    {isComplete && (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    )}
+                    {completedSets}/{totalSets}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -800,44 +1025,52 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const hasNextExercise = currentExerciseIndex < exercises.length - 1;
   const currentExerciseComplete =
     currentExercise?.setRows.every((set) => set.completed) ?? false;
+  const isRestTimerActive = props.restTimer.status === "running";
 
   return (
-    <div className={cn(containerClasses, "space-y-4 p-4 pt-2 pb-8")}>
-      {/* Compact header with progress */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold">{programName}</h1>
-          </div>
-          <Badge variant="secondary" className="shrink-0 tabular-nums">
-            {setsDone}/{setsTotal} sets
-          </Badge>
-        </div>
-        <Progress value={progressPercent} className="h-2" />
-        {props.showTrackGoalsToggle ? (
-          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Goal tracking during workout</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[11px]"
-              onClick={props.onToggleTrackGoals}
-            >
-              {props.trackGoalsEnabled ? "On" : "Off"}
-            </Button>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Action bar - moved to top */}
-      <FloatingActionBar
-        restTimer={props.restTimer}
-        onStartRestTimer={props.onStartRestTimer}
-        onStopRestTimer={props.onStopRestTimer}
-        onSaveExit={props.onSaveExit}
-        onFinish={handleFinishClick}
-        finishDisabled={props.finishDisabled}
+    <div className="flex min-h-screen flex-col">
+      {/* Top Sticky Bar */}
+      <WorkoutTopBar
+        workoutName={programName}
+        dayLabel={props.dayLabel}
+        elapsedTime={props.elapsedTime}
+        isOnline={props.isOnline}
+        onEnd={props.onSaveExit}
       />
+
+      <div className={cn(containerClasses, "flex-1 space-y-4 p-4 pt-4 pb-8")}>
+        {/* Progress bar and sets count */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <Badge variant="secondary" className="tabular-nums">
+              {setsDone}/{setsTotal} sets
+            </Badge>
+            <Progress value={progressPercent} className="h-2 flex-1" />
+          </div>
+          {props.showTrackGoalsToggle ? (
+            <div className="text-muted-foreground flex items-center justify-between gap-3 text-xs">
+              <span>Goal tracking during workout</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[11px]"
+                onClick={props.onToggleTrackGoals}
+              >
+                {props.trackGoalsEnabled ? "On" : "Off"}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Action bar */}
+        <FloatingActionBar
+          restTimer={props.restTimer}
+          onStartRestTimer={props.onStartRestTimer}
+          onStopRestTimer={props.onStopRestTimer}
+          onSaveExit={props.onSaveExit}
+          onFinish={handleFinishClick}
+          finishDisabled={props.finishDisabled}
+        />
 
       {/* Exercise navigator */}
       <ExerciseNavigator
@@ -904,19 +1137,38 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
         </CardContent>
       </Card>
 
-      {/* Single exercise focus */}
-      {currentExercise ? (
-        <SingleExerciseView
-          key={currentExercise.id}
-          exercise={currentExercise}
-          onUpdateSet={props.onUpdateSet}
-          onAddSet={props.onAddSet}
-          onCopyPrevious={props.onCopyPrevious}
-          onCopyLastSet={props.onCopyLastSet}
-          showNextWorkout={currentExerciseComplete && hasNextExercise}
-          onNextWorkout={() => setCurrentExerciseIndex((idx) => idx + 1)}
-        />
-      ) : null}
+        {/* Single exercise focus */}
+        {currentExercise ? (
+          <SingleExerciseView
+            key={currentExercise.id}
+            exercise={currentExercise}
+            onUpdateSet={props.onUpdateSet}
+            onAddSet={props.onAddSet}
+            onCopyPrevious={props.onCopyPrevious}
+            onCopyLastSet={props.onCopyLastSet}
+            showNextWorkout={currentExerciseComplete && hasNextExercise}
+            onNextWorkout={() => setCurrentExerciseIndex((idx) => idx + 1)}
+          />
+        ) : null}
+      </div>
+
+      {/* Up Next Panel - fixed at bottom (hidden when rest timer is active) */}
+      {!isRestTimerActive && (
+        <div className="sticky bottom-0">
+          <UpNextPanel
+            exercises={exercises}
+            currentExerciseIndex={currentExerciseIndex}
+            onNavigateToExercise={setCurrentExerciseIndex}
+          />
+        </div>
+      )}
+
+      {/* Rest Timer Overlay */}
+      <RestTimerOverlay
+        restTimer={props.restTimer}
+        onAddTime={props.onAddRestTime}
+        onSkip={props.onStopRestTimer}
+      />
 
       {/* Finish confirmation dialog */}
       <FinishConfirmationDialog

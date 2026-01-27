@@ -299,6 +299,20 @@ export function useWorkoutDraft() {
     saveDraft({ ...draft, restTimer, updatedAt: nowIso() });
   }, [draft, saveDraft]);
 
+  const addRestTime = useCallback(
+    (extraMs: number) => {
+      if (!draft) return;
+      if (draft.restTimer.status !== "running") return;
+      const restTimer: RestTimerState = {
+        status: "running",
+        startedAt: draft.restTimer.startedAt,
+        durationMs: draft.restTimer.durationMs + extraMs,
+      };
+      saveDraft({ ...draft, restTimer, updatedAt: nowIso() });
+    },
+    [draft, saveDraft]
+  );
+
   return {
     hydrated,
     draft,
@@ -317,5 +331,6 @@ export function useWorkoutDraft() {
     isCompletedToday,
     startRestTimer,
     stopRestTimer,
+    addRestTime,
   };
 }

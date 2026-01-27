@@ -40,4 +40,8 @@ export type TrainEntryScreenViewProps = {
     actionLabel?: string;
     onAction?: () => void;
   };
+  // Schedule drawer
+  showScheduleLink: boolean;
+  scheduleDrawerOpen: boolean;
+  onScheduleDrawerOpenChange: (open: boolean) => void;
 };

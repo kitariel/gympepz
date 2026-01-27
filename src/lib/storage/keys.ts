@@ -19,4 +19,7 @@ export const STORAGE_KEYS = {
   syncedWorkouts: "gympepz.synced_workouts",
   syncQueue: "gympepz.sync_queue",
   syncStatus: "gympepz.sync_status",
+  // Schedule preferences
+  schedulePreferredDays: "gympepz.schedule.preferredDays",
+  scheduleMissedDayState: "gympepz.schedule.missedDayState",
 } as const;

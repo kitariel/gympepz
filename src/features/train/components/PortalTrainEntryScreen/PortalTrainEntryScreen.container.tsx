@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
 
@@ -33,6 +33,8 @@ export function PortalTrainEntryScreen() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const { isOnline, isOffline, isSyncing } = useTrainMode();
+
+  const [scheduleDrawerOpen, setScheduleDrawerOpen] = useState(false);
 
   // Offline mode hooks (localStorage)
   const { profile, hydrated: profileHydrated } = useTrainingProfile();
@@ -269,6 +271,10 @@ export function PortalTrainEntryScreen() {
     buildHref: "/portal/train/build",
     plansHref: "/portal/train/plans",
     syncError,
+    // Schedule drawer
+    showScheduleLink: hasProgram,
+    scheduleDrawerOpen,
+    onScheduleDrawerOpenChange: setScheduleDrawerOpen,
   };
 
   return <PortalTrainEntryScreenView {...viewProps} />;

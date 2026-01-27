@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { useTrainingProfile } from "@/hooks/useTrainingProfile";
 import { useActiveProgram } from "@/hooks/useActiveProgram";
@@ -34,6 +34,8 @@ export function TrainEntryScreen() {
   const { draft, hydrated: workoutHydrated, summary, history } = useWorkoutDraft();
   const { selectedWorkoutDay, hydrated: prefsHydrated } = useTrainPrefs();
   const routeContext = useRouteContext();
+
+  const [scheduleDrawerOpen, setScheduleDrawerOpen] = useState(false);
 
   const hydrated = profileHydrated && programHydrated && workoutHydrated && prefsHydrated;
 
@@ -139,6 +141,10 @@ export function TrainEntryScreen() {
     templatesHref: trainPath(routeContext, "templates"),
     buildHref: trainPath(routeContext, "build"),
     plansHref: trainPath(routeContext, "plans"),
+    // Schedule drawer
+    showScheduleLink: hasProgram,
+    scheduleDrawerOpen,
+    onScheduleDrawerOpenChange: setScheduleDrawerOpen,
   };
 
   return <TrainEntryScreenView {...viewProps} />;

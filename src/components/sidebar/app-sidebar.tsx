@@ -222,6 +222,7 @@ export function AppSidebar({
               const u = (c.url ?? "").toString();
               if (u.startsWith("/portal/exercises")) return false;
               if (u.startsWith("/portal/account")) return false;
+              if (u.startsWith("/portal/goals/achievements")) return false;
               return true;
             }) ?? item.items;
 

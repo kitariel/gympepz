@@ -10,7 +10,7 @@ const getArg = (key) => {
   return found ? found.slice(key.length + 1) : null;
 };
 
-const apiKey = ''
+const apiKey = 'AIzaSyDSdgZq0iyCX0yzit1kGI47x7x6dhlUTz0'
 // const apiKey = 'AIzaSyC0ms--eVxjKrG4jNQ'
 // const apiKey = 'AIzaSyDSdgZq0iyCX0yzitss1kGI47x7x6dhlUTz0'
 const queryName = getArg("--name");

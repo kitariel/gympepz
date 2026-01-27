@@ -79,6 +79,9 @@ export type WorkoutLoggerViewProps =
   | {
       kind: "logging";
       programName: string;
+      dayLabel?: string | null;
+      elapsedTime: string; // "12:34" format
+      isOnline: boolean;
       setsDone: number;
       setsTotal: number;
       exercises: WorkoutLoggerExerciseVM[];
@@ -96,6 +99,7 @@ export type WorkoutLoggerViewProps =
       onCopyPrevious: (exerciseId: string, setId: string) => void;
       onCopyLastSet: (exerciseId: string, setId: string) => void;
       onStartRestTimer: (durationMs: number) => void;
+      onAddRestTime: (extraMs: number) => void;
       onStopRestTimer: () => void;
       onFinish: () => void;
       onDiscardWorkout: () => void;

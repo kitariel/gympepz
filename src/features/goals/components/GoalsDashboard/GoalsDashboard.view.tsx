@@ -11,6 +11,7 @@ import {
   Scale,
   ChevronRight,
   Sparkles,
+  Badge,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -82,20 +83,29 @@ function GoalsHeader({
       : `${activeCount} active · ${completedCount} completed`;
 
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Goals</h1>
-        <p className="text-muted-foreground text-sm">{subtitle}</p>
+    <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+            Goals
+          </h1>
+          {hasGoals ? (
+            <Badge className="text-[10px]">
+              {activeCount} active
+            </Badge>
+          ) : null}
+        </div>
+        <p className="text-muted-foreground text-xs sm:text-sm">{subtitle}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" className="gap-2" asChild>
+        <Button variant="outline" size="sm" className="h-8 gap-2" asChild>
           <Link href={startWorkoutPath}>
             <Play className="h-4 w-4" />
             Start workout
           </Link>
         </Button>
         {isAuthenticated && (
-          <Button size="sm" className="gap-2" onClick={onAddGoalClick}>
+          <Button size="sm" className="h-8 gap-2" onClick={onAddGoalClick}>
             <Plus className="h-4 w-4" />
             Add goal
           </Button>

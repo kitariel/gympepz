@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  Calendar,
   ChevronRight,
   Dumbbell,
   FolderOpen,
@@ -16,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrainShell } from "@/components/train/TrainShell";
+import { ScheduleDrawer } from "@/features/train/components/ScheduleDrawer";
 import { cn } from "@/lib/utils";
 import type { TrainEntryScreenViewProps } from "./TrainEntryScreen.types";
 
@@ -404,6 +406,27 @@ export function TrainEntryScreenView(props: TrainEntryScreenViewProps) {
 
       {/* Hero card */}
       <HeroCard startCard={props.startCard} />
+
+      {/* Schedule link */}
+      {props.showScheduleLink && (
+        <div className="animate-fade-up -mt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground h-8 gap-1.5 text-xs"
+            onClick={() => props.onScheduleDrawerOpenChange(true)}
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Schedule
+          </Button>
+        </div>
+      )}
+
+      {/* Schedule Drawer */}
+      <ScheduleDrawer
+        open={props.scheduleDrawerOpen}
+        onOpenChange={props.onScheduleDrawerOpenChange}
+      />
 
       {/* Recent workouts */}
       <RecentWorkoutsSection
