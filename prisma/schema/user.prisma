@@ -34,4 +34,6 @@ model User {
     streak          WorkoutStreak?
     pageViews       PageView[]
     goals           Goal[]
+    workoutLock     WorkoutSessionLock?
+    devices         UserDevice[]
 }

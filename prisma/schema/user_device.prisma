@@ -1,0 +1,19 @@
+// Device registry for multi-device awareness
+// Tracks all devices that have accessed a user's account
+model UserDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  deviceId    String   // Client-generated device ID
+  platform    String   // "Mac", "Windows", "iOS", "Android", "Linux"
+  browser     String   // "Chrome", "Safari", "Firefox", "Edge"
+  label       String?  // User-customizable name like "My MacBook"
+  createdAt   DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([deviceId])
+  @@index([lastSeenAt])
+}

@@ -37,6 +37,7 @@ const geist = Geist({
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { Suspense } from "react";
 
 export default function RootLayout({
@@ -51,6 +52,7 @@ export default function RootLayout({
               <Suspense fallback={null}>
                 <AnalyticsTracker />
               </Suspense>
+              <ServiceWorkerRegistration />
               {children}
               <Toaster
                 position="top-center"

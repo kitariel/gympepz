@@ -7,12 +7,14 @@ import { locationRouter } from "./routers/location";
 import { galleryRouter } from "./routers/gallery";
 import { exerciseRouter } from "./routers/exercise";
 import { workoutLogRouter } from "./routers/workout-log";
+import { workoutLockRouter } from "./routers/workout-lock";
 import { programRouter } from "./routers/program";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
 import { goalRouter } from "./routers/goal";
 import { goalTemplateRouter } from "./routers/goal-template";
 import { templateRouter } from "./routers/template";
+import { deviceRouter } from "./routers/device";
 
 /**
  * This is the primary router for your server.
@@ -28,12 +30,14 @@ export const appRouter = createTRPCRouter({
   gallery: galleryRouter,
   exercise: exerciseRouter,
   workoutLog: workoutLogRouter,
+  workoutLock: workoutLockRouter,
   program: programRouter,
   progress: progressRouter,
   analytics: analyticsRouter,
   goal: goalRouter,
   goalTemplate: goalTemplateRouter,
   template: templateRouter,
+  device: deviceRouter,
 });
 
 // export type definition of API

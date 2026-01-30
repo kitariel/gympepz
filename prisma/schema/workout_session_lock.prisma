@@ -1,0 +1,28 @@
+// Single-device workout lock - ensures only one device can actively log a workout at a time
+model WorkoutSessionLock {
+  id              String   @id @default(cuid())
+  userId          String   @unique // Only one lock per user
+  deviceId        String   // Which device currently owns the lock
+  sessionId       String   // Unique session identifier (client-generated)
+  workoutId       String?  // Optional reference to the local workout draft ID
+  programName     String?  // Context: which program
+  dayLabel        String?  // Context: which day
+  startedAt       DateTime // When the workout session started
+  lastHeartbeatAt DateTime // Last heartbeat from the device
+  status          WorkoutLockStatus @default(active)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([lastHeartbeatAt])
+}
+
+enum WorkoutLockStatus {
+  active      // Currently in use
+  ended       // Workout completed normally
+  taken_over  // Another device took over
+  expired     // Lock expired due to no heartbeat
+}
