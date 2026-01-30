@@ -73,14 +73,6 @@ export default function Footer() {
                   Start Training
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-muted-foreground transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
-                >
-                  Pricing
-                </Link>
-              </li>
             </ul>
           </div>
 
