@@ -29,6 +29,27 @@ export function TemplateListView(props: TemplateListViewProps) {
     );
   }
 
+  if (props.kind === "offlineEmpty") {
+    return (
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-6 pt-5">
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="h-8 px-2">
+            <Link href={props.backHref}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Link>
+          </Button>
+        </div>
+        <Card className="border-muted/60">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold">{props.title}</h2>
+            <p className="text-sm text-muted-foreground mt-2">{props.message}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8 p-6 pt-5">
       {/* Header Section */}
@@ -58,6 +79,9 @@ export function TemplateListView(props: TemplateListViewProps) {
             <p className="text-muted-foreground max-w-xl text-sm">
               Choose a proven program that fits your schedule. Customize exercises, sets, and rest days to match your goals.
             </p>
+            {props.kind === "ready" && props.offlineNotice ? (
+              <p className="text-xs font-medium text-amber-600">{props.offlineNotice}</p>
+            ) : null}
           </div>
 
           {props.kind === "ready" && (

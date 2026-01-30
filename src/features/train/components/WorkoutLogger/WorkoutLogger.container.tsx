@@ -8,6 +8,7 @@ import { useRouteContext } from "@/hooks/useRouteContext";
 import { useTrainPrefs } from "@/hooks/useTrainPrefs";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
 import { useGoals, useGoalMutations } from "@/hooks/useGoals";
+import { useWorkoutLockActivity } from "@/hooks/useWorkoutLockActivity";
 import { useTrainMode } from "@/features/train/context/TrainModeContext";
 import { trainPath } from "@/lib/routes";
 import {
@@ -59,6 +60,7 @@ export function WorkoutLogger() {
   const { activeGoals } = useGoals();
   const { recordProgressForExercise, userId } = useGoalMutations();
   const { isOnline } = useTrainMode();
+  const { touchActivity } = useWorkoutLockActivity();
 
   const {
     activeProgram,
@@ -416,10 +418,11 @@ export function WorkoutLogger() {
       if (!set) return;
       updateSet(setId, patch);
       if (patch.completed && !set.completed) {
+        void touchActivity();
         void updateGoalsForSet(set.exerciseId, setId, patch);
       }
     },
-    [draft, updateSet, updateGoalsForSet],
+    [draft, updateSet, updateGoalsForSet, touchActivity],
   );
 
   const viewProps: WorkoutLoggerViewProps = useMemo(() => {
@@ -608,7 +611,13 @@ export function WorkoutLogger() {
       onCopyLastSet: (exerciseId, setId) => copyLastSet(exerciseId, setId),
       onStartRestTimer: (durationMs) => startRestTimer(durationMs),
       onAddRestTime: (extraMs) => addRestTime(extraMs),
-      onStopRestTimer: () => stopRestTimer(),
+      onStopRestTimer: () => {
+        stopRestTimer();
+        void touchActivity();
+      },
+      onNavigateExercise: () => {
+        void touchActivity();
+      },
       onFinish: () => {
         try {
           const id = finish();
@@ -652,6 +661,7 @@ export function WorkoutLogger() {
     startRestTimer,
     stopRestTimer,
     addRestTime,
+    touchActivity,
     finish,
     goalsByExerciseId,
     formatGoalHint,

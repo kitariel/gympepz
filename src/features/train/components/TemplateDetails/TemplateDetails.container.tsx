@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useActiveProgram } from "@/hooks/useActiveProgram";
 import { useRouteContext } from "@/hooks/useRouteContext";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { getCachedTemplate } from "@/lib/storage/templateCache";
 import type { ProgramTemplate, TemplateDayNumber } from "@/lib/program-templates/types";
 import { getDayNumberForToday } from "@/features/train/domain/workoutSessionState";
 import { trainPath } from "@/lib/routes";
@@ -87,9 +89,14 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
   const routeContext = useRouteContext();
   const { selectTemplate, saveActiveProgram } = useActiveProgram();
   const { clearDraft } = useWorkoutDraft();
-  const { data: templateData, isLoading } = api.template.getById.useQuery({
-    id: templateId,
-  });
+  const { isOnline } = useOnlineStatus();
+  const [cachedTemplate, setCachedTemplate] = useState<Awaited<ReturnType<typeof getCachedTemplate>> | null>(null);
+  const [cacheLoading, setCacheLoading] = useState(false);
+
+  const { data: templateData, isLoading } = api.template.getById.useQuery(
+    { id: templateId },
+    { enabled: isOnline }
+  );
   const { data: exercises = [] } = api.exercise.list.useQuery(
     { take: 1000 },
     { enabled: Boolean(templateData) },
@@ -98,7 +105,53 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
   const [scheduleMode, setScheduleMode] = useState<"default" | "custom">("default");
   const [selectedDays, setSelectedDays] = useState<TemplateDayNumber[]>([]);
 
+  useEffect(() => {
+    if (isOnline) return;
+    let active = true;
+    setCacheLoading(true);
+    const load = async () => {
+      try {
+        const cached = await getCachedTemplate(templateId);
+        if (!active) return;
+        setCachedTemplate(cached);
+      } catch (error) {
+        console.error("[TemplateDetails] Failed to load cached template:", error);
+      } finally {
+        if (active) setCacheLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [isOnline, templateId]);
+
   const template = useMemo<ProgramTemplate | null>(() => {
+    if (!isOnline && cachedTemplate) {
+      return {
+        id: cachedTemplate.id,
+        name: cachedTemplate.name,
+        description: cachedTemplate.description,
+        tags: cachedTemplate.tags as ProgramTemplate["tags"],
+        daysPerWeek: cachedTemplate.daysPerWeek,
+        weeks: cachedTemplate.weeks ?? undefined,
+        plan: {
+          days: cachedTemplate.days.map((day) => ({
+            day: day.day as TemplateDayNumber,
+            label: day.label,
+            isRestDay: day.isRestDay,
+            items: day.items.map((item) => ({
+              order: item.order,
+              sets: item.sets,
+              reps: item.reps,
+              weight: item.weight ?? undefined,
+              exerciseId: item.exerciseId ?? undefined,
+              nameFallback: item.exerciseName ?? item.nameFallback ?? "Exercise",
+            })),
+          })),
+        },
+      };
+    }
     if (!templateData) return null;
     const exerciseIndex = new Map(
       exercises.map((ex) => [normalizeExerciseName(ex.name), ex]),
@@ -146,11 +199,11 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
         })),
       },
     };
-  }, [templateData, exercises]);
+  }, [templateData, exercises, isOnline, cachedTemplate]);
   const today = useMemo(() => getDayNumberForToday(), []);
 
   const viewProps: TemplateDetailsViewProps = useMemo(() => {
-    if (isLoading) {
+    if ((isOnline && isLoading) || (!isOnline && cacheLoading)) {
       return { kind: "loading", backHref: trainPath(routeContext, "templates") };
     }
 
@@ -253,10 +306,12 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
       onUse: handleUse,
       schedulePrompt,
       backHref: trainPath(routeContext, "templates"),
+      offlineNotice: !isOnline ? "Offline • Using saved template" : undefined,
     };
   }, [
     template,
     isLoading,
+    cacheLoading,
     clearDraft,
     selectTemplate,
     saveActiveProgram,
@@ -266,6 +321,7 @@ export function TemplateDetails({ templateId }: { templateId: string }) {
     scheduleMode,
     selectedDays,
     today,
+    isOnline,
   ]);
 
   return <TemplateDetailsView {...viewProps} />;

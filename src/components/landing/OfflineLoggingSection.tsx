@@ -85,7 +85,7 @@ export default function OfflineLoggingSection() {
             >
               Track sets, reps, and weights as you train. If the gym signal
               drops, keep going—your workout is saved locally and can sync when
-              you&apos;re back online.
+              you&apos;re back online once sync is enabled.
             </motion.p>
             <motion.p
               initial={{ opacity: 0, x: -20 }}

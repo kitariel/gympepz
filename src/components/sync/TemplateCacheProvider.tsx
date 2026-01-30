@@ -8,34 +8,59 @@ import { useTemplateCache } from "@/hooks/useTemplateCache";
  * Silently caches templates and exercises for offline use.
  * Runs on first visit when online, and refreshes if cache is stale.
  */
-export function TemplateCacheProvider({ children }: { children: React.ReactNode }) {
+let templateCacheSyncInFlight: Promise<void> | null = null;
+let templateCacheSyncDone = false;
+
+export function TemplateCacheProvider() {
   const { isOnline } = useOnlineStatus();
-  const { hasTemplatesCache, hasExercisesCache, syncTemplates, refreshIfStale } = useTemplateCache();
+  const {
+    hasTemplatesCache,
+    hasExercisesCache,
+    hasGoalTemplatesCache,
+    syncTemplates,
+    refreshIfStale,
+  } = useTemplateCache();
   const hasSynced = useRef(false);
 
   useEffect(() => {
     // Only sync once per session
-    if (hasSynced.current) return;
+    if (hasSynced.current || templateCacheSyncDone) return;
 
     // Need to be online
     if (!isOnline) return;
 
     const doSync = async () => {
       // If no cache exists, do initial sync
-      if (!hasTemplatesCache || !hasExercisesCache) {
+      if (!hasTemplatesCache || !hasExercisesCache || !hasGoalTemplatesCache) {
         console.log("[TemplateCacheProvider] No cache found, syncing templates...");
         await syncTemplates();
-        hasSynced.current = true;
-        return;
+      } else {
+        // Otherwise, check if cache is stale
+        await refreshIfStale();
       }
-
-      // Otherwise, check if cache is stale
-      await refreshIfStale();
-      hasSynced.current = true;
     };
 
-    void doSync();
-  }, [isOnline, hasTemplatesCache, hasExercisesCache, syncTemplates, refreshIfStale]);
+    if (!templateCacheSyncInFlight) {
+      templateCacheSyncInFlight = doSync()
+        .then(() => {
+          templateCacheSyncDone = true;
+          hasSynced.current = true;
+        })
+        .catch((error) => {
+          console.error("[TemplateCacheProvider] Sync failed:", error);
+        })
+        .finally(() => {
+          templateCacheSyncInFlight = null;
+        });
+    }
+  }, [
+    isOnline,
+    hasTemplatesCache,
+    hasExercisesCache,
+    hasGoalTemplatesCache,
+    syncTemplates,
+    refreshIfStale,
+  ]);
 
-  return <>{children}</>;
+  return null;
 }

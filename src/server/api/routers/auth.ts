@@ -1,6 +1,8 @@
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { sendOtpEmail } from "@/server/auth/mailer";
+import { env } from "@/env";
 
 // Helpers
 function generateOTP(): string {
@@ -64,9 +66,16 @@ export const authRouter = createTRPCRouter({
           },
         });
 
-        // Simulate email sending: log and return the OTP
-        console.log(`[OTP] ${email}: ${code} (expires at ${expires.toISOString()})`);
-        return { status: "exists_no_password" as const, otp: code };
+        const delivery = await sendOtpEmail(email, code);
+        if (!delivery.delivered) {
+          console.warn(`[OTP] Delivery failed for ${email}`);
+        }
+
+        const includeOtp = env.NODE_ENV !== "production";
+        if (includeOtp) {
+          console.log(`[OTP] ${email}: ${code} (expires at ${expires.toISOString()})`);
+        }
+        return { status: "exists_no_password" as const, otp: includeOtp ? code : null };
       }
 
       // New user -> create and send OTP
@@ -86,10 +95,17 @@ export const authRouter = createTRPCRouter({
         },
       });
 
-      // Simulate email sending for testing: log and return the OTP
-      console.log(`[OTP] ${email}: ${code} (expires at ${expires.toISOString()})`);
+      const delivery = await sendOtpEmail(email, code);
+      if (!delivery.delivered) {
+        console.warn(`[OTP] Delivery failed for ${email}`);
+      }
 
-      return { status: "otp_sent" as const, otp: code };
+      const includeOtp = env.NODE_ENV !== "production";
+      if (includeOtp) {
+        console.log(`[OTP] ${email}: ${code} (expires at ${expires.toISOString()})`);
+      }
+
+      return { status: "otp_sent" as const, otp: includeOtp ? code : null };
     }),
 
   verifyOtp: publicProcedure

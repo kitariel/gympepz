@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useWorkoutDraft } from "@/hooks/useWorkoutDraft";
+import { useRouteContext } from "@/hooks/useRouteContext";
+import { trainPath } from "@/lib/routes";
 import { api } from "@/trpc/react";
 import { getDeviceId } from "@/lib/device-id";
 import {
@@ -17,9 +19,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-// Poll for lock status every 10 seconds when we have an active workout
-const STATUS_POLL_INTERVAL_MS = 10_000;
-
 /**
  * Detects when this device's workout session has been taken over by another device.
  * Shows a modal prompting the user to go home or view their summary.
@@ -31,6 +30,7 @@ export function SessionTakenOverBanner() {
   const { draft, discardDraft } = useWorkoutDraft();
   const router = useRouter();
   const pathname = usePathname();
+  const routeContext = useRouteContext();
 
   const deviceId = useMemo(() => getDeviceId(), []);
   const [wasTakenOver, setWasTakenOver] = useState(false);
@@ -39,7 +39,8 @@ export function SessionTakenOverBanner() {
     { deviceId },
     {
       enabled: Boolean(userId) && isOnline && Boolean(draft) && !draft?.completed,
-      refetchInterval: STATUS_POLL_INTERVAL_MS,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     }
   );
 
@@ -65,15 +66,15 @@ export function SessionTakenOverBanner() {
   const handleGoHome = useCallback(() => {
     discardDraft();
     setWasTakenOver(false);
-    router.push("/train");
-  }, [discardDraft, router]);
+    router.push(trainPath(routeContext));
+  }, [discardDraft, router, routeContext]);
 
   const handleViewSummary = useCallback(() => {
     // Keep the draft data but navigate to a summary view
     // The user can see what they logged before being taken over
     setWasTakenOver(false);
-    router.push("/train/summary");
-  }, [router]);
+    router.push(trainPath(routeContext, "summary"));
+  }, [router, routeContext]);
 
   const handleTakeBack = useCallback(async () => {
     // User wants to reclaim the session
@@ -84,7 +85,7 @@ export function SessionTakenOverBanner() {
   }, [statusQuery]);
 
   // Only show on workout-related pages
-  const isWorkoutPage = pathname?.startsWith("/train/log") || pathname?.startsWith("/train/focus");
+  const isWorkoutPage = pathname?.includes("/train/log") || pathname?.includes("/train/focus");
 
   if (!wasTakenOver || !isWorkoutPage) return null;
 

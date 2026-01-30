@@ -170,6 +170,9 @@ export function TemplateDetailsView(props: TemplateDetailsViewProps) {
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight">{props.name}</h1>
             <p className="text-sm text-muted-foreground">{props.description}</p>
+            {props.offlineNotice ? (
+              <p className="text-xs font-medium text-amber-600">{props.offlineNotice}</p>
+            ) : null}
           </div>
           <Badge variant="secondary" className="shrink-0 gap-1">
             <Calendar className="h-3 w-3" />

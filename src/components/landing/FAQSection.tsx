@@ -13,12 +13,12 @@ export default function FAQSection() {
     {
       question: "Does it work offline?",
       answer:
-        "Absolutely. Go-Train is built with offline-first functionality. All your workouts are saved locally on your device first, then synced to the cloud when you're back online. You'll never lose a workout due to poor gym WiFi.",
+        "Absolutely. Go-Train is offline-first, so workouts save locally on your device. When sync is enabled, your data can upload once you're back online—no lost sessions due to spotty gym WiFi.",
     },
     {
       question: "Can I use it on multiple devices?",
       answer:
-        "Yes! Your data syncs across all your devices when you're logged in. Start a workout on your phone at the gym, and view your progress on your tablet at home.",
+        "Multi-device access is supported when sync is enabled. If sync isn’t enabled yet, each device keeps its own local data.",
     },
     {
       question: "What kind of exercises are supported?",

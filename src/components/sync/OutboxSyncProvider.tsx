@@ -16,7 +16,7 @@ import { activityStorage } from "@/lib/storage/activityStorage";
  * This acts as a bridge between the existing localStorage-based
  * workflow and the new IndexedDB outbox pattern.
  */
-export function OutboxSyncProvider({ children }: { children: React.ReactNode }) {
+export function OutboxSyncProvider() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const { isOnline } = useOnlineStatus();
@@ -85,7 +85,7 @@ export function OutboxSyncProvider({ children }: { children: React.ReactNode }) 
     }
   }, [isOnline, userId, outboxSync.syncNow]);
 
-  return <>{children}</>;
+  return null;
 }
 
 /**

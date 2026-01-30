@@ -101,6 +101,7 @@ export type WorkoutLoggerViewProps =
       onStartRestTimer: (durationMs: number) => void;
       onAddRestTime: (extraMs: number) => void;
       onStopRestTimer: () => void;
+      onNavigateExercise?: () => void;
       onFinish: () => void;
       onDiscardWorkout: () => void;
       finishDisabled: boolean;

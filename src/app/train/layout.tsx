@@ -17,23 +17,21 @@ import {
 export default function TrainLayout({ children }: { children: ReactNode }) {
   return (
     <TrainModeProvider>
-      <OutboxSyncProvider>
-        {/* Sync components - invisible, handle background sync */}
-        <DeviceRegistration />
-        <TemplateCacheProvider>
-          <ActiveWorkoutStatusSync />
-          <ActiveWorkoutConflictPrompt />
-          <SessionTakenOverBanner />
+      {/* Sync components - invisible, handle background sync */}
+      <OutboxSyncProvider />
+      <DeviceRegistration />
+      <TemplateCacheProvider />
+      <ActiveWorkoutStatusSync />
+      <ActiveWorkoutConflictPrompt />
+      <SessionTakenOverBanner />
 
-          <div className="min-h-dvh">
-            <TrainHeader />
-            <main className="pb-24 md:pb-0">{children}</main>
-            <WorkoutSessionDock />
-            <BottomNavigation />
-            <TrainBottomNav variant="dock" />
-          </div>
-        </TemplateCacheProvider>
-      </OutboxSyncProvider>
+      <div className="min-h-dvh">
+        <TrainHeader />
+        <main className="pb-24 md:pb-0">{children}</main>
+        <WorkoutSessionDock />
+        <BottomNavigation />
+        <TrainBottomNav variant="dock" />
+      </div>
     </TrainModeProvider>
   );
 }

@@ -3,6 +3,12 @@ import type { TemplateCardVM } from "../TemplateCard/TemplateCard.types";
 export type TemplateListViewProps =
   | { kind: "loading" }
   | {
+      kind: "offlineEmpty";
+      backHref: string;
+      title: string;
+      message: string;
+    }
+  | {
       kind: "noProfile";
       onboardingHref: string;
       backHref: string;
@@ -15,5 +21,5 @@ export type TemplateListViewProps =
       recommendedTitle: string;
       recommendedCards: TemplateCardVM[];
       allCards: TemplateCardVM[];
+      offlineNotice?: string;
     };
-

@@ -1,10 +1,9 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
 
-// Lock is considered stale after 90 seconds without heartbeat
-const LOCK_STALE_THRESHOLD_MS = 90 * 1000;
+// Lock is considered stale after 6 hours without activity
+const LOCK_STALE_THRESHOLD_MS = 6 * 60 * 60 * 1000;
 
 // Helper to check if error is a unique constraint violation
 function isUniqueConstraintError(error: unknown): boolean {
@@ -22,9 +21,11 @@ type AcquireResult =
       status: "blocked";
       lockedByDevice: string;
       startedAt: string;
-      lastHeartbeat: string;
+      lastActiveAt: string;
+      expiresAt: string;
       programName: string | null;
       dayLabel: string | null;
+      deviceLabel?: string | null;
     }
   | { status: "acquired_stale"; lockId: string; sessionId: string; previousDevice: string };
 
@@ -33,14 +34,14 @@ type TakeoverResult =
   | { status: "no_lock_exists" }
   | { status: "already_owned" };
 
-type HeartbeatResult =
-  | { status: "ok"; lockId: string }
-  | { status: "not_owner"; currentOwner: string | null }
-  | { status: "no_lock" };
-
 type ReleaseResult =
   | { status: "released" }
   | { status: "not_owner" }
+  | { status: "no_lock" };
+
+type TouchResult =
+  | { status: "ok"; lockId: string }
+  | { status: "not_owner"; currentOwner: string | null }
   | { status: "no_lock" };
 
 type LockStatusResult =
@@ -51,11 +52,13 @@ type LockStatusResult =
       deviceId: string;
       sessionId: string;
       startedAt: string;
-      lastHeartbeatAt: string;
+      lastActiveAt: string;
+      expiresAt: string;
       programName: string | null;
       dayLabel: string | null;
       status: string;
       isStale: boolean;
+      deviceLabel?: string | null;
     }
   | { hasLock: false };
 
@@ -72,7 +75,7 @@ export const workoutLockRouter = createTRPCRouter({
       z.object({
         deviceId: z.string().min(1),
         sessionId: z.string().min(1),
-        workoutId: z.string().optional(),
+        workoutLogId: z.string().optional(),
         programName: z.string().optional(),
         dayLabel: z.string().optional(),
       })
@@ -80,6 +83,7 @@ export const workoutLockRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<AcquireResult> => {
       const userId = ctx.session.user!.id;
       const now = new Date();
+      const expiresAt = new Date(now.getTime() + LOCK_STALE_THRESHOLD_MS);
 
       // Check for existing lock
       const existingLock = await ctx.db.workoutSessionLock.findUnique({
@@ -94,11 +98,12 @@ export const workoutLockRouter = createTRPCRouter({
               userId,
               deviceId: input.deviceId,
               sessionId: input.sessionId,
-              workoutId: input.workoutId,
+              workoutLogId: input.workoutLogId,
               programName: input.programName,
               dayLabel: input.dayLabel,
               startedAt: now,
-              lastHeartbeatAt: now,
+              lastActiveAt: now,
+              expiresAt,
               status: "active",
             },
           });
@@ -111,13 +116,21 @@ export const workoutLockRouter = createTRPCRouter({
               where: { userId },
             });
             if (newLock) {
+              const device = await ctx.db.userDevice.findUnique({
+                where: {
+                  userId_deviceId: { userId, deviceId: newLock.deviceId },
+                },
+                select: { label: true, browser: true, platform: true },
+              });
               return {
                 status: "blocked",
                 lockedByDevice: newLock.deviceId,
                 startedAt: newLock.startedAt.toISOString(),
-                lastHeartbeat: newLock.lastHeartbeatAt.toISOString(),
+                lastActiveAt: newLock.lastActiveAt.toISOString(),
+                expiresAt: newLock.expiresAt.toISOString(),
                 programName: newLock.programName,
                 dayLabel: newLock.dayLabel,
+                deviceLabel: device?.label ?? (device ? `${device.browser} on ${device.platform}` : null),
               };
             }
           }
@@ -132,10 +145,11 @@ export const workoutLockRouter = createTRPCRouter({
           where: { id: existingLock.id },
           data: {
             sessionId: input.sessionId,
-            workoutId: input.workoutId,
+            workoutLogId: input.workoutLogId,
             programName: input.programName,
             dayLabel: input.dayLabel,
-            lastHeartbeatAt: now,
+            lastActiveAt: now,
+            expiresAt,
             status: "active",
           },
         });
@@ -143,8 +157,9 @@ export const workoutLockRouter = createTRPCRouter({
       }
 
       // Check if lock is stale (no heartbeat within threshold)
-      const timeSinceHeartbeat = now.getTime() - existingLock.lastHeartbeatAt.getTime();
-      if (timeSinceHeartbeat > LOCK_STALE_THRESHOLD_MS) {
+      const timeSinceActive = now.getTime() - existingLock.lastActiveAt.getTime();
+      const isExpired = existingLock.expiresAt.getTime() <= now.getTime();
+      if (timeSinceActive > LOCK_STALE_THRESHOLD_MS || isExpired) {
         // Lock is stale - take over automatically
         const previousDevice = existingLock.deviceId;
         const lock = await ctx.db.workoutSessionLock.update({
@@ -152,11 +167,12 @@ export const workoutLockRouter = createTRPCRouter({
           data: {
             deviceId: input.deviceId,
             sessionId: input.sessionId,
-            workoutId: input.workoutId,
+            workoutLogId: input.workoutLogId,
             programName: input.programName,
             dayLabel: input.dayLabel,
             startedAt: now,
-            lastHeartbeatAt: now,
+            lastActiveAt: now,
+            expiresAt,
             status: "active",
           },
         });
@@ -169,13 +185,21 @@ export const workoutLockRouter = createTRPCRouter({
       }
 
       // Lock is active and owned by another device - blocked
+      const device = await ctx.db.userDevice.findUnique({
+        where: {
+          userId_deviceId: { userId, deviceId: existingLock.deviceId },
+        },
+        select: { label: true, browser: true, platform: true },
+      });
       return {
         status: "blocked",
         lockedByDevice: existingLock.deviceId,
         startedAt: existingLock.startedAt.toISOString(),
-        lastHeartbeat: existingLock.lastHeartbeatAt.toISOString(),
+        lastActiveAt: existingLock.lastActiveAt.toISOString(),
+        expiresAt: existingLock.expiresAt.toISOString(),
         programName: existingLock.programName,
         dayLabel: existingLock.dayLabel,
+        deviceLabel: device?.label ?? (device ? `${device.browser} on ${device.platform}` : null),
       };
     }),
 
@@ -188,7 +212,7 @@ export const workoutLockRouter = createTRPCRouter({
       z.object({
         deviceId: z.string().min(1),
         sessionId: z.string().min(1),
-        workoutId: z.string().optional(),
+        workoutLogId: z.string().optional(),
         programName: z.string().optional(),
         dayLabel: z.string().optional(),
       })
@@ -196,6 +220,7 @@ export const workoutLockRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<TakeoverResult> => {
       const userId = ctx.session.user!.id;
       const now = new Date();
+      const expiresAt = new Date(now.getTime() + LOCK_STALE_THRESHOLD_MS);
 
       const existingLock = await ctx.db.workoutSessionLock.findUnique({
         where: { userId },
@@ -215,11 +240,12 @@ export const workoutLockRouter = createTRPCRouter({
         data: {
           deviceId: input.deviceId,
           sessionId: input.sessionId,
-          workoutId: input.workoutId,
+          workoutLogId: input.workoutLogId,
           programName: input.programName ?? existingLock.programName,
           dayLabel: input.dayLabel ?? existingLock.dayLabel,
           startedAt: now,
-          lastHeartbeatAt: now,
+          lastActiveAt: now,
+          expiresAt,
           status: "active",
         },
       });
@@ -228,19 +254,19 @@ export const workoutLockRouter = createTRPCRouter({
     }),
 
   /**
-   * Send a heartbeat to keep the lock alive.
-   * Should be called every 20-30 seconds during an active workout.
+   * Update lastActiveAt/expiresAt on real workout actions.
    */
-  heartbeat: protectedProcedure
+  touch: protectedProcedure
     .input(
       z.object({
         deviceId: z.string().min(1),
-        sessionId: z.string().min(1),
+        sessionId: z.string().optional(),
       })
     )
-    .mutation(async ({ ctx, input }): Promise<HeartbeatResult> => {
+    .mutation(async ({ ctx, input }): Promise<TouchResult> => {
       const userId = ctx.session.user!.id;
       const now = new Date();
+      const expiresAt = new Date(now.getTime() + LOCK_STALE_THRESHOLD_MS);
 
       const existingLock = await ctx.db.workoutSessionLock.findUnique({
         where: { userId },
@@ -255,11 +281,15 @@ export const workoutLockRouter = createTRPCRouter({
         return { status: "not_owner", currentOwner: existingLock.deviceId };
       }
 
-      // Update heartbeat
+      if (input.sessionId && existingLock.sessionId !== input.sessionId) {
+        return { status: "not_owner", currentOwner: existingLock.deviceId };
+      }
+
       const lock = await ctx.db.workoutSessionLock.update({
         where: { id: existingLock.id },
         data: {
-          lastHeartbeatAt: now,
+          lastActiveAt: now,
+          expiresAt,
           status: "active",
         },
       });
@@ -324,8 +354,14 @@ export const workoutLockRouter = createTRPCRouter({
         return { hasLock: false };
       }
 
-      const timeSinceHeartbeat = now.getTime() - lock.lastHeartbeatAt.getTime();
-      const isStale = timeSinceHeartbeat > LOCK_STALE_THRESHOLD_MS;
+      const timeSinceActive = now.getTime() - lock.lastActiveAt.getTime();
+      const isStale = timeSinceActive > LOCK_STALE_THRESHOLD_MS || lock.expiresAt.getTime() <= now.getTime();
+      const device = await ctx.db.userDevice.findUnique({
+        where: {
+          userId_deviceId: { userId, deviceId: lock.deviceId },
+        },
+        select: { label: true, browser: true, platform: true },
+      });
 
       return {
         hasLock: true,
@@ -334,11 +370,13 @@ export const workoutLockRouter = createTRPCRouter({
         deviceId: lock.deviceId,
         sessionId: lock.sessionId,
         startedAt: lock.startedAt.toISOString(),
-        lastHeartbeatAt: lock.lastHeartbeatAt.toISOString(),
+        lastActiveAt: lock.lastActiveAt.toISOString(),
+        expiresAt: lock.expiresAt.toISOString(),
         programName: lock.programName,
         dayLabel: lock.dayLabel,
         status: lock.status,
         isStale,
+        deviceLabel: device?.label ?? (device ? `${device.browser} on ${device.platform}` : null),
       };
     }),
 });

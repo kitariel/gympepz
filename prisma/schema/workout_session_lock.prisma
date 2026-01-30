@@ -4,11 +4,12 @@ model WorkoutSessionLock {
   userId          String   @unique // Only one lock per user
   deviceId        String   // Which device currently owns the lock
   sessionId       String   // Unique session identifier (client-generated)
-  workoutId       String?  // Optional reference to the local workout draft ID
+  workoutLogId    String?  // Optional reference to the local workout draft ID
   programName     String?  // Context: which program
   dayLabel        String?  // Context: which day
   startedAt       DateTime // When the workout session started
-  lastHeartbeatAt DateTime // Last heartbeat from the device
+  lastActiveAt    DateTime // Last user activity from the device
+  expiresAt       DateTime // Absolute expiry for the lock
   status          WorkoutLockStatus @default(active)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -17,7 +18,8 @@ model WorkoutSessionLock {
 
   @@index([userId])
   @@index([deviceId])
-  @@index([lastHeartbeatAt])
+  @@index([lastActiveAt])
+  @@index([expiresAt])
 }
 
 enum WorkoutLockStatus {

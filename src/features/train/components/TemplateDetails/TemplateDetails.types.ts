@@ -46,4 +46,5 @@ export type TemplateDetailsViewProps =
       onUse: () => void;
       schedulePrompt?: TemplateDetailsSchedulePrompt;
       backHref: string;
+      offlineNotice?: string;
     };

@@ -1,7 +1,6 @@
 import Hero from "@/components/landing/Hero";
 import LandingHeader from "@/components/landing/LandingHeader";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import WeeklyPlanSection from "@/components/landing/WeeklyPlanSection";
 import OfflineLoggingSection from "@/components/landing/OfflineLoggingSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
@@ -19,7 +18,6 @@ export default function HomePage() {
       <LandingHeader ctaHref={ctaHref} />
       <Hero ctaHref={ctaHref} />
       <FeaturesSection />
-      <HowItWorksSection />
       <AnimatedSeparator />
       <WeeklyPlanSection />
       <OfflineLoggingSection />

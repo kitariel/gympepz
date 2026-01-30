@@ -6,13 +6,16 @@ import { api } from "@/trpc/react";
 import {
   cacheTemplates,
   cacheExercises,
+  cacheGoalTemplates,
   getCachedTemplates,
   getCachedExercises,
+  getCachedGoalTemplates,
   getCacheStatus,
   isCacheStale,
   hasCache,
   type CachedTemplate,
   type CachedExercise,
+  type CachedGoalTemplate,
 } from "@/lib/storage/templateCache";
 
 // Cache refresh interval: 24 hours
@@ -23,8 +26,10 @@ export interface TemplateCacheState {
   isOnline: boolean;
   hasTemplatesCache: boolean;
   hasExercisesCache: boolean;
+  hasGoalTemplatesCache: boolean;
   templatesCount: number;
   exercisesCount: number;
+  goalTemplatesCount: number;
   lastUpdated: number | null;
   error: string | null;
 }
@@ -36,8 +41,10 @@ export function useTemplateCache() {
     isOnline: true,
     hasTemplatesCache: false,
     hasExercisesCache: false,
+    hasGoalTemplatesCache: false,
     templatesCount: 0,
     exercisesCount: 0,
+    goalTemplatesCount: 0,
     lastUpdated: null,
     error: null,
   });
@@ -49,6 +56,10 @@ export function useTemplateCache() {
   });
 
   const exercisesQuery = api.exercise.list.useQuery(undefined, {
+    enabled: false, // Manual fetch only
+  });
+
+  const goalTemplatesQuery = api.goalTemplate.list.useQuery(undefined, {
     enabled: false, // Manual fetch only
   });
 
@@ -65,8 +76,10 @@ export function useTemplateCache() {
           isOnline,
           hasTemplatesCache: status.templates.count > 0,
           hasExercisesCache: status.exercises.count > 0,
+          hasGoalTemplatesCache: status.goalTemplates.count > 0,
           templatesCount: status.templates.count,
           exercisesCount: status.exercises.count,
+          goalTemplatesCount: status.goalTemplates.count,
           lastUpdated: status.templates.lastUpdated ?? status.exercises.lastUpdated,
         }));
       } catch (error) {
@@ -152,6 +165,27 @@ export function useTemplateCache() {
         await cacheExercises(cachedExercises);
       }
 
+      // Fetch goal templates from server
+      const goalTemplatesResult = await goalTemplatesQuery.refetch();
+      if (goalTemplatesResult.data) {
+        const cachedGoals: CachedGoalTemplate[] = goalTemplatesResult.data.map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          goalType: t.type,
+          unit: t.unit,
+          defaultTargetValue: t.targetValue,
+          defaultDurationWeeks: t.suggestedDeadlineDays
+            ? Math.ceil(t.suggestedDeadlineDays / 7)
+            : null,
+          category: t.category,
+          iconName: t.icon,
+          cachedAt: Date.now(),
+        }));
+
+        await cacheGoalTemplates(cachedGoals);
+      }
+
       // Update state
       const status = await getCacheStatus();
       setState((prev) => ({
@@ -159,8 +193,10 @@ export function useTemplateCache() {
         isLoading: false,
         hasTemplatesCache: status.templates.count > 0,
         hasExercisesCache: status.exercises.count > 0,
+        hasGoalTemplatesCache: status.goalTemplates.count > 0,
         templatesCount: status.templates.count,
         exercisesCount: status.exercises.count,
+        goalTemplatesCount: status.goalTemplates.count,
         lastUpdated: Date.now(),
         error: null,
       }));
@@ -176,17 +212,24 @@ export function useTemplateCache() {
       }));
       return false;
     }
-  }, [isOnline, templatesListQuery, exercisesQuery, utils.template.getById]);
+  }, [
+    isOnline,
+    templatesListQuery,
+    exercisesQuery,
+    goalTemplatesQuery,
+    utils.template.getById,
+  ]);
 
   // Check and refresh cache if stale
   const refreshIfStale = useCallback(async () => {
     try {
-      const [templatesStale, exercisesStale] = await Promise.all([
+      const [templatesStale, exercisesStale, goalTemplatesStale] = await Promise.all([
         isCacheStale("templates", CACHE_MAX_AGE_MS),
         isCacheStale("exercises", CACHE_MAX_AGE_MS),
+        isCacheStale("goal_templates", CACHE_MAX_AGE_MS),
       ]);
 
-      if ((templatesStale || exercisesStale) && isOnline) {
+      if ((templatesStale || exercisesStale || goalTemplatesStale) && isOnline) {
         console.log("[useTemplateCache] Cache is stale, refreshing...");
         await syncTemplates();
       }
@@ -215,11 +258,21 @@ export function useTemplateCache() {
     }
   }, []);
 
+  const getGoalTemplates = useCallback(async (): Promise<CachedGoalTemplate[]> => {
+    try {
+      return await getCachedGoalTemplates();
+    } catch (error) {
+      console.error("[useTemplateCache] Failed to get cached goal templates:", error);
+      return [];
+    }
+  }, []);
+
   return {
     ...state,
     syncTemplates,
     refreshIfStale,
     getTemplates,
     getExercises,
+    getGoalTemplates,
   };
 }

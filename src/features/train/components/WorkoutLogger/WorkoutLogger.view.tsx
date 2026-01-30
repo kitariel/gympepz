@@ -1023,6 +1023,10 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
   const currentExercise = exercises[currentExerciseIndex];
   const progressPercent = setsTotal > 0 ? (setsDone / setsTotal) * 100 : 0;
   const hasNextExercise = currentExerciseIndex < exercises.length - 1;
+  const handleNavigateExercise = (nextIndex: number) => {
+    props.onNavigateExercise?.();
+    setCurrentExerciseIndex(nextIndex);
+  };
   const currentExerciseComplete =
     currentExercise?.setRows.every((set) => set.completed) ?? false;
   const isRestTimerActive = props.restTimer.status === "running";
@@ -1076,7 +1080,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
       <ExerciseNavigator
         exercises={exercises}
         currentIndex={currentExerciseIndex}
-        onNavigate={setCurrentExerciseIndex}
+        onNavigate={handleNavigateExercise}
       />
 
       <Card elevation="subtle">
@@ -1109,7 +1113,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
                   <button
                     key={exercise.id}
                     type="button"
-                    onClick={() => setCurrentExerciseIndex(index)}
+                    onClick={() => handleNavigateExercise(index)}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors",
                       isActive
@@ -1147,7 +1151,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
             onCopyPrevious={props.onCopyPrevious}
             onCopyLastSet={props.onCopyLastSet}
             showNextWorkout={currentExerciseComplete && hasNextExercise}
-            onNextWorkout={() => setCurrentExerciseIndex((idx) => idx + 1)}
+            onNextWorkout={() => handleNavigateExercise(currentExerciseIndex + 1)}
           />
         ) : null}
       </div>
@@ -1158,7 +1162,7 @@ export function WorkoutLoggerView(props: WorkoutLoggerViewProps) {
           <UpNextPanel
             exercises={exercises}
             currentExerciseIndex={currentExerciseIndex}
-            onNavigateToExercise={setCurrentExerciseIndex}
+            onNavigateToExercise={handleNavigateExercise}
           />
         </div>
       )}
